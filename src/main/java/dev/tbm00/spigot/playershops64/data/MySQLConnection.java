@@ -78,6 +78,8 @@ public class MySQLConnection {
           + "  `buy_price` DECIMAL(18,2) NULL,"
           + "  `sell_price` DECIMAL(18,2) NULL,"
           + "  `last_tx` DATETIME NULL,"
+          + "  `inf_money` TINYINT(1) NOT NULL DEFAULT 0,"
+          + "  `inf_stock` TINYINT(1) NOT NULL DEFAULT 0,"
           + "  PRIMARY KEY (`uuid`),"
           + "  KEY `idx_owner_uuid` (`owner_uuid`),"
           + "  KEY `idx_world` (`world`),"

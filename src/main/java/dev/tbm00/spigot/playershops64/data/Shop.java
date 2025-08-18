@@ -19,11 +19,13 @@ public class Shop {
     private Location location; // stored in SQL as String (using "x,y,z" formatting)
     private ItemStack itemStack; // serialized and stored in SQL as Base64
     private int stackSize; // minimum 1, should never be null
-    private int itemStock; // -1 for unlimited (used only by admins)
-    private BigDecimal moneyStock; // -1 for unlimited (used only by admins)
-    private BigDecimal buyPrice; // -1 to disable buying from the shop
-    private BigDecimal sellPrice; // -1 to disable selling to the shop
+    private int itemStock; // minimum 0, should never be null
+    private BigDecimal moneyStock; // minimum 0, should never be null
+    private BigDecimal buyPrice; // null to disable buying from the shop
+    private BigDecimal sellPrice; // null to disable selling to the shop
     private Date lastTransactionDate; // null if no transactions ever
+    private boolean infiniteMoney; // only enabled by admins
+    private boolean infiniteStock; // only enabled by admins
 
     /**
      * Constructs a Shop with all properties initialized.
@@ -39,7 +41,9 @@ public class Shop {
                 BigDecimal moneyStock,
                 BigDecimal buyPrice,
                 BigDecimal sellPrice,
-                Date lastTransactionDate
+                Date lastTransactionDate,
+                boolean infiniteMoney,
+                boolean infiniteStock
                 ) {
         this.uuid = uuid;
         this.ownerUuid = ownerUuid;
@@ -48,11 +52,13 @@ public class Shop {
         this.location = location;
         this.itemStack = itemStack;
         this.stackSize = (stackSize>0) ? stackSize : 1;
-        this.itemStock = (itemStock>=0) ? itemStock : -1;
-        this.moneyStock = (moneyStock!=null && moneyStock.compareTo(BigDecimal.ZERO)>=0) ? StaticUtils.normalizeBigDecimal(moneyStock) : BigDecimal.valueOf(-1.0);
+        this.itemStock = (itemStock>=0) ? itemStock : 0;
+        this.moneyStock = (moneyStock!=null && moneyStock.compareTo(BigDecimal.ZERO)>=0) ? StaticUtils.normalizeBigDecimal(moneyStock) : BigDecimal.ZERO;
         this.buyPrice = (buyPrice!=null && buyPrice.compareTo(BigDecimal.ZERO)>=0) ? StaticUtils.normalizeBigDecimal(buyPrice) : null;
         this.sellPrice = (sellPrice!=null && sellPrice.compareTo(BigDecimal.ZERO)>=0) ? StaticUtils.normalizeBigDecimal(sellPrice) : null;
         this.lastTransactionDate = lastTransactionDate;
+        this.infiniteMoney = infiniteMoney;
+        this.infiniteStock = infiniteStock;
     }
 
     // --- Getters ---
@@ -104,6 +110,14 @@ public class Shop {
         return lastTransactionDate;
     }
 
+    public boolean getInfiniteMoney() {
+        return infiniteMoney;
+    }
+
+    public boolean getInfiniteStock() {
+        return infiniteStock;
+    }
+
     // --- Setters ---
     public void setUuid(UUID uuid) {
         this.uuid = uuid;
@@ -134,21 +148,19 @@ public class Shop {
     }
 
     public void setItemStock(int itemStock) {
-        this.itemStock = (itemStock >= 0) ? itemStock : -1;
+        this.itemStock = (itemStock > 0) ? itemStock : 0;
     }
 
     public void setMoneyStock(BigDecimal moneyStock) {
-        if (moneyStock == null) { 
-            this.moneyStock = BigDecimal.valueOf(0.00);
-        } else if (moneyStock.compareTo(BigDecimal.ZERO) >= 0) {
+        if (moneyStock != null && moneyStock.compareTo(BigDecimal.ZERO) > 0) { 
             this.moneyStock = StaticUtils.normalizeBigDecimal(moneyStock);
         } else {
-            this.moneyStock = BigDecimal.valueOf(-1.00);
+            this.moneyStock = BigDecimal.ZERO;
         }
     }
 
     public void setBuyPrice(BigDecimal buyPrice) {
-        if (buyPrice != null) {
+        if (buyPrice != null && buyPrice.compareTo(BigDecimal.ZERO) >= 0) {
             this.buyPrice = StaticUtils.normalizeBigDecimal(buyPrice);
         } else {
             this.buyPrice = null;
@@ -156,7 +168,7 @@ public class Shop {
     }
 
     public void setSellPrice(BigDecimal sellPrice) {
-        if (sellPrice != null) {
+        if (sellPrice != null && sellPrice.compareTo(BigDecimal.ZERO) >= 0) {
             this.sellPrice = StaticUtils.normalizeBigDecimal(sellPrice);
         } else {
             this.sellPrice = null;
@@ -165,5 +177,13 @@ public class Shop {
 
     public void setLastTransactionDate(Date lastTransactionDate) {
         this.lastTransactionDate = lastTransactionDate;
+    }
+
+    public void setInfiniteMoney(boolean infiniteMoney) {
+        this.infiniteMoney = infiniteMoney;
+    }
+
+    public void setInfiniteStock(boolean infiniteStock) {
+        this.infiniteStock = infiniteStock;
     }
 }

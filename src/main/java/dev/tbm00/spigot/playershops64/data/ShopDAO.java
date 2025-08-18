@@ -20,11 +20,19 @@ public class ShopDAO {
     /**
      * Inserts a new shop into the database.
      */
-    public void createShop(Shop shop) {
+    public boolean createShop(Shop shop) {
+        if (shop.getWorld()==null) {
+            Bukkit.getLogger().severe(shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") world is unloaded/null, so the shop was not inserted in SQL!");
+            return false;
+        } else if (shop.getLocation()==null) {
+            Bukkit.getLogger().severe(shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") location is null, so the shop was not inserted in SQL!");
+            return false;
+        }
+
         final String sql = "INSERT INTO playershops64_shops "
             + "(uuid, owner_uuid, owner_name, world, location, itemstack_b64, stack_size, "
-            + "item_stock, money_stock, buy_price, sell_price, last_tx) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            + "item_stock, money_stock, buy_price, sell_price, last_tx, inf_money, inf_stock) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = mySQL.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -32,7 +40,7 @@ public class ShopDAO {
             ps.setString(1, shop.getUuid().toString());
             ps.setString(2, shop.getOwnerUuid().toString());
             ps.setString(3, shop.getOwnerName());
-            bindWorldStrOrNull(ps, 4, shop.getWorld());
+            ps.setString(4, shop.getWorld().getName());
             ps.setString(5, serializeLocation(shop.getLocation()));
             ps.setString(6, ItemSerializer.itemStackToBase64(shop.getItemStack()));
             ps.setInt(7, shop.getStackSize());
@@ -41,10 +49,14 @@ public class ShopDAO {
             bindBigDecimalOrNull(ps, 10, shop.getBuyPrice());
             bindBigDecimalOrNull(ps, 11, shop.getSellPrice());
             bindTimestampOrNull(ps, 12, shop.getLastTransactionDate());
+            ps.setBoolean(13, shop.getInfiniteMoney());
+            ps.setBoolean(14, shop.getInfiniteStock());
 
             ps.executeUpdate();
+            return true;
         } catch (SQLException e) {
             Bukkit.getLogger().severe("Failed to insert shop: " + e.getMessage());
+            return false;
         }
     }
 
@@ -71,10 +83,18 @@ public class ShopDAO {
     /**
      * Updates an existing shop.
      */
-    public void updateShop(Shop shop) {
+    public boolean updateShop(Shop shop) {
+        if (shop.getWorld()==null) {
+            Bukkit.getLogger().severe(shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") world is unloaded/null, so the shop was not updated in SQL!");
+            return false;
+        } else if (shop.getLocation()==null) {
+            Bukkit.getLogger().severe(shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") location is null, so the shop was not updated in SQL!");
+            return false;
+        }
+
         final String sql = "UPDATE playershops64_shops SET "
             + "owner_uuid=?, owner_name=?, world=?, location=?, itemstack_b64=?, stack_size=?, "
-            + "item_stock=?, money_stock=?, buy_price=?, sell_price=?, last_tx=? "
+            + "item_stock=?, money_stock=?, buy_price=?, sell_price=?, last_tx=?, inf_money=?, inf_stock=? "
             + "WHERE uuid=?";
 
         try (Connection conn = mySQL.getConnection();
@@ -82,7 +102,7 @@ public class ShopDAO {
 
             ps.setString(1, shop.getOwnerUuid().toString());
             ps.setString(2, shop.getOwnerName());
-            bindWorldStrOrNull(ps, 3, shop.getWorld());
+            ps.setString(3, shop.getWorld().getName());
             ps.setString(4, serializeLocation(shop.getLocation()));
             ps.setString(5, ItemSerializer.itemStackToBase64(shop.getItemStack()));
             ps.setInt(6, shop.getStackSize());
@@ -91,25 +111,31 @@ public class ShopDAO {
             bindBigDecimalOrNull(ps, 9, shop.getBuyPrice());
             bindBigDecimalOrNull(ps, 10, shop.getSellPrice());
             bindTimestampOrNull(ps, 11, shop.getLastTransactionDate());
-            ps.setString(12, shop.getUuid().toString());
+            ps.setBoolean(12, shop.getInfiniteMoney());
+            ps.setBoolean(13, shop.getInfiniteStock());
+            ps.setString(14, shop.getUuid().toString());
 
             ps.executeUpdate();
+            return true;
         } catch (SQLException e) {
             Bukkit.getLogger().severe("Failed to update shop: " + e.getMessage());
+            return false;
         }
     }
 
     /**
      * Deletes a shop by UUID.
      */
-    public void deleteShop(UUID uuid) {
+    public boolean deleteShop(UUID uuid) {
         final String sql = "DELETE FROM playershops64_shops WHERE uuid=?";
         try (Connection conn = mySQL.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, uuid.toString());
             ps.executeUpdate();
+            return true;
         } catch (SQLException e) {
             Bukkit.getLogger().severe("Failed to delete shop: " + e.getMessage());
+            return false;
         }
     }
 
@@ -121,7 +147,7 @@ public class ShopDAO {
         UUID ownerUuid = UUID.fromString(rs.getString("owner_uuid"));
         String ownerName = rs.getString("owner_name");
         String worldName = rs.getString("world");
-        World world = (worldName == null ? null : Bukkit.getWorld(worldName));
+        World world = (worldName == null) ? null : Bukkit.getWorld(worldName);
         Location location = deserializeLocation(world, rs.getString("location"));
         ItemStack itemStack = ItemSerializer.itemStackFromBase64(rs.getString("itemstack_b64"));
         int stackSize = rs.getInt("stack_size");
@@ -131,8 +157,10 @@ public class ShopDAO {
         BigDecimal buyPrice = rs.getBigDecimal("buy_price");
         BigDecimal sellPrice = rs.getBigDecimal("sell_price");
         java.util.Date lastTx = toJavaDate(rs.getTimestamp("last_tx"));
+        boolean infiniteMoney = rs.getBoolean("inf_money");
+        boolean infiniteStock = rs.getBoolean("inf_stock");
 
-        return new Shop(uuid, ownerUuid, ownerName, world, location, itemStack, stackSize, itemStock, moneyStock, buyPrice, sellPrice, lastTx);
+        return new Shop(uuid, ownerUuid, ownerName, world, location, itemStack, stackSize, itemStock, moneyStock, buyPrice, sellPrice, lastTx, infiniteMoney, infiniteStock);
     }
 
     // --- Helper methods ---
@@ -156,6 +184,7 @@ public class ShopDAO {
     private java.util.Date toJavaDate(java.sql.Timestamp d) {
         return d != null ? new java.util.Date(d.getTime()) : null;
     }
+
     /*
     private java.sql.Timestamp toSqlTimestamp(java.util.Date d) {
         return d != null ? new java.sql.Timestamp(d.getTime()) : null;
@@ -163,12 +192,12 @@ public class ShopDAO {
     */
 
     private void bindTimestampOrNull(PreparedStatement ps, int idx, java.util.Date d) throws SQLException {
-        if (d == null) ps.setNull(idx, Types.TIMESTAMP); else ps.setTimestamp(idx, new Timestamp(d.getTime()));
+        if (d == null) ps.setNull(idx, Types.TIMESTAMP); 
+        else ps.setTimestamp(idx, new Timestamp(d.getTime()));
     }
-    private void bindWorldStrOrNull(PreparedStatement ps, int idx, World w) throws SQLException {
-        if (w == null) ps.setNull(idx, Types.VARCHAR); else ps.setString(idx, w.getName());
-    }
+
     private void bindBigDecimalOrNull(PreparedStatement ps, int idx, BigDecimal v) throws SQLException {
-        if (v == null) ps.setNull(idx, Types.DECIMAL); else ps.setBigDecimal(idx, v);
+        if (v == null) ps.setNull(idx, Types.DECIMAL); 
+        else ps.setBigDecimal(idx, v);
     }
 }
