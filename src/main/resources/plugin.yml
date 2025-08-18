@@ -1,0 +1,19 @@
+name: PlayerShops64
+version: ${project.version}
+description: ${project.description}
+author: tbm00
+main: dev.tbm00.spigot.playershops64.PlayerShops64
+api-version: 1.17
+depend: [Vault]
+commands:
+  testshop:
+    description: Base player command for PlayerShops64
+  testshopadmin:
+    description: Base admin command for PlayerShops64
+permissions:
+  playershops64.player:
+    description: Ability to use player commands
+    default: true
+  playershops64.admin:
+    description: Ability to use admin commands
+    default: op
