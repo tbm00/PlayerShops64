@@ -10,11 +10,13 @@ import net.milkbowl.vault.economy.Economy;
 
 import dev.tbm00.spigot.playershops64.utils.*;
 import dev.tbm00.spigot.playershops64.command.*;
+import dev.tbm00.spigot.playershops64.data.ConfigHandler;
+import dev.tbm00.spigot.playershops64.data.MySQLConnection;
 import dev.tbm00.spigot.playershops64.listener.PlayerMovement;
 
 public class PlayerShops64 extends JavaPlugin {
     private ConfigHandler configHandler;
-    public static PlayerShops64 dsHook;
+    private MySQLConnection mysqlConnection;
     public static Economy ecoHook;
 
     @Override
@@ -26,6 +28,15 @@ public class PlayerShops64 extends JavaPlugin {
             configHandler = new ConfigHandler(this);
 
             StaticUtils.init(this, configHandler);
+
+            // Connect to MySQL
+            try {
+                mysqlConnection = new MySQLConnection(this);
+            } catch (Exception e) {
+                getLogger().severe("Failed to connect to MySQL. Disabling plugin.");
+                getServer().getPluginManager().disablePlugin(this);
+                return;
+            }
             
             StaticUtils.log(ChatColor.LIGHT_PURPLE,
                     ChatColor.DARK_PURPLE + "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",

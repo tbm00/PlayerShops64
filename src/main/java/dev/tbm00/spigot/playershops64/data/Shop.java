@@ -1,0 +1,169 @@
+package dev.tbm00.spigot.playershops64.data;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.UUID;
+
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.inventory.ItemStack;
+
+import dev.tbm00.spigot.playershops64.utils.StaticUtils;
+
+
+public class Shop {
+    private UUID uuid; // generated when the shop is created (shop base block is placed)
+    private UUID ownerUuid; // minecraft player's uuid
+    private String ownerName; // minecraft player's username
+    private World world; // stored in SQL as String (using world.getName())
+    private Location location; // stored in SQL as String (using "x,y,z" formatting)
+    private ItemStack itemStack; // serialized and stored in SQL as Base64
+    private int stackSize; // minimum 1, should never be null
+    private int itemStock; // -1 for unlimited (used only by admins)
+    private BigDecimal moneyStock; // -1 for unlimited (used only by admins)
+    private BigDecimal buyPrice; // -1 to disable buying from the shop
+    private BigDecimal sellPrice; // -1 to disable selling to the shop
+    private Date lastTransactionDate; // null if no transactions ever
+
+    /**
+     * Constructs a Shop with all properties initialized.
+     */
+    public Shop(UUID uuid,
+                UUID ownerUuid,
+                String ownerName,
+                World world,
+                Location location,
+                ItemStack itemStack,
+                int stackSize,
+                int itemStock,
+                BigDecimal moneyStock,
+                BigDecimal buyPrice,
+                BigDecimal sellPrice,
+                Date lastTransactionDate
+                ) {
+        this.uuid = uuid;
+        this.ownerUuid = ownerUuid;
+        this.ownerName = ownerName;
+        this.world = world;
+        this.location = location;
+        this.itemStack = itemStack;
+        this.stackSize = (stackSize>0) ? stackSize : 1;
+        this.itemStock = (itemStock>=0) ? itemStock : -1;
+        this.moneyStock = (moneyStock!=null && moneyStock.compareTo(BigDecimal.ZERO)>=0) ? StaticUtils.normalizeBigDecimal(moneyStock) : BigDecimal.valueOf(-1.0);
+        this.buyPrice = (buyPrice!=null && buyPrice.compareTo(BigDecimal.ZERO)>=0) ? StaticUtils.normalizeBigDecimal(buyPrice) : null;
+        this.sellPrice = (sellPrice!=null && sellPrice.compareTo(BigDecimal.ZERO)>=0) ? StaticUtils.normalizeBigDecimal(sellPrice) : null;
+        this.lastTransactionDate = lastTransactionDate;
+    }
+
+    // --- Getters ---
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public UUID getOwnerUuid() {
+        return ownerUuid;
+    }
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public World getWorld() {
+        return world;
+    }
+
+    public Location getLocation() {
+        return location;
+    }
+
+    public ItemStack getItemStack() {
+        return itemStack;
+    }
+
+    public int getStackSize() {
+        return stackSize;
+    }
+
+    public int getItemStock() {
+        return itemStock;
+    }
+
+    public BigDecimal getMoneyStock() {
+        return moneyStock;
+    }
+
+    public BigDecimal getBuyPrice() {
+        return buyPrice;
+    }
+
+    public BigDecimal getSellPrice() {
+        return sellPrice;
+    }
+
+    public Date getLastTransactionDate() {
+        return lastTransactionDate;
+    }
+
+    // --- Setters ---
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
+    }
+
+    public void setOwnerUuid(UUID ownerUuid) {
+        this.ownerUuid = ownerUuid;
+    }
+
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
+    }
+
+    public void setWorld(World world) {
+        this.world = world;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
+    }
+
+    public void setItemStack(ItemStack itemStack) {
+        this.itemStack = itemStack;
+    }
+
+    public void setStackSize(int stackSize) {
+        this.stackSize = (stackSize > 0) ? stackSize : 1;
+    }
+
+    public void setItemStock(int itemStock) {
+        this.itemStock = (itemStock >= 0) ? itemStock : -1;
+    }
+
+    public void setMoneyStock(BigDecimal moneyStock) {
+        if (moneyStock == null) { 
+            this.moneyStock = BigDecimal.valueOf(0.00);
+        } else if (moneyStock.compareTo(BigDecimal.ZERO) >= 0) {
+            this.moneyStock = StaticUtils.normalizeBigDecimal(moneyStock);
+        } else {
+            this.moneyStock = BigDecimal.valueOf(-1.00);
+        }
+    }
+
+    public void setBuyPrice(BigDecimal buyPrice) {
+        if (buyPrice != null) {
+            this.buyPrice = StaticUtils.normalizeBigDecimal(buyPrice);
+        } else {
+            this.buyPrice = null;
+        }
+    }
+
+    public void setSellPrice(BigDecimal sellPrice) {
+        if (sellPrice != null) {
+            this.sellPrice = StaticUtils.normalizeBigDecimal(sellPrice);
+        } else {
+            this.sellPrice = null;
+        }
+    }
+
+    public void setLastTransactionDate(Date lastTransactionDate) {
+        this.lastTransactionDate = lastTransactionDate;
+    }
+}

@@ -1,5 +1,7 @@
 package dev.tbm00.spigot.playershops64.utils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
@@ -21,7 +23,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.milkbowl.vault.economy.EconomyResponse;
 
 import dev.tbm00.spigot.playershops64.PlayerShops64;
-import dev.tbm00.spigot.playershops64.ConfigHandler;
+import dev.tbm00.spigot.playershops64.data.ConfigHandler;
 
 public class StaticUtils {
     private static PlayerShops64 javaPlugin;
@@ -46,6 +48,16 @@ public class StaticUtils {
 		for (String s : strings)
             javaPlugin.getServer().getConsoleSender().sendMessage("[DSA64] " + chatColor + s);
 	}
+
+    /**
+     * Normalizes big decimal to avoid money drift beyond 2 decimals places
+     *
+     * @param chatColor the chat color to use for the log messages
+     * @param strings one or more message strings to log
+     */
+    public static BigDecimal normalizeBigDecimal(BigDecimal amount) {
+        return amount == null ? null : amount.setScale(2, RoundingMode.DOWN);
+    }
 
     /**
      * Formats int to "200,000" style

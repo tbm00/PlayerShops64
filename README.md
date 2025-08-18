@@ -25,14 +25,4 @@ Created by tbm00 for play.mc64.wtf.
 
 ## Config
 ```
-# PlayerShops64 v0.0.0-beta by @tbm00
-# https://github.com/tbm00/PlayerShops64
-
-enabled: true
-
-lang:
-  prefix: "&8[&fShop&8] &7"
-
-feature:
-  enabled: true
 ```

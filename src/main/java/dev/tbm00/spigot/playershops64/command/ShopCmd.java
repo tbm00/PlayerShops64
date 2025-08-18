@@ -13,7 +13,7 @@ import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
 import dev.tbm00.spigot.playershops64.PlayerShops64;
-import dev.tbm00.spigot.playershops64.ConfigHandler;
+import dev.tbm00.spigot.playershops64.data.ConfigHandler;
 import dev.tbm00.spigot.playershops64.utils.*;
 
 public class ShopCmd implements TabExecutor {
