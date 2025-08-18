@@ -20,7 +20,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import net.md_5.bungee.api.chat.TextComponent;
-import net.milkbowl.vault.economy.EconomyResponse;
 
 import dev.tbm00.spigot.playershops64.PlayerShops64;
 import dev.tbm00.spigot.playershops64.data.ConfigHandler;
@@ -225,33 +224,5 @@ public class StaticUtils {
             log(ChatColor.RED, "Caught exception sudoing command: " + target.getName() + " : /" + command + ": " + e.getMessage());
             return false;
         }
-    }
-
-    /**
-     * Attempts to remove a specified amount of money from the player's account.
-     *
-     * @param player the player from whose account the money will be withdrawn
-     * @param amount the amount of money to remove from the account
-     * @return true if the withdrawal transaction was successful, false otherwise
-     */
-    public static boolean removeMoney(Player player, double amount) {
-        EconomyResponse r = PlayerShops64.ecoHook.withdrawPlayer(player, amount);
-        if (r.transactionSuccess()) {
-            return true;
-        } else return false;
-    }
-
-    /**
-     * Attempts to add a specified amount of money to the player's account.
-     *
-     * @param player the player whose account will receive the deposit
-     * @param amount the amount of money to add to the account
-     * @return true if the deposit transaction was successful, false otherwise
-     */
-    public static boolean addMoney(Player player, double amount) {
-        EconomyResponse r = PlayerShops64.ecoHook.depositPlayer(player, amount);
-        if (r.transactionSuccess()) {
-            return true;
-        } else return false;
     }
 }

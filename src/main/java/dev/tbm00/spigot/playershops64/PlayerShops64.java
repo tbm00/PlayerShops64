@@ -3,21 +3,20 @@ package dev.tbm00.spigot.playershops64;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import net.milkbowl.vault.economy.Economy;
 
 import dev.tbm00.spigot.playershops64.utils.*;
 import dev.tbm00.spigot.playershops64.command.*;
 import dev.tbm00.spigot.playershops64.data.ConfigHandler;
 import dev.tbm00.spigot.playershops64.data.MySQLConnection;
+import dev.tbm00.spigot.playershops64.hook.VaultHook;
 import dev.tbm00.spigot.playershops64.listener.PlayerMovement;
 
 public class PlayerShops64 extends JavaPlugin {
     private ConfigHandler configHandler;
     private MySQLConnection mysqlConnection;
-    public static Economy ecoHook;
+    private VaultHook vaultHook;
+    private ShopHandler shopHandler;
 
     @Override
     public void onEnable() {
@@ -29,14 +28,7 @@ public class PlayerShops64 extends JavaPlugin {
 
             StaticUtils.init(this, configHandler);
 
-            // Connect to MySQL
-            try {
-                mysqlConnection = new MySQLConnection(this);
-            } catch (Exception e) {
-                getLogger().severe("Failed to connect to MySQL. Disabling plugin.");
-                getServer().getPluginManager().disablePlugin(this);
-                return;
-            }
+            if (!setupMySQL()) disablePlugin();
             
             StaticUtils.log(ChatColor.LIGHT_PURPLE,
                     ChatColor.DARK_PURPLE + "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
@@ -44,9 +36,11 @@ public class PlayerShops64 extends JavaPlugin {
                     ChatColor.DARK_PURPLE + "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
             );
 
-            setupHooks();
+            if (!setupHooks()) disablePlugin();
 
             if (configHandler.isFeatureEnabled()) {
+                shopHandler = new ShopHandler(this, mysqlConnection, vaultHook);
+
                 // Register Listener
                 getServer().getPluginManager().registerEvents(new PlayerMovement(), this);
 
@@ -58,15 +52,29 @@ public class PlayerShops64 extends JavaPlugin {
     }
 
     /**
+     * Sets up the MySQL db connection.
+     * Disables the plugin if it fails.
+     */
+    private boolean setupMySQL() {
+        try {
+            mysqlConnection = new MySQLConnection(this);
+            return true;
+        } catch (Exception e) {
+            getLogger().severe("Failed to connect to MySQL. Disabling plugin.");
+            return false;
+        }
+    }
+
+    /**
      * Sets up the required hooks for plugin integration.
      * Disables the plugin if any required hook fails.
      */
-    private void setupHooks() {
+    private boolean setupHooks() {
         if (!setupVault()) {
             getLogger().severe("Vault hook failed -- disabling plugin!");
-            disablePlugin();
-            return;
+            return false;
         }
+        return true;
     }
 
     /**
@@ -77,10 +85,11 @@ public class PlayerShops64 extends JavaPlugin {
     private boolean setupVault() {
         if (!isPluginAvailable("Vault")) return false;
 
-        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-        if (rsp == null) return false;
-        ecoHook = rsp.getProvider();
-        if (ecoHook == null) return false;
+        vaultHook = new VaultHook(this);
+
+        if (vaultHook==null || vaultHook.pl==null) {
+            return false;
+        }
 
         StaticUtils.log(ChatColor.GREEN, "Vault hooked.");
         return true;
