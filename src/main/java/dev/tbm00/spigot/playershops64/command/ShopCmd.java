@@ -6,11 +6,16 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import dev.tbm00.spigot.playershops64.PlayerShops64;
 import dev.tbm00.spigot.playershops64.data.ConfigHandler;
@@ -52,11 +57,33 @@ public class ShopCmd implements TabExecutor {
         switch (subCmd) {
             case "help":
                 return handleHelpCmd(player);
+            case "buy":
+                return handleBuyCmd(player, args);
             default: {
                 StaticUtils.sendMessage(sender, "&cNo applicable argument provided!");
                 return true;
             }
         }
+    }
+
+    private boolean handleBuyCmd(Player player, String[] args) {
+        Integer amount = 1;
+        if (args.length>1) {
+            amount = Integer.parseInt(args[1]);
+        }
+
+        ItemStack lectern = new ItemStack(Material.LECTERN);
+        ItemMeta meta = lectern.getItemMeta();
+
+        meta.getPersistentDataContainer().set(new NamespacedKey(javaPlugin, "base-shop-block"), PersistentDataType.STRING, "true");
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aPlayerShop"));
+
+        lectern.setItemMeta(meta);
+        lectern.setAmount(amount);
+
+        StaticUtils.giveItem(player, lectern);
+        player.sendMessage(ChatColor.GREEN + "You should've received "+amount+" lectern(s) with the PDC key!");
+        return true;
     }
     
     /**

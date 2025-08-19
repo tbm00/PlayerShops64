@@ -11,6 +11,7 @@ import dev.tbm00.spigot.playershops64.data.ConfigHandler;
 import dev.tbm00.spigot.playershops64.data.MySQLConnection;
 import dev.tbm00.spigot.playershops64.hook.VaultHook;
 import dev.tbm00.spigot.playershops64.listener.PlayerMovement;
+import dev.tbm00.spigot.playershops64.listener.ShopBlockListener;
 
 public class PlayerShops64 extends JavaPlugin {
     private ConfigHandler configHandler;
@@ -41,8 +42,9 @@ public class PlayerShops64 extends JavaPlugin {
             if (configHandler.isFeatureEnabled()) {
                 shopHandler = new ShopHandler(this, mysqlConnection, vaultHook);
 
-                // Register Listener
+                // Register Listeners
                 getServer().getPluginManager().registerEvents(new PlayerMovement(), this);
+                getServer().getPluginManager().registerEvents(new ShopBlockListener(this), this);
 
                 // Register Commands
                 getCommand("testshop").setExecutor(new ShopCmd(this, configHandler));
