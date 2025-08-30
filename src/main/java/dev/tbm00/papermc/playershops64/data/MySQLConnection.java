@@ -7,6 +7,9 @@ import java.sql.Statement;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+import dev.tbm00.papermc.playershops64.utils.StaticUtils;
+
+import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class MySQLConnection {
@@ -45,13 +48,13 @@ public class MySQLConnection {
 
     private void setupConnectionPool() {
         dataSource = new HikariDataSource(config);
-        javaPlugin.getLogger().info("Initialized Hikari connection pool.");
+        StaticUtils.log(ChatColor.YELLOW, "Initialized Hikari connection pool.");
 
         try (Connection connection = getConnection()) {
             if (connection.isValid(2))
-                javaPlugin.getLogger().info("MySQL database connection is valid!");
+                StaticUtils.log(ChatColor.YELLOW, "MySQL database connection is valid!");
         } catch (SQLException e) {
-            javaPlugin.getLogger().severe("Failed to establish connection to MySQL database: " + e.getMessage());
+            StaticUtils.log(ChatColor.RED, "Failed to establish connection to MySQL database: " + e.getMessage());
         }
     }
 
@@ -90,7 +93,7 @@ public class MySQLConnection {
              Statement statement = connection.createStatement()) {
             statement.execute(shopTable);
         } catch (SQLException e) {
-            javaPlugin.getLogger().severe("Error initializing database: " + e.getMessage());
+            StaticUtils.log(ChatColor.RED, "Error initializing database: " + e.getMessage());
         }
     }
 
@@ -105,11 +108,11 @@ public class MySQLConnection {
     
             for (String tbl : oldTables) {
                 stmt.executeUpdate("DROP TABLE IF EXISTS `" + tbl + "`;");
-                javaPlugin.getLogger().info("Dropped old table '" + tbl + "' (if it existed).");
+                StaticUtils.log(ChatColor.YELLOW, "Dropped old table '" + tbl + "' (if it existed).");
             }
     
         } catch (SQLException e) {
-            javaPlugin.getLogger().severe("Failed to drop old tables: " + e.getMessage());
+            StaticUtils.log(ChatColor.RED, "Failed to drop old tables: " + e.getMessage());
         }
     }
 }

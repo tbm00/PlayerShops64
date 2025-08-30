@@ -6,11 +6,11 @@ import java.util.UUID;
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.ShopHandler;
 import dev.tbm00.papermc.playershops64.data.Shop;
+import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
+import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.Material;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class VisualTask extends BukkitRunnable {
@@ -20,54 +20,67 @@ public class VisualTask extends BukkitRunnable {
     public int tickCycle;
     public int viewDistance;
     public int focusDistance;
-    public float scale;
-    public static double OFFX = 0.0, OFFY = 0.0, OFFZ = 0.0;
 
-    // simple spin state (radians) per item display entity UUID — optional
-    // you can extend this to smoother interpolation if desired
-    // Map<UUID, Float> spinAngles = new HashMap<>();
     public VisualTask(PlayerShops64 javaPlugin, ShopHandler shopHandler) {
+        StaticUtils.log(ChatColor.YELLOW, "VisualTask starting initialization.");
         this.javaPlugin = javaPlugin;
         this.shopHandler = shopHandler;
         this.tickCycle = javaPlugin.configHandler.getDisplayTickCycle();
         this.viewDistance = javaPlugin.configHandler.getDisplayViewDistance();
         this.focusDistance = javaPlugin.configHandler.getDisplayFocusDistance();
-        this.scale = (float) javaPlugin.configHandler.getDisplayGlassScale();
+        StaticUtils.log(ChatColor.YELLOW, "VisualTask class initialized.");
     }
 
     @Override
     public void run() {
+        StaticUtils.log(ChatColor.YELLOW, "VisualTask.run(): start");
         Map<UUID, Shop> shops = shopHandler.getShopMap();
-        if (shops == null || shops.isEmpty()) return;
+        if (shops == null || shops.isEmpty()) {
+            StaticUtils.log(ChatColor.YELLOW, "VisualTask.run(): shop map empty");
+            return;
+        }
 
         for (Shop shop : shops.values()) {
             // Guards
-            if (shop == null || shop.getLocation() == null || shop.getWorld() == null) continue;
+            if (shop == null || shop.getLocation() == null || shop.getWorld() == null) {
+                StaticUtils.log(ChatColor.YELLOW, "VisualTask.run(): shop, location, or world is null");
+                continue;
+            }
             World world = shop.getWorld();
-            if (!world.isChunkLoaded(shop.getLocation().getBlockX() >> 4, shop.getLocation().getBlockZ() >> 4)) continue;
+            if (!world.isChunkLoaded(shop.getLocation().getBlockX() >> 4, shop.getLocation().getBlockZ() >> 4)) {
+                StaticUtils.log(ChatColor.YELLOW, "VisualTask.run(): EXIT - chunk not loaded");
+                continue;
+            }
 
             // Get/build display
             UUID id = shop.getUuid();
             ShopDisplay shopDisplay = shopHandler.getDisplayManager().getOrCreate(id, shop);
-            if (shopDisplay == null) continue;
+            if (shopDisplay == null) {
+                StaticUtils.log(ChatColor.YELLOW, "VisualTask.run(): EXIT - shopDisplay null");
+                continue;
+            }
 
             // Build text
             String text = shopHandler.formatShopText(shop);
 
             // Update entities
-            shopDisplay.update(world, text, scale, OFFX, OFFY, OFFZ);
+            shopDisplay.update(world, text);
 
             // Per-player show/hide
+            StaticUtils.log(ChatColor.YELLOW, "VisualTask.run().forEachPlayer(): ");
             for (Player player : javaPlugin.getServer().getOnlinePlayers()) {
                 if (!player.isOnline()) continue;
+                StaticUtils.log(ChatColor.YELLOW, "VisualTask.run().forEachPlayer(): "+player.getName());
 
                 boolean inRange = shopDisplay.shouldSee(player, viewDistance);
                 if (!inRange) {
-                    shopDisplay.hide(player, false);
+                    StaticUtils.log(ChatColor.YELLOW, "VisualTask.run().forEachPlayer(): "+player.getName()+" not in range -> hide");
+                    shopDisplay.hide(player, true);
                     continue;
                 }
                 boolean focused = shopHandler.isLookingAtShop(player, shop, focusDistance);
                 shopDisplay.show(player, focused);
+                StaticUtils.log(ChatColor.YELLOW, "VisualTask.run().forEachPlayer(): "+player.getName()+" in range -> show, focused: "+focused);
             }
         }
     }

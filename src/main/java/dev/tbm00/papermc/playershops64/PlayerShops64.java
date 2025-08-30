@@ -11,21 +11,17 @@ import dev.tbm00.papermc.playershops64.data.ConfigHandler;
 import dev.tbm00.papermc.playershops64.data.MySQLConnection;
 import dev.tbm00.papermc.playershops64.hook.VaultHook;
 import dev.tbm00.papermc.playershops64.listener.PlayerMovement;
-import dev.tbm00.papermc.playershops64.listener.ShopBlockListener;
+import dev.tbm00.papermc.playershops64.listener.ServerStartup;
+import dev.tbm00.papermc.playershops64.listener.ShopBaseBlock;
 
 public class PlayerShops64 extends JavaPlugin {
     public ConfigHandler configHandler;
     private MySQLConnection mysqlConnection;
     private VaultHook vaultHook;
-    private ShopHandler shopHandler;
+    public ShopHandler shopHandler;
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
-    }
-
-    @Override
-    public void onLoad() {
         saveDefaultConfig();
         final PluginDescriptionFile pdf = this.getDescription();
 
@@ -47,8 +43,9 @@ public class PlayerShops64 extends JavaPlugin {
             shopHandler = new ShopHandler(this, mysqlConnection, vaultHook);
 
             // Register Listeners
+            getServer().getPluginManager().registerEvents(new ServerStartup(this), this);
             getServer().getPluginManager().registerEvents(new PlayerMovement(), this);
-            getServer().getPluginManager().registerEvents(new ShopBlockListener(this), this);
+            getServer().getPluginManager().registerEvents(new ShopBaseBlock(this), this);
 
             // Register Commands
             getCommand("testshop").setExecutor(new ShopCmd(this));
@@ -65,7 +62,7 @@ public class PlayerShops64 extends JavaPlugin {
             mysqlConnection = new MySQLConnection(this);
             return true;
         } catch (Exception e) {
-            getLogger().severe("Failed to connect to MySQL. Disabling plugin.");
+            StaticUtils.log(ChatColor.RED, "Failed to connect to MySQL. Disabling plugin.");
             return false;
         }
     }
@@ -76,7 +73,7 @@ public class PlayerShops64 extends JavaPlugin {
      */
     private boolean setupHooks() {
         if (!setupVault()) {
-            getLogger().severe("Vault hook failed -- disabling plugin!");
+            StaticUtils.log(ChatColor.RED, "Vault hook failed -- disabling plugin!");
             return false;
         }
         return true;
@@ -115,6 +112,7 @@ public class PlayerShops64 extends JavaPlugin {
      * Disables the plugin.
      */
     private void disablePlugin() {
+        if (shopHandler!=null) shopHandler.shutdown();
         getServer().getPluginManager().disablePlugin(this);
     }
 

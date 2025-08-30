@@ -6,9 +6,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.bukkit.ChatColor;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
@@ -16,8 +19,10 @@ import dev.tbm00.papermc.playershops64.data.MySQLConnection;
 import dev.tbm00.papermc.playershops64.data.Shop;
 import dev.tbm00.papermc.playershops64.data.ShopDAO;
 import dev.tbm00.papermc.playershops64.display.DisplayManager;
+import dev.tbm00.papermc.playershops64.display.ShopDisplay;
 import dev.tbm00.papermc.playershops64.display.VisualTask;
 import dev.tbm00.papermc.playershops64.hook.VaultHook;
+import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ShopHandler {
     private final PlayerShops64 javaPlugin;
@@ -26,17 +31,53 @@ public class ShopHandler {
     private final DisplayManager displayManager;
     private final Map<UUID, Shop> shops = new LinkedHashMap<>(); 
 
-    // running task to show shop entities
     private VisualTask visualTask;
 
     public ShopHandler(PlayerShops64 javaPlugin, MySQLConnection db, VaultHook economy) {
+        StaticUtils.log(ChatColor.YELLOW, "ShopHandler starting initialization...");
         this.javaPlugin = javaPlugin;
         this.dao = new ShopDAO(db);
         this.economy = economy;
+        
         this.displayManager = new DisplayManager(javaPlugin);
         this.visualTask = new VisualTask(javaPlugin, this);
 
-        this.visualTask.runTaskTimer(javaPlugin, 20L, Math.max(1L, 10L));
+        this.visualTask.runTaskTimer(javaPlugin, 20L, Math.max(1L, javaPlugin.configHandler.getDisplayTickCycle()));
+        StaticUtils.log(ChatColor.YELLOW, "ShopHandler class initialized.");
+        loadShops();
+    }
+
+    public void loadShops() {
+        StaticUtils.log(ChatColor.YELLOW, "ShopHandler loading shops from DB...");
+        int loaded = 0, skippedNullShop = 0, skippedNullWorld = 0, skippedNullLoc = 0;
+
+        for (Shop shop : dao.getAllShops()) {
+            if (shop == null) {
+                skippedNullShop++;
+                StaticUtils.log(ChatColor.RED, "Skipping null shop");
+                continue;
+            }
+
+            if (shop.getWorld() == null) {
+                skippedNullWorld++;
+                StaticUtils.log(ChatColor.RED, "Skipping " + shop.getOwnerName() + "'s shop: " + shop.getUuid() + ", world is not loaded");
+                continue;
+            }
+            if (shop.getLocation() == null) {
+                skippedNullLoc++;
+                StaticUtils.log(ChatColor.RED, "Skipping " + shop.getOwnerName() + "'s shop: " + shop.getUuid() + ", location is null");
+                continue;
+            }
+
+            shops.put(shop.getUuid(), shop);
+            loaded++;
+        }
+
+
+        StaticUtils.log(ChatColor.GREEN, "Loaded " + loaded + " shops, " +
+                "\nskippedNullShop: " + skippedNullShop +
+                ", skippedNullWorld:" + skippedNullWorld +
+                ", skippedNullLocation: " + skippedNullLoc);
     }
 
     public void shutdown() {
@@ -59,16 +100,45 @@ public class ShopHandler {
         return shops.get(uuid);
     }
 
-    public void addOrUpdateShop(Shop shop) {
+    public void upsertShop(Shop shop) {
         if (shop == null || shop.getUuid() == null) {
             return;
         }
-        shops.put(shop.getUuid(), shop);
+
+        // run DB operations async
+        javaPlugin.getServer().getScheduler().runTaskAsynchronously(javaPlugin, () -> {
+            boolean ok = dao.upsertShop(shop);
+            if (!ok) {
+                StaticUtils.log(ChatColor.RED, "[PlayerShops64] DB upsert failed for shop " + shop.getUuid());
+                return;
+            }
+
+            // go back to main for memory + visuals
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> {
+                shops.put(shop.getUuid(), shop);
+
+                // instantly refresh this shop's display
+                ShopDisplay shopDisplay = displayManager.getOrCreate(shop.getUuid(), shop);
+                if (shopDisplay != null) shopDisplay.update(shop.getWorld(), formatShopText(shop));
+            });
+        });
     }
 
     public void removeShop(UUID uuid) {
-        shops.remove(uuid);
-        displayManager.delete(uuid);
+        // run DB operations async
+        javaPlugin.getServer().getScheduler().runTaskAsynchronously(javaPlugin, () -> {
+            boolean ok = dao.deleteShop(uuid);
+            if (!ok) {
+                StaticUtils.log(ChatColor.RED, "[PlayerShops64] DB delete failed for shop " + uuid);
+                return;
+            }
+
+            // go back to main for memory + visuals
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> {
+                shops.remove(uuid);
+                displayManager.delete(uuid);
+            });
+        });
     }
 
     public String formatShopText(Shop shop) {
@@ -79,8 +149,15 @@ public class ShopHandler {
         String stock = (shop.getItemStock()==-1) ? "infinite" : shop.getItemStock() + "";
         String balance = (shop.getMoneyStock()==null) ? "null" : (shop.getMoneyStock().compareTo(BigDecimal.valueOf(-1.0))==0) ? "infinite" : shop.getMoneyStock().toPlainString();
         String owner = (shop.getOwnerName()==null) ? "null" : shop.getOwnerName();
+        String lore0 = "";
+        try {
+            ItemMeta meta = shop.getItemStack().getItemMeta();
+            if (meta.hasLore() && meta.getLore()!=null && !meta.getLore().isEmpty()) {
+                lore0 = String.valueOf(meta.getLore().get(0));
+            }
+        } catch (Exception e) {e.printStackTrace();}
         return item + " x " + stackSize
-                    + "\n" + shop.getItemStack().getItemMeta().getLore().get(0)
+                    + "\n" + lore0
                     + "\nBuy for $" + buy
                     + "\nSell for $" + sell
                     + "\nStock: " + stock + ", Balance: " + balance
@@ -106,5 +183,18 @@ public class ShopHandler {
         return Math.abs(hit.getX() - shopLoc.getX()) <= aabb &&
                Math.abs(hit.getY() - shopLoc.getY()) <= aabb &&
                Math.abs(hit.getZ() - shopLoc.getZ()) <= aabb;
+    }
+
+    public boolean hasShopAtBlock(Location blockLocation) {
+        if (blockLocation == null) return false;
+        World world = blockLocation.getWorld();
+        int bx = blockLocation.getBlockX(), by = blockLocation.getBlockY(), bz = blockLocation.getBlockZ();
+        for (Shop shop : shops.values()) {
+            if (shop.getWorld() == null || shop.getLocation() == null) continue;
+            if (!shop.getWorld().equals(world)) continue;
+            Location shopLocation = shop.getLocation();
+            if (shopLocation.getBlockX() == bx && shopLocation.getBlockY() == by && shopLocation.getBlockZ() == bz) return true;
+        }
+        return false;
     }
 }

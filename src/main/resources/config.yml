@@ -28,4 +28,5 @@ display:
   view-distance: 16
   focus-distance: 5
   glass-scale: 1.0
-  line-bg: "60,0,0,0" # ARGB(%,R,G,B)
+  item-scale: 1.0
+  holo-color: "60,0,0,0" # ARGB(%,R,G,B)

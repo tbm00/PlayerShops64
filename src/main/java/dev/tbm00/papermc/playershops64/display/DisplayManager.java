@@ -4,17 +4,21 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.Shop;
+import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class DisplayManager {
     private final PlayerShops64 javaPlugin;
     private final Map<UUID, ShopDisplay> displays = new ConcurrentHashMap<>();
 
     public DisplayManager(PlayerShops64 javaPlugin) {
+        StaticUtils.log(ChatColor.YELLOW, "DisplayManager starting initialization.");
         this.javaPlugin = javaPlugin;
+        StaticUtils.log(ChatColor.YELLOW, "DisplayManager class initialized.");
     }
 
     public ShopDisplay getOrCreate(UUID shopId, Shop shop) {

@@ -7,7 +7,6 @@ import java.util.ArrayList;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -72,7 +71,7 @@ public class ShopCmd implements TabExecutor {
         ItemStack lectern = new ItemStack(Material.LECTERN);
         ItemMeta meta = lectern.getItemMeta();
 
-        meta.getPersistentDataContainer().set(new NamespacedKey(javaPlugin, "base-shop-block"), PersistentDataType.STRING, "true");
+        meta.getPersistentDataContainer().set(StaticUtils.SHOP_BASE_PDC_KEY, PersistentDataType.STRING, "true");
         meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aPlayerShop"));
 
         lectern.setItemMeta(meta);

@@ -8,7 +8,6 @@ import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 
 public class VaultHook {
-
     public Economy pl;
     
     public VaultHook(PlayerShops64 javaPlugin) {

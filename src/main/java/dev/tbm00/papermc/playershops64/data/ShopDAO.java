@@ -4,11 +4,13 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 
 import dev.tbm00.papermc.playershops64.utils.ItemSerializer;
+import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ShopDAO {
     private final MySQLConnection mySQL;
@@ -17,25 +19,80 @@ public class ShopDAO {
         this.mySQL = mySQL;
     }
 
+    public List<Shop> getAllShops() {
+        final String sql = "SELECT * FROM playershops64_shops";
+        List<Shop> out = new ArrayList<>();
+        try (Connection conn = mySQL.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                try {
+                    Shop s = mapResultSetToShop(rs);
+                    out.add(s);
+                } catch (Exception ex) {
+                    StaticUtils.log(ChatColor.RED, "Failed to map shop row: " + ex.getMessage());
+                }
+            }
+        } catch (SQLException e) {
+            StaticUtils.log(ChatColor.RED, "Failed to fetch all shops: " + e.getMessage());
+        }
+        return out;
+    }
+
     /**
-     * Inserts a new shop into the database.
+     * Retrieves a shop by UUID.
      */
-    public boolean createShop(Shop shop) {
+    public Shop getShop(UUID uuid) {
+        final String sql = "SELECT * FROM playershops64_shops WHERE uuid = ?";
+        try (Connection conn = mySQL.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, uuid.toString());
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return mapResultSetToShop(rs);
+            }
+        } catch (SQLException e) {
+            StaticUtils.log(ChatColor.RED, "Failed to fetch shop: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Adds or updates a shop.
+     */
+    public boolean upsertShop(Shop shop) {
         if (shop.getWorld()==null) {
-            Bukkit.getLogger().severe(shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") world is unloaded/null, so the shop was not inserted in SQL!");
+            StaticUtils.log(ChatColor.RED, shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") world is unloaded/null, so the shop was not upserted in SQL!");
             return false;
         } else if (shop.getLocation()==null) {
-            Bukkit.getLogger().severe(shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") location is null, so the shop was not inserted in SQL!");
+            StaticUtils.log(ChatColor.RED, shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") location is null, so the shop was not upserted in SQL!");
             return false;
         }
 
-        final String sql = "INSERT INTO playershops64_shops "
-            + "(uuid, owner_uuid, owner_name, world, location, itemstack_b64, stack_size, "
-            + "item_stock, money_stock, buy_price, sell_price, last_tx, inf_money, inf_stock) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        final String sql = "INSERT INTO playershops64_shops " +
+            "(uuid, owner_uuid, owner_name, world, location, itemstack_b64, stack_size, " +
+            " item_stock, money_stock, buy_price, sell_price, last_tx, inf_money, inf_stock) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+            "ON DUPLICATE KEY UPDATE " +
+            " owner_uuid=VALUES(owner_uuid), " +
+            " owner_name=VALUES(owner_name), " +
+            " world=VALUES(world), " +
+            " location=VALUES(location), " +
+            " itemstack_b64=VALUES(itemstack_b64), " +
+            " stack_size=VALUES(stack_size), " +
+            " item_stock=VALUES(item_stock), " +
+            " money_stock=VALUES(money_stock), " +
+            " buy_price=VALUES(buy_price), " +
+            " sell_price=VALUES(sell_price), " +
+            " last_tx=VALUES(last_tx), " +
+            " inf_money=VALUES(inf_money), " +
+            " inf_stock=VALUES(inf_stock)";
 
         try (Connection conn = mySQL.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, shop.getUuid().toString());
             ps.setString(2, shop.getOwnerUuid().toString());
@@ -55,70 +112,7 @@ public class ShopDAO {
             ps.executeUpdate();
             return true;
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to insert shop: " + e.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Retrieves a shop by UUID.
-     */
-    public Shop getShop(UUID uuid) {
-        final String sql = "SELECT * FROM playershops64_shops WHERE uuid = ?";
-        try (Connection conn = mySQL.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, uuid.toString());
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return mapResultSetToShop(rs);
-            }
-        } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to fetch shop: " + e.getMessage());
-        }
-        return null;
-    }
-
-    /**
-     * Updates an existing shop.
-     */
-    public boolean updateShop(Shop shop) {
-        if (shop.getWorld()==null) {
-            Bukkit.getLogger().severe(shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") world is unloaded/null, so the shop was not updated in SQL!");
-            return false;
-        } else if (shop.getLocation()==null) {
-            Bukkit.getLogger().severe(shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") location is null, so the shop was not updated in SQL!");
-            return false;
-        }
-
-        final String sql = "UPDATE playershops64_shops SET "
-            + "owner_uuid=?, owner_name=?, world=?, location=?, itemstack_b64=?, stack_size=?, "
-            + "item_stock=?, money_stock=?, buy_price=?, sell_price=?, last_tx=?, inf_money=?, inf_stock=? "
-            + "WHERE uuid=?";
-
-        try (Connection conn = mySQL.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, shop.getOwnerUuid().toString());
-            ps.setString(2, shop.getOwnerName());
-            ps.setString(3, shop.getWorld().getName());
-            ps.setString(4, serializeLocation(shop.getLocation()));
-            ps.setString(5, ItemSerializer.itemStackToBase64(shop.getItemStack()));
-            ps.setInt(6, shop.getStackSize());
-            ps.setInt(7, shop.getItemStock());
-            ps.setBigDecimal(8, shop.getMoneyStock());
-            bindBigDecimalOrNull(ps, 9, shop.getBuyPrice());
-            bindBigDecimalOrNull(ps, 10, shop.getSellPrice());
-            bindTimestampOrNull(ps, 11, shop.getLastTransactionDate());
-            ps.setBoolean(12, shop.getInfiniteMoney());
-            ps.setBoolean(13, shop.getInfiniteStock());
-            ps.setString(14, shop.getUuid().toString());
-
-            ps.executeUpdate();
-            return true;
-        } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to update shop: " + e.getMessage());
+            StaticUtils.log(ChatColor.RED, "Failed to upsert shop: " + e.getMessage());
             return false;
         }
     }
@@ -134,7 +128,7 @@ public class ShopDAO {
             ps.executeUpdate();
             return true;
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to delete shop: " + e.getMessage());
+            StaticUtils.log(ChatColor.RED, "Failed to delete shop: " + e.getMessage());
             return false;
         }
     }
@@ -200,4 +194,90 @@ public class ShopDAO {
         if (v == null) ps.setNull(idx, Types.DECIMAL); 
         else ps.setBigDecimal(idx, v);
     }
+
+    /**
+     * Inserts a new shop into the database.
+     */
+    /*public boolean createShop(Shop shop) {
+        if (shop.getWorld()==null) {
+            StaticUtils.log(ChatColor.RED, shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") world is unloaded/null, so the shop was not inserted in SQL!");
+            return false;
+        } else if (shop.getLocation()==null) {
+            StaticUtils.log(ChatColor.RED, shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") location is null, so the shop was not inserted in SQL!");
+            return false;
+        }
+
+        final String sql = "INSERT INTO playershops64_shops "
+            + "(uuid, owner_uuid, owner_name, world, location, itemstack_b64, stack_size, "
+            + "item_stock, money_stock, buy_price, sell_price, last_tx, inf_money, inf_stock) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = mySQL.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, shop.getUuid().toString());
+            ps.setString(2, shop.getOwnerUuid().toString());
+            ps.setString(3, shop.getOwnerName());
+            ps.setString(4, shop.getWorld().getName());
+            ps.setString(5, serializeLocation(shop.getLocation()));
+            ps.setString(6, ItemSerializer.itemStackToBase64(shop.getItemStack()));
+            ps.setInt(7, shop.getStackSize());
+            ps.setInt(8, shop.getItemStock());
+            ps.setBigDecimal(9, shop.getMoneyStock());
+            bindBigDecimalOrNull(ps, 10, shop.getBuyPrice());
+            bindBigDecimalOrNull(ps, 11, shop.getSellPrice());
+            bindTimestampOrNull(ps, 12, shop.getLastTransactionDate());
+            ps.setBoolean(13, shop.getInfiniteMoney());
+            ps.setBoolean(14, shop.getInfiniteStock());
+
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            StaticUtils.log(ChatColor.RED, "Failed to insert shop: " + e.getMessage());
+            return false;
+        }
+    }*/
+
+    /**
+     * Updates an existing shop.
+     */
+    /*public boolean updateShop(Shop shop) {
+        if (shop.getWorld()==null) {
+            StaticUtils.log(ChatColor.RED, shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") world is unloaded/null, so the shop was not updated in SQL!");
+            return false;
+        } else if (shop.getLocation()==null) {
+            StaticUtils.log(ChatColor.RED, shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") location is null, so the shop was not updated in SQL!");
+            return false;
+        }
+
+        final String sql = "UPDATE playershops64_shops SET "
+            + "owner_uuid=?, owner_name=?, world=?, location=?, itemstack_b64=?, stack_size=?, "
+            + "item_stock=?, money_stock=?, buy_price=?, sell_price=?, last_tx=?, inf_money=?, inf_stock=? "
+            + "WHERE uuid=?";
+
+        try (Connection conn = mySQL.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, shop.getOwnerUuid().toString());
+            ps.setString(2, shop.getOwnerName());
+            ps.setString(3, shop.getWorld().getName());
+            ps.setString(4, serializeLocation(shop.getLocation()));
+            ps.setString(5, ItemSerializer.itemStackToBase64(shop.getItemStack()));
+            ps.setInt(6, shop.getStackSize());
+            ps.setInt(7, shop.getItemStock());
+            ps.setBigDecimal(8, shop.getMoneyStock());
+            bindBigDecimalOrNull(ps, 9, shop.getBuyPrice());
+            bindBigDecimalOrNull(ps, 10, shop.getSellPrice());
+            bindTimestampOrNull(ps, 11, shop.getLastTransactionDate());
+            ps.setBoolean(12, shop.getInfiniteMoney());
+            ps.setBoolean(13, shop.getInfiniteStock());
+            ps.setString(14, shop.getUuid().toString());
+
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            StaticUtils.log(ChatColor.RED, "Failed to update shop: " + e.getMessage());
+            return false;
+        }
+    }*/
 }

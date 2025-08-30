@@ -13,6 +13,7 @@ import org.bukkit.GameMode;
 import org.bukkit.World;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.HumanEntity;
@@ -29,6 +30,9 @@ public class StaticUtils {
     
     public static final String PLAYER_PERM = "playershops64.player";
     public static final String ADMIN_PERM = "playershops64.admin";
+
+    public static final NamespacedKey DISPLAY_ENTITY_PDC_KEY = new NamespacedKey(javaPlugin, "display-entity");
+    public static final NamespacedKey SHOP_BASE_PDC_KEY = new NamespacedKey(javaPlugin, "shop-base");
 
     public static void init(PlayerShops64 javaPlugin) {
         StaticUtils.javaPlugin = javaPlugin;
