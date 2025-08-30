@@ -39,17 +39,15 @@ public class PlayerShops64 extends JavaPlugin {
 
             if (!setupHooks()) disablePlugin();
 
-            if (configHandler.isFeatureEnabled()) {
-                shopHandler = new ShopHandler(this, mysqlConnection, vaultHook);
+            shopHandler = new ShopHandler(this, configHandler, mysqlConnection, vaultHook);
 
-                // Register Listeners
-                getServer().getPluginManager().registerEvents(new PlayerMovement(), this);
-                getServer().getPluginManager().registerEvents(new ShopBlockListener(this), this);
+            // Register Listeners
+            getServer().getPluginManager().registerEvents(new PlayerMovement(), this);
+            getServer().getPluginManager().registerEvents(new ShopBlockListener(this), this);
 
-                // Register Commands
-                getCommand("testshop").setExecutor(new ShopCmd(this, configHandler));
-                getCommand("testshopadmin").setExecutor(new AdminCmd());
-            }
+            // Register Commands
+            getCommand("testshop").setExecutor(new ShopCmd(this, configHandler));
+            getCommand("testshopadmin").setExecutor(new AdminCmd());
         }
     }
 

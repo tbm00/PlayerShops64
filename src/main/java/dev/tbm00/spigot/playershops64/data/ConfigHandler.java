@@ -6,8 +6,14 @@ import dev.tbm00.spigot.playershops64.PlayerShops64;
 
 public class ConfigHandler {
     private final PlayerShops64 javaPlugin;
+
     private String chatPrefix;
-    private boolean featureEnabled = false;
+
+    private int displayTickCycle = 5;
+    private int displayViewDistance = 16;
+    private int displayFocusDistance = 5;
+    private double displayGlassScale = 1.0;
+    private String displayLineBg = "60,0,0,0";
 
     /**
      * Constructs a ConfigHandler instance.
@@ -19,7 +25,7 @@ public class ConfigHandler {
         this.javaPlugin = javaPlugin;
         try {
             loadLanguageSection();
-            loadFeatureSection();
+            loadDisplaySection();
         } catch (Exception e) {
             javaPlugin.getLogger().warning("Caught exception loading config: " + e.getMessage());
         }
@@ -35,20 +41,44 @@ public class ConfigHandler {
     }
 
     /**
-     * Loads the "feature" section of the configuration.
+     * Loads the "display" section of the configuration.
      */
-    private void loadFeatureSection() {
-        ConfigurationSection section = javaPlugin.getConfig().getConfigurationSection("feature");
-        if (section!=null) {
-            featureEnabled = section.contains("enabled") ? section.getBoolean("enabled") : false;
+    private void loadDisplaySection() {
+        ConfigurationSection section = javaPlugin.getConfig().getConfigurationSection("display");
+        if (section != null) {
+            displayTickCycle = section.getInt("tick-cycle", 5);
+            displayViewDistance = section.getInt("view-distance", 16);
+            displayFocusDistance = section.getInt("focus-distance", 5);
+            displayGlassScale = section.getDouble("glass-scale", 1.0);
+            displayLineBg = section.getString("line-bg", "60,0,0,0");
         }
     }
 
+    // Language
     public String getChatPrefix() {
         return chatPrefix;
     }
 
-    public boolean isFeatureEnabled() {
-        return featureEnabled;
+    // Display
+    public int getDisplayTickCycle() {
+        return displayTickCycle;
     }
+
+    public int getDisplayViewDistance() {
+        return displayViewDistance;
+    }
+
+    public int getDisplayFocusDistance() {
+        return displayFocusDistance;
+    }
+
+
+    public double getDisplayGlassScale() {
+        return displayGlassScale;
+    }
+
+    public String getDisplayLineBg() {
+        return displayLineBg;
+    }
+
 }
