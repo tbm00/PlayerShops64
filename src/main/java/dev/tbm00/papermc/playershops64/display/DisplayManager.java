@@ -14,12 +14,12 @@ public class DisplayManager {
     private final Map<UUID, ShopDisplay> displays = new ConcurrentHashMap<>();
 
     public DisplayManager(PlayerShops64 javaPlugin) {
-        this.plugin = plugin;
+        this.javaPlugin = javaPlugin;
     }
 
     public ShopDisplay getOrCreate(UUID shopId, Shop shop) {
         if (shopId == null || shop == null) return null;
-        return displays.computeIfAbsent(shopId, id -> new ShopDisplay(plugin, shop));
+        return displays.computeIfAbsent(shopId, id -> new ShopDisplay(javaPlugin, shop));
     }
 
     public ShopDisplay get(UUID shopId) {
