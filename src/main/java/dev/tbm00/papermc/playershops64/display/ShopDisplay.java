@@ -73,8 +73,8 @@ public class ShopDisplay {
         if (itemDisplay == null || !itemDisplay.isValid() || itemDisplay.isDead()) {
             // Remove any stray PS64 item display nearby
             for (ItemDisplay nearby : world.getNearbyEntitiesByType(ItemDisplay.class, loc, 1.0)) {
-                if (!nearby.getPersistentDataContainer().has(StaticUtils.DISPLAY_ENTITY_PDC_KEY, PersistentDataType.STRING)) continue;
-                if (!"item".equals(nearby.getPersistentDataContainer().get(StaticUtils.DISPLAY_ENTITY_PDC_KEY, PersistentDataType.STRING))) continue;
+                if (!nearby.getPersistentDataContainer().has(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING)) continue;
+                if (!"item".equals(nearby.getPersistentDataContainer().get(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING))) continue;
                 nearby.remove();
                 tracked.remove(nearby.getUniqueId());
             }
@@ -85,7 +85,7 @@ public class ShopDisplay {
                 ent.setNoPhysics(true);
                 ent.setViewRange(0.2f);
                 ent.setTransformationMatrix(new Matrix4f().scale(itemScale));
-                ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_ENTITY_PDC_KEY, PersistentDataType.STRING, "item");
+                ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "item");
                 if (!tracked.contains(ent.getUniqueId())) tracked.add(ent.getUniqueId());
             });
         } else {
@@ -100,8 +100,8 @@ public class ShopDisplay {
 
         if (glassDisplay == null || !glassDisplay.isValid() || glassDisplay.isDead()) {
             for (ItemDisplay nearby : world.getNearbyEntitiesByType(ItemDisplay.class, loc, 1.0)) {
-                if (!nearby.getPersistentDataContainer().has(StaticUtils.DISPLAY_ENTITY_PDC_KEY, PersistentDataType.STRING)) continue;
-                if (!"glass".equals(nearby.getPersistentDataContainer().get(StaticUtils.DISPLAY_ENTITY_PDC_KEY, PersistentDataType.STRING))) continue;
+                if (!nearby.getPersistentDataContainer().has(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING)) continue;
+                if (!"glass".equals(nearby.getPersistentDataContainer().get(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING))) continue;
                 nearby.remove();
                 tracked.remove(nearby.getUniqueId());
             }
@@ -112,7 +112,7 @@ public class ShopDisplay {
                 ent.setNoPhysics(true);
                 ent.setViewRange(0.2f);
                 ent.setTransformationMatrix(new Matrix4f().scale(glassScale));
-                ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_ENTITY_PDC_KEY, PersistentDataType.STRING, "glass");
+                ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "glass");
                 if (!tracked.contains(ent.getUniqueId())) tracked.add(ent.getUniqueId());
             });
         } else {
@@ -125,8 +125,8 @@ public class ShopDisplay {
 
         if (textDisplay == null || !textDisplay.isValid() || textDisplay.isDead()) {
             for (TextDisplay nearby : world.getNearbyEntitiesByType(TextDisplay.class, loc, 1.0)) {
-                if (!nearby.getPersistentDataContainer().has(StaticUtils.DISPLAY_ENTITY_PDC_KEY, PersistentDataType.STRING)) continue;
-                if (!"line".equals(nearby.getPersistentDataContainer().get(StaticUtils.DISPLAY_ENTITY_PDC_KEY, PersistentDataType.STRING))) continue;
+                if (!nearby.getPersistentDataContainer().has(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING)) continue;
+                if (!"line".equals(nearby.getPersistentDataContainer().get(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING))) continue;
                 nearby.remove();
                 tracked.remove(nearby.getUniqueId());
             }
@@ -140,7 +140,7 @@ public class ShopDisplay {
                 ent.setNoPhysics(true);
                 ent.setGravity(false);
                 ent.setViewRange(0.2f);
-                ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_ENTITY_PDC_KEY, PersistentDataType.STRING, "line");
+                ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "line");
                 if (!tracked.contains(ent.getUniqueId())) tracked.add(ent.getUniqueId());
             });
         }

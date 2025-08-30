@@ -71,7 +71,7 @@ public class ShopCmd implements TabExecutor {
         ItemStack lectern = new ItemStack(Material.LECTERN);
         ItemMeta meta = lectern.getItemMeta();
 
-        meta.getPersistentDataContainer().set(StaticUtils.SHOP_BASE_PDC_KEY, PersistentDataType.STRING, "true");
+        meta.getPersistentDataContainer().set(StaticUtils.SHOP_KEY, PersistentDataType.STRING, "true");
         meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aPlayerShop"));
 
         lectern.setItemMeta(meta);

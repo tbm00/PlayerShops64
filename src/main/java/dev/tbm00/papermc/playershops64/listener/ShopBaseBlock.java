@@ -1,8 +1,10 @@
 package dev.tbm00.papermc.playershops64.listener;
 
 import java.math.BigDecimal;
+//import java.util.UUID;
 import java.util.UUID;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -43,7 +45,7 @@ public class ShopBaseBlock implements Listener {
 
         // Verify held item has base block PDC key
         PersistentDataContainer itemDataContainer = heldItemMeta.getPersistentDataContainer();
-        if (!itemDataContainer.has(StaticUtils.SHOP_BASE_PDC_KEY, PersistentDataType.STRING)) return;
+        if (!itemDataContainer.has(StaticUtils.SHOP_KEY, PersistentDataType.STRING)) return;
         
         // Prevent duplicate shops at tsame location
         Location location = block.getLocation();
@@ -56,34 +58,38 @@ public class ShopBaseBlock implements Listener {
         // Apply PDC key to new block's tileState
         BlockState blockState = block.getState();
         if (blockState instanceof TileState tileState) {
-            tileState.getPersistentDataContainer().set(StaticUtils.SHOP_BASE_PDC_KEY, PersistentDataType.STRING, "true");
+            tileState.getPersistentDataContainer().set(StaticUtils.SHOP_KEY, PersistentDataType.STRING, "true");
             tileState.update(true, false); // apply to world
         }
 
         Player owner = event.getPlayer();
         World world = block.getWorld();
 
+
         Shop shop = new Shop(UUID.randomUUID(),
-                            (UUID) owner.getUniqueId(),
+                            owner.getUniqueId(),
                             owner.getName(),
                             world,
                             location,
                             null,
                             1,
                             0,
-                            0,
-                            100,
-                            50,
+                            BigDecimal.ZERO,
+                            BigDecimal.valueOf(100.0),
+                            BigDecimal.valueOf(50.0),
                             null,
                             false,
                             false);
-        
+
+        javaPlugin.shopHandler.upsertShop(shop);
+        StaticUtils.sendMessage(owner, "&aCreated a new PlayerShop! Click to manage it, or sneak-left-click to start selling your held item");
+        StaticUtils.log(ChatColor.GOLD, owner.getName() + " created a shop " + shop.getUuid() + " in " + world.getName()+ " @ " + block.getX() + "," + block.getY() + "," + block.getZ());
     }
 
     private boolean isProtected(Block b) {
         BlockState blockState = b.getState();
         if (!(blockState instanceof TileState tileState)) return false;
-        return tileState.getPersistentDataContainer().has(StaticUtils.SHOP_BASE_PDC_KEY, PersistentDataType.STRING);
+        return tileState.getPersistentDataContainer().has(StaticUtils.SHOP_KEY, PersistentDataType.STRING);
     }
 
     @EventHandler(ignoreCancelled = true)

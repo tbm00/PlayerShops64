@@ -31,11 +31,13 @@ public class StaticUtils {
     public static final String PLAYER_PERM = "playershops64.player";
     public static final String ADMIN_PERM = "playershops64.admin";
 
-    public static final NamespacedKey DISPLAY_ENTITY_PDC_KEY = new NamespacedKey(javaPlugin, "display-entity");
-    public static final NamespacedKey SHOP_BASE_PDC_KEY = new NamespacedKey(javaPlugin, "shop-base");
+    public static NamespacedKey DISPLAY_KEY;
+    public static NamespacedKey SHOP_KEY;
 
     public static void init(PlayerShops64 javaPlugin) {
         StaticUtils.javaPlugin = javaPlugin;
+        SHOP_KEY = new NamespacedKey(javaPlugin, "shop-base");
+        DISPLAY_KEY = new NamespacedKey(javaPlugin, "display-entity");
     }
 
     /**

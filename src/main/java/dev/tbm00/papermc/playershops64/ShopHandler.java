@@ -109,8 +109,10 @@ public class ShopHandler {
         javaPlugin.getServer().getScheduler().runTaskAsynchronously(javaPlugin, () -> {
             boolean ok = dao.upsertShop(shop);
             if (!ok) {
-                StaticUtils.log(ChatColor.RED, "[PlayerShops64] DB upsert failed for shop " + shop.getUuid());
+                StaticUtils.log(ChatColor.RED, "DB upsert failed for shop " + shop.getUuid());
                 return;
+            } else {
+                StaticUtils.log(ChatColor.GREEN, "DB upsert passed for shop " + shop.getUuid());
             }
 
             // go back to main for memory + visuals
@@ -129,7 +131,7 @@ public class ShopHandler {
         javaPlugin.getServer().getScheduler().runTaskAsynchronously(javaPlugin, () -> {
             boolean ok = dao.deleteShop(uuid);
             if (!ok) {
-                StaticUtils.log(ChatColor.RED, "[PlayerShops64] DB delete failed for shop " + uuid);
+                StaticUtils.log(ChatColor.RED, "DB delete failed for shop " + uuid);
                 return;
             }
 
