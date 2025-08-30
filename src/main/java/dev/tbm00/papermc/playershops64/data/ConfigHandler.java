@@ -1,8 +1,8 @@
-package dev.tbm00.spigot.playershops64.data;
+package dev.tbm00.papermc.playershops64.data;
 
 import org.bukkit.configuration.ConfigurationSection;
 
-import dev.tbm00.spigot.playershops64.PlayerShops64;
+import dev.tbm00.papermc.playershops64.PlayerShops64;
 
 public class ConfigHandler {
     private final PlayerShops64 javaPlugin;

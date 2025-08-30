@@ -1,12 +1,12 @@
 # PlayerShops64
-A spigot plugin that adds user-friendly, but powerful player shops.
+A paper plugin that adds user-friendly, but powerful player shops.
 
 Created by tbm00 for play.mc64.wtf.
 
 
 ## Dependencies
 - **Java 17+**: REQUIRED
-- **Spigot 1.18.1+**: UNTESTED ON OLDER VERSIONS
+- **Paper 1.21.4+**: UNTESTED ON OLDER VERSIONS
 - **Vault**: REQUIRED
 
 #### Player Commands

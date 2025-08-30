@@ -1,10 +1,10 @@
-package dev.tbm00.spigot.playershops64.listener;
+package dev.tbm00.papermc.playershops64.listener;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
-import dev.tbm00.spigot.playershops64.utils.StaticUtils;
+import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class PlayerMovement implements Listener {
 

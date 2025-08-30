@@ -1,6 +1,6 @@
 
 
-package dev.tbm00.spigot.playershops64.command;
+package dev.tbm00.papermc.playershops64.command;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -17,17 +17,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import dev.tbm00.spigot.playershops64.PlayerShops64;
-import dev.tbm00.spigot.playershops64.data.ConfigHandler;
-import dev.tbm00.spigot.playershops64.utils.*;
+import dev.tbm00.papermc.playershops64.PlayerShops64;
+import dev.tbm00.papermc.playershops64.utils.*;
 
 public class ShopCmd implements TabExecutor {
     private final PlayerShops64 javaPlugin;
-    private final ConfigHandler configHandler;
 
-    public ShopCmd(PlayerShops64 javaPlugin, ConfigHandler configHandler) {
+    public ShopCmd(PlayerShops64 javaPlugin) {
         this.javaPlugin = javaPlugin;
-        this.configHandler = configHandler;
     }
 
     /**

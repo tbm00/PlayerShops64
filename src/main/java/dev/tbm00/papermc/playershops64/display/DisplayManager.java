@@ -1,4 +1,4 @@
-package dev.tbm00.spigot.playershops64.display;
+package dev.tbm00.papermc.playershops64.display;
 
 import java.util.Map;
 import java.util.UUID;
@@ -6,14 +6,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.entity.Player;
 
-import dev.tbm00.spigot.playershops64.PlayerShops64;
-import dev.tbm00.spigot.playershops64.data.Shop;
+import dev.tbm00.papermc.playershops64.PlayerShops64;
+import dev.tbm00.papermc.playershops64.data.Shop;
 
 public class DisplayManager {
-    private final PlayerShops64 plugin;
+    private final PlayerShops64 javaPlugin;
     private final Map<UUID, ShopDisplay> displays = new ConcurrentHashMap<>();
 
-    public DisplayManager(PlayerShops64 plugin) {
+    public DisplayManager(PlayerShops64 javaPlugin) {
         this.plugin = plugin;
     }
 

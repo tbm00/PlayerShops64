@@ -2,8 +2,8 @@ name: PlayerShops64
 version: ${project.version}
 description: ${project.description}
 author: tbm00
-main: dev.tbm00.spigot.playershops64.PlayerShops64
-api-version: 1.17
+main: dev.tbm00.papermc.playershops64.PlayerShops64
+api-version: 1.21.4
 depend: [Vault]
 commands:
   testshop:

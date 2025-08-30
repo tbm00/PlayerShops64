@@ -1,4 +1,4 @@
-package dev.tbm00.spigot.playershops64.listener;
+package dev.tbm00.papermc.playershops64.listener;
 
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -16,7 +16,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-import dev.tbm00.spigot.playershops64.PlayerShops64;
+import dev.tbm00.papermc.playershops64.PlayerShops64;
 
 public class ShopBlockListener implements Listener {
 

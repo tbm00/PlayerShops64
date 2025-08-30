@@ -1,4 +1,4 @@
-package dev.tbm00.spigot.playershops64.data;
+package dev.tbm00.papermc.playershops64.data;
 
 import java.sql.Connection;
 import java.sql.SQLException;

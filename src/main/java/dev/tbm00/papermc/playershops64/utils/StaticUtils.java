@@ -1,4 +1,4 @@
-package dev.tbm00.spigot.playershops64.utils;
+package dev.tbm00.papermc.playershops64.utils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -21,20 +21,17 @@ import org.bukkit.inventory.ItemStack;
 
 import net.md_5.bungee.api.chat.TextComponent;
 
-import dev.tbm00.spigot.playershops64.PlayerShops64;
-import dev.tbm00.spigot.playershops64.data.ConfigHandler;
+import dev.tbm00.papermc.playershops64.PlayerShops64;
 
 public class StaticUtils {
     private static PlayerShops64 javaPlugin;
-    private static ConfigHandler configHandler;
     public static final List<String> pendingTeleports = new CopyOnWriteArrayList<>();
     
     public static final String PLAYER_PERM = "playershops64.player";
     public static final String ADMIN_PERM = "playershops64.admin";
 
-    public static void init(PlayerShops64 javaPlugin, ConfigHandler configHandler) {
+    public static void init(PlayerShops64 javaPlugin) {
         StaticUtils.javaPlugin = javaPlugin;
-        StaticUtils.configHandler = configHandler;
     }
 
     /**
@@ -124,7 +121,7 @@ public class StaticUtils {
      */
     public static void sendMessage(CommandSender target, String string) {
         if (!string.isBlank())
-            target.spigot().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', configHandler.getChatPrefix() + string)));
+            target.spigot().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', javaPlugin.configHandler.getChatPrefix() + string)));
     }
 
     /**

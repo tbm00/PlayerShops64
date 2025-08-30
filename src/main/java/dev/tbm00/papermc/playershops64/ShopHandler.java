@@ -1,4 +1,4 @@
-package dev.tbm00.spigot.playershops64;
+package dev.tbm00.papermc.playershops64;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -12,17 +12,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
-import dev.tbm00.spigot.playershops64.data.ConfigHandler;
-import dev.tbm00.spigot.playershops64.data.MySQLConnection;
-import dev.tbm00.spigot.playershops64.data.Shop;
-import dev.tbm00.spigot.playershops64.data.ShopDAO;
-import dev.tbm00.spigot.playershops64.display.DisplayManager;
-import dev.tbm00.spigot.playershops64.display.VisualTask;
-import dev.tbm00.spigot.playershops64.hook.VaultHook;
+import dev.tbm00.papermc.playershops64.data.MySQLConnection;
+import dev.tbm00.papermc.playershops64.data.Shop;
+import dev.tbm00.papermc.playershops64.data.ShopDAO;
+import dev.tbm00.papermc.playershops64.display.DisplayManager;
+import dev.tbm00.papermc.playershops64.display.VisualTask;
+import dev.tbm00.papermc.playershops64.hook.VaultHook;
 
 public class ShopHandler {
     private final PlayerShops64 javaPlugin;
-    public final ConfigHandler configHandler;
     private final ShopDAO dao;
     private final VaultHook economy;
     private final DisplayManager displayManager;
@@ -31,9 +29,8 @@ public class ShopHandler {
     // running task to show shop entities
     private VisualTask visualTask;
 
-    public ShopHandler(PlayerShops64 javaPlugin, ConfigHandler configHandler, MySQLConnection db, VaultHook economy) {
+    public ShopHandler(PlayerShops64 javaPlugin, MySQLConnection db, VaultHook economy) {
         this.javaPlugin = javaPlugin;
-        this.configHandler = configHandler;
         this.dao = new ShopDAO(db);
         this.economy = economy;
         this.displayManager = new DisplayManager(javaPlugin);

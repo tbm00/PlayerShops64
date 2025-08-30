@@ -1,4 +1,4 @@
-package dev.tbm00.spigot.playershops64.utils;
+package dev.tbm00.papermc.playershops64.utils;
 
 import java.io.*;
 import java.util.Base64;

@@ -1,4 +1,4 @@
-package dev.tbm00.spigot.playershops64.data;
+package dev.tbm00.papermc.playershops64.data;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -8,7 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 
-import dev.tbm00.spigot.playershops64.utils.StaticUtils;
+import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 
 public class Shop {

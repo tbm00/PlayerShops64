@@ -1,6 +1,6 @@
 
 
-package dev.tbm00.spigot.playershops64.command;
+package dev.tbm00.papermc.playershops64.command;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
-import dev.tbm00.spigot.playershops64.utils.*;
+import dev.tbm00.papermc.playershops64.utils.*;
 
 public class AdminCmd implements TabExecutor {
 

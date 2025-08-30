@@ -1,20 +1,20 @@
-package dev.tbm00.spigot.playershops64;
+package dev.tbm00.papermc.playershops64;
 
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import dev.tbm00.spigot.playershops64.utils.*;
-import dev.tbm00.spigot.playershops64.command.*;
-import dev.tbm00.spigot.playershops64.data.ConfigHandler;
-import dev.tbm00.spigot.playershops64.data.MySQLConnection;
-import dev.tbm00.spigot.playershops64.hook.VaultHook;
-import dev.tbm00.spigot.playershops64.listener.PlayerMovement;
-import dev.tbm00.spigot.playershops64.listener.ShopBlockListener;
+import dev.tbm00.papermc.playershops64.utils.*;
+import dev.tbm00.papermc.playershops64.command.*;
+import dev.tbm00.papermc.playershops64.data.ConfigHandler;
+import dev.tbm00.papermc.playershops64.data.MySQLConnection;
+import dev.tbm00.papermc.playershops64.hook.VaultHook;
+import dev.tbm00.papermc.playershops64.listener.PlayerMovement;
+import dev.tbm00.papermc.playershops64.listener.ShopBlockListener;
 
 public class PlayerShops64 extends JavaPlugin {
-    private ConfigHandler configHandler;
+    public ConfigHandler configHandler;
     private MySQLConnection mysqlConnection;
     private VaultHook vaultHook;
     private ShopHandler shopHandler;
@@ -22,12 +22,17 @@ public class PlayerShops64 extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+    }
+
+    @Override
+    public void onLoad() {
+        saveDefaultConfig();
         final PluginDescriptionFile pdf = this.getDescription();
 
         if (getConfig().contains("enabled") && getConfig().getBoolean("enabled")) {
             configHandler = new ConfigHandler(this);
 
-            StaticUtils.init(this, configHandler);
+            StaticUtils.init(this);
 
             if (!setupMySQL()) disablePlugin();
             
@@ -39,14 +44,14 @@ public class PlayerShops64 extends JavaPlugin {
 
             if (!setupHooks()) disablePlugin();
 
-            shopHandler = new ShopHandler(this, configHandler, mysqlConnection, vaultHook);
+            shopHandler = new ShopHandler(this, mysqlConnection, vaultHook);
 
             // Register Listeners
             getServer().getPluginManager().registerEvents(new PlayerMovement(), this);
             getServer().getPluginManager().registerEvents(new ShopBlockListener(this), this);
 
             // Register Commands
-            getCommand("testshop").setExecutor(new ShopCmd(this, configHandler));
+            getCommand("testshop").setExecutor(new ShopCmd(this));
             getCommand("testshopadmin").setExecutor(new AdminCmd());
         }
     }

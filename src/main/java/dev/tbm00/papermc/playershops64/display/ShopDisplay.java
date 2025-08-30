@@ -1,4 +1,4 @@
-package dev.tbm00.spigot.playershops64.display;
+package dev.tbm00.papermc.playershops64.display;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,35 +19,38 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.Plugin;
 
 import net.kyori.adventure.text.Component;
 
-import dev.tbm00.spigot.playershops64.PlayerShops64;
-import dev.tbm00.spigot.playershops64.data.Shop;
+import dev.tbm00.papermc.playershops64.PlayerShops64;
+import dev.tbm00.papermc.playershops64.data.Shop;
 
 public class ShopDisplay {
-    public static final String META_KEY = "playershops64-entity";
-    public static final NamespacedKey PDC_KEY = new NamespacedKey("playershops64", "entity-role");
+    public static final String META_KEY = "playershops64-display";
+    public static final NamespacedKey PDC_KEY = new NamespacedKey("playershops64", "display-entity");
 
-    private final PlayerShops64 plugin;
+    private final PlayerShops64 javaPlugin;
     private final Shop shop;
 
     private ItemDisplay itemDisplay;
     private ItemDisplay glassDisplay;
     private TextDisplay textDisplay;
 
+    private double displayGlassScale;
+    private String displayLineBg;
+
     private final List<UUID> tracked = new ArrayList<>();
     private String lastText = "";
 
-    public ShopDisplay(PlayerShops64 plugin, Shop shop) {
-        this.plugin = plugin;
+    public ShopDisplay(PlayerShops64 javaPlugin, Shop shop) {
+        this.javaPlugin = javaPlugin;
         this.shop = shop;
+
     }
 
     public void clear() {
         World w = shop.getWorld();
-        plugin.getServer().getScheduler().runTask(plugin, () -> {
+        javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> {
             if (itemDisplay != null && itemDisplay.isValid()) itemDisplay.remove();
             if (glassDisplay != null && glassDisplay.isValid()) glassDisplay.remove();
             if (textDisplay != null && textDisplay.isValid()) textDisplay.remove();
@@ -60,7 +63,7 @@ public class ShopDisplay {
 
         if (world == null || shop.getLocation() == null) return;
 
-        Location base = shop.getLocation().clone(); // lectern block pos (your base shop block)
+        Location base = shop.getLocation().clone();
         updateItem(world, base, itemScale, offX, offY, offZ);
         updateGlass(world, base);
         updateText(world, base, text);
@@ -69,8 +72,8 @@ public class ShopDisplay {
     private void updateItem(World world, Location base, float scale,
                             double x, double y, double z) {
 
-        ItemStack stack = (shop.getItemStack() != null) ? shop.getItemStack() : new ItemStack(Material.BARRIER);
-        boolean isBlock = stack.getType().isBlock() && stack.getType() != Material.BARRIER;
+        ItemStack item = (shop.getItemStack() != null) ? shop.getItemStack() : new ItemStack(Material.BARRIER);
+        boolean isBlock = item.getType().isBlock() && item.getType() != Material.BARRIER;
 
         // Anchor slightly above the lectern center
         Location loc = base.clone().add(0.5 + x, (isBlock ? 0.4 : 1.4) + y, 0.5 + z);
@@ -84,27 +87,25 @@ public class ShopDisplay {
                 tracked.remove(nearby.getUniqueId());
             }
             itemDisplay = world.spawn(loc, ItemDisplay.class, ent -> {
-                ent.setItemStack(stack);
+                ent.setItemStack(item);
                 ent.setGravity(false);
                 ent.setPersistent(true);
                 ent.setNoPhysics(true);
                 ent.setViewRange(0.2f);
                 ent.setTransformationMatrix(new Matrix4f().scale(scale));
                 ent.getPersistentDataContainer().set(PDC_KEY, PersistentDataType.STRING, "item");
-                ent.setMetadata(META_KEY, new FixedMetadataValue(plugin, ""));
+                ent.setMetadata(META_KEY, new FixedMetadataValue(javaPlugin, ""));
                 if (!tracked.contains(ent.getUniqueId())) tracked.add(ent.getUniqueId());
             });
         } else {
-            itemDisplay.setItemStack(stack);
+            itemDisplay.setItemStack(item);
             // keep it pegged in place
             itemDisplay.teleportAsync(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
         }
     }
 
     private void updateGlass(World world, Location base) {
-        if (plugin.getConfig().getBoolean("display.hide-glass", false)) return;
-
-        double scale = plugin.getConfig().getDouble("display.glass-scale", 1.0);
+        double scale = javaPlugin.configHandler.getDisplayGlassScale();
         Location loc = base.clone().add(0.5, 1.4, 0.5);
 
         if (glassDisplay == null || !glassDisplay.isValid() || glassDisplay.isDead()) {
@@ -122,7 +123,7 @@ public class ShopDisplay {
                 ent.setViewRange(0.2f);
                 ent.setTransformationMatrix(new Matrix4f().scale((float) scale));
                 ent.getPersistentDataContainer().set(PDC_KEY, PersistentDataType.STRING, "glass");
-                ent.setMetadata(META_KEY, new FixedMetadataValue(plugin, ""));
+                ent.setMetadata(META_KEY, new FixedMetadataValue(javaPlugin, ""));
                 if (!tracked.contains(ent.getUniqueId())) tracked.add(ent.getUniqueId());
             });
         } else {
@@ -143,7 +144,7 @@ public class ShopDisplay {
             textDisplay = world.spawn(loc, TextDisplay.class, ent -> {
                 ent.setBillboard(Display.Billboard.VERTICAL);
                 ent.setAlignment(TextDisplay.TextAlignment.CENTER);
-                ent.setBackgroundColor(parseColor(plugin.getConfig().getString("display.line-bg", "60,0,0,0")));
+                ent.setBackgroundColor(parseColor(displayLineBg));
                 ent.setShadowed(false);
                 ent.setVisibleByDefault(false); // shown when focused
                 ent.setPersistent(true);
@@ -151,13 +152,13 @@ public class ShopDisplay {
                 ent.setGravity(false);
                 ent.setViewRange(0.2f);
                 ent.getPersistentDataContainer().set(PDC_KEY, PersistentDataType.STRING, "line");
-                ent.setMetadata(META_KEY, new FixedMetadataValue(plugin, ""));
+                ent.setMetadata(META_KEY, new FixedMetadataValue(javaPlugin, ""));
                 if (!tracked.contains(ent.getUniqueId())) tracked.add(ent.getUniqueId());
             });
         }
 
         if (!text.equals(lastText)) {
-            if (textDisplay != null) textDisplay.text(Component.text(text)); // plug your serializer if you want colors/§ codes
+            if (textDisplay != null) textDisplay.text(Component.text(text));
             lastText = text;
         }
         if (textDisplay != null) {
@@ -185,19 +186,19 @@ public class ShopDisplay {
 
     /** Per-player show/hide: text only toggles on focus; item/glass always shown. */
     public void show(Player player, boolean focused) {
-        if (itemDisplay != null && itemDisplay.isValid()) player.showEntity(plugin, itemDisplay);
-        if (glassDisplay != null && glassDisplay.isValid()) player.showEntity(plugin, glassDisplay);
+        if (itemDisplay != null && itemDisplay.isValid()) player.showEntity(javaPlugin, itemDisplay);
+        if (glassDisplay != null && glassDisplay.isValid()) player.showEntity(javaPlugin, glassDisplay);
         if (textDisplay != null && textDisplay.isValid()) {
-            if (focused) player.showEntity(plugin, textDisplay);
-            else player.hideEntity(plugin, textDisplay);
+            if (focused) player.showEntity(javaPlugin, textDisplay);
+            else player.hideEntity(javaPlugin, textDisplay);
         }
     }
 
     public void hide(Player player, boolean hideAll) {
-        if (textDisplay != null && textDisplay.isValid()) player.hideEntity(plugin, textDisplay);
+        if (textDisplay != null && textDisplay.isValid()) player.hideEntity(javaPlugin, textDisplay);
         if (hideAll) {
-            if (itemDisplay != null && itemDisplay.isValid()) player.hideEntity(plugin, itemDisplay);
-            if (glassDisplay != null && glassDisplay.isValid()) player.hideEntity(plugin, glassDisplay);
+            if (itemDisplay != null && itemDisplay.isValid()) player.hideEntity(javaPlugin, itemDisplay);
+            if (glassDisplay != null && glassDisplay.isValid()) player.hideEntity(javaPlugin, glassDisplay);
         }
     }
 

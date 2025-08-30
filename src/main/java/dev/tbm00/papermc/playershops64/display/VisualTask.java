@@ -1,11 +1,11 @@
-package dev.tbm00.spigot.playershops64.display;
+package dev.tbm00.papermc.playershops64.display;
 
 import java.util.Map;
 import java.util.UUID;
 
-import dev.tbm00.spigot.playershops64.PlayerShops64;
-import dev.tbm00.spigot.playershops64.ShopHandler;
-import dev.tbm00.spigot.playershops64.data.Shop;
+import dev.tbm00.papermc.playershops64.PlayerShops64;
+import dev.tbm00.papermc.playershops64.ShopHandler;
+import dev.tbm00.papermc.playershops64.data.Shop;
 
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -29,15 +29,15 @@ public class VisualTask extends BukkitRunnable {
     public VisualTask(PlayerShops64 javaPlugin, ShopHandler shopHandler) {
         this.javaPlugin = javaPlugin;
         this.shopHandler = shopHandler;
-        this.tickCycle = shopHandler.configHandler.getDisplayTickCycle();
-        this.viewDistance = shopHandler.configHandler.getDisplayViewDistance();
-        this.focusDistance = shopHandler.configHandler.getDisplayFocusDistance();
-        this.scale = (float) shopHandler.configHandler.getDisplayGlassScale();
+        this.tickCycle = javaPlugin.configHandler.getDisplayTickCycle();
+        this.viewDistance = javaPlugin.configHandler.getDisplayViewDistance();
+        this.focusDistance = javaPlugin.configHandler.getDisplayFocusDistance();
+        this.scale = (float) javaPlugin.configHandler.getDisplayGlassScale();
     }
 
     @Override
     public void run() {
-        Map<UUID, Shop> shops = shopHandler.getShopMap(); // you’ll add this in ShopHandler (read-only view of loaded shops)
+        Map<UUID, Shop> shops = shopHandler.getShopMap();
         if (shops == null || shops.isEmpty()) return;
 
         for (Shop shop : shops.values()) {
@@ -45,6 +45,8 @@ public class VisualTask extends BukkitRunnable {
             if (shop == null || shop.getLocation() == null || shop.getWorld() == null) continue;
             World world = shop.getWorld();
             if (!world.isChunkLoaded(shop.getLocation().getBlockX() >> 4, shop.getLocation().getBlockZ() >> 4)) continue;
+
+            // Get/build display
             UUID id = shop.getUuid();
             ShopDisplay shopDisplay = shopHandler.getDisplayManager().getOrCreate(id, shop);
             if (shopDisplay == null) continue;

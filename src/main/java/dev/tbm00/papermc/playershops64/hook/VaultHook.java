@@ -1,9 +1,9 @@
-package dev.tbm00.spigot.playershops64.hook;
+package dev.tbm00.papermc.playershops64.hook;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import dev.tbm00.spigot.playershops64.PlayerShops64;
+import dev.tbm00.papermc.playershops64.PlayerShops64;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 
