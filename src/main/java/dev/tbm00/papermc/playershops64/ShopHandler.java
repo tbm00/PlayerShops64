@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.lang.WordUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
@@ -24,6 +25,8 @@ import dev.tbm00.papermc.playershops64.display.ShopDisplay;
 import dev.tbm00.papermc.playershops64.display.VisualTask;
 import dev.tbm00.papermc.playershops64.hook.VaultHook;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class ShopHandler {
     private final PlayerShops64 javaPlugin;
@@ -146,7 +149,7 @@ public class ShopHandler {
 
     public String formatShopText(Shop shop) {
         ItemStack item = shop.getItemStack();
-        String itemname = (item==null) ? "null" : item.getType().name();
+        String name = (item==null) ? "null" : item.getType().name();
         String stackSize = (!((1<=shop.getStackSize())&&(shop.getStackSize()<=64))) ? "error" : shop.getStackSize() + "";
         String buy = (shop.getBuyPrice()==null) ? "null" : (shop.getBuyPrice().compareTo(BigDecimal.valueOf(-1.0))==0) ? "disabled" : shop.getBuyPrice().toPlainString();
         String sell = (shop.getSellPrice()==null) ? "null" : (shop.getSellPrice().compareTo(BigDecimal.valueOf(-1.0))==0) ? "disabled" : shop.getSellPrice().toPlainString();
@@ -157,19 +160,30 @@ public class ShopHandler {
         try {
             if (item!=null) {
                 ItemMeta meta = item.getItemMeta();
-                if (meta.hasLore() && meta.getLore()!=null && !meta.getLore().isEmpty()) {
-                    lore0 = String.valueOf(meta.getLore().get(0));
+                if (meta!=null) {
+                    if (meta.hasDisplayName()) name = meta.getDisplayName();
+                    if (name.isBlank()) {
+                        name = meta.getItemName();
+                        if (name.isBlank()) {
+                            name = WordUtils.capitalizeFully(item.getType().name().toLowerCase().replace("_", " "));
+                        }
+                    }
+                    StaticUtils.log(ChatColor.YELLOW, "name shouldve been grabbed");
+
+                    if (meta.hasLore() && meta.getLore()!=null && !meta.getLore().isEmpty()) {
+                        lore0 = String.valueOf(meta.getLore().get(0));
+                    }
                 }
             }
         } catch (Exception e) {e.printStackTrace();}
         if (lore0.isBlank()) {
-            return itemname + " &7x &f" + stackSize
+            return name + " &7x &f" + stackSize
                         + "\n&7Buy for &a$" + buy
                         + "\n&7Sell for &c$" + sell
                         + "\n&7Stock: &e" + stock + "&7, Balance: &e$" + balance
                         + "\n&7Owner: &e" + owner;
         } else {
-            return itemname + " &7x &f" + stackSize
+            return name + " &7x &f" + stackSize
                         + "\n" + lore0
                         + "\n&7Buy for &a$" + buy
                         + "\n&7Sell for &c$" + sell
@@ -210,5 +224,22 @@ public class ShopHandler {
             if (shopLocation.getBlockX() == bx && shopLocation.getBlockY() == by && shopLocation.getBlockZ() == bz) return true;
         }
         return false;
+    }
+
+    public Shop getShopAtBlock(Location blockLocation) {
+        if (blockLocation == null) {
+            StaticUtils.log(ChatColor.RED, "blockLocation==null");
+            return null;
+        }
+        World world = blockLocation.getWorld();
+        int bx = blockLocation.getBlockX(), by = blockLocation.getBlockY(), bz = blockLocation.getBlockZ();
+        for (Shop shop : shops.values()) {
+            if (shop.getWorld() == null || shop.getLocation() == null) continue;
+            if (!shop.getWorld().equals(world)) continue;
+            Location shopLocation = shop.getLocation();
+            if (shopLocation.getBlockX() == bx && shopLocation.getBlockY() == by && shopLocation.getBlockZ() == bz) return shop;
+        }
+        StaticUtils.log(ChatColor.RED, "blockLocation not found in shops");
+        return null;
     }
 }

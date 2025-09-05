@@ -19,6 +19,8 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import net.md_5.bungee.api.chat.TextComponent;
 
@@ -141,6 +143,24 @@ public class StaticUtils {
         if ((player.getInventory().firstEmpty() == -1)) {
             player.getWorld().dropItemNaturally(player.getLocation(), item);
         } else player.getInventory().addItem(item);
+    }
+
+    /**
+     * Prepares an base block ItemStack for usage.
+     * 
+     * @param amount the amount to give
+     */
+    public static ItemStack prepPlayerShopItemStack(int amount) {
+        ItemStack lectern = new ItemStack(Material.LECTERN);
+        ItemMeta meta = lectern.getItemMeta();
+
+        meta.getPersistentDataContainer().set(StaticUtils.SHOP_KEY, PersistentDataType.STRING, "true");
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aPlayerShop"));
+
+        lectern.setItemMeta(meta);
+        lectern.setAmount(amount);
+
+        return lectern;
     }
 
     /**

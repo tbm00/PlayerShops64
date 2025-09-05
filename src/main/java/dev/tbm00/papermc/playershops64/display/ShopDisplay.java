@@ -36,7 +36,7 @@ public class ShopDisplay {
     public float glassScale;
     public float itemScale;
     private String holoColor;
-    public static double OFFX = 0.0, OFFY = -0.2, OFFZ = 0.0;
+    public static double OFFX = 0.0, OFFY = 0.0, OFFZ = 0.0;
 
     private final List<UUID> tracked = new ArrayList<>();
     private String lastText = "";
@@ -78,16 +78,15 @@ public class ShopDisplay {
 
     private void updateItem(World world, Location base, double x, double y, double z) {
         ItemStack item = (shop.getItemStack() != null) ? shop.getItemStack() : new ItemStack(Material.BARRIER);
-        boolean isBlock = item.getType().isBlock() && item.getType() != Material.BARRIER;
-        Location loc = base.clone().add(0.5 + x, (isBlock ? 0.4 : 1.4) + y, 0.5 + z);
+        Location loc = base.clone().add(0.5 + x, 1.2 + y, 0.5 + z);
 
         // Remove any stray PS64 item display nearby
-        for (ItemDisplay nearby : world.getNearbyEntitiesByType(ItemDisplay.class, loc, 1.0)) {
+        /*for (Item nearby : world.getNearbyEntitiesByType(Item.class, loc, 1.0)) {
             if (!nearby.getPersistentDataContainer().has(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING)) continue;
             if (!"item".equals(nearby.getPersistentDataContainer().get(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING))) continue;
             nearby.remove();
             tracked.remove(nearby.getUniqueId());
-        }
+        }*/
 
         if (itemDisplay == null || !itemDisplay.isValid() || itemDisplay.isDead()) {
             itemDisplay = world.dropItem(loc, item, ent -> {
@@ -99,7 +98,7 @@ public class ShopDisplay {
                 ent.setUnlimitedLifetime(true);              // never despawn
                 ent.setPersistent(true);
                 ent.setInvulnerable(true);
-                ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "item_drop");
+                ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "item");
             });
             tracked.add(itemDisplay.getUniqueId());
         } else {
