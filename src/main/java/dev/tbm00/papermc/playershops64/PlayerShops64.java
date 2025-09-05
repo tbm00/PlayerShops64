@@ -26,9 +26,10 @@ public class PlayerShops64 extends JavaPlugin {
         final PluginDescriptionFile pdf = this.getDescription();
 
         if (getConfig().contains("enabled") && getConfig().getBoolean("enabled")) {
-            configHandler = new ConfigHandler(this);
-
+            
             StaticUtils.init(this);
+
+            configHandler = new ConfigHandler(this);
 
             if (!setupMySQL()) disablePlugin();
             

@@ -29,6 +29,7 @@ public class ConfigHandler {
         try {
             loadLanguageSection();
             loadDisplaySection();
+            StaticUtils.log(ChatColor.GREEN, "ConfigHandler initialized.");
         } catch (Exception e) {
             StaticUtils.log(ChatColor.RED, "Caught exception loading config: " + e.getMessage());
         }

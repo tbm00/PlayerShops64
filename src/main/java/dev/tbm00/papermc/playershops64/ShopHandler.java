@@ -25,8 +25,6 @@ import dev.tbm00.papermc.playershops64.display.ShopDisplay;
 import dev.tbm00.papermc.playershops64.display.VisualTask;
 import dev.tbm00.papermc.playershops64.hook.VaultHook;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class ShopHandler {
     private final PlayerShops64 javaPlugin;
@@ -38,7 +36,6 @@ public class ShopHandler {
     private VisualTask visualTask;
 
     public ShopHandler(PlayerShops64 javaPlugin, MySQLConnection db, VaultHook economy) {
-        StaticUtils.log(ChatColor.YELLOW, "ShopHandler starting initialization...");
         this.javaPlugin = javaPlugin;
         this.dao = new ShopDAO(db);
         this.economy = economy;
@@ -47,7 +44,7 @@ public class ShopHandler {
         this.visualTask = new VisualTask(javaPlugin, this);
 
         this.visualTask.runTaskTimer(javaPlugin, 20L, Math.max(1L, javaPlugin.configHandler.getDisplayTickCycle()));
-        StaticUtils.log(ChatColor.YELLOW, "ShopHandler class initialized.");
+        StaticUtils.log(ChatColor.GREEN, "ShopHandler initialized.");
         loadShops();
     }
 
@@ -78,7 +75,7 @@ public class ShopHandler {
         }
 
 
-        StaticUtils.log(ChatColor.GREEN, "Loaded " + loaded + " shops, " +
+        StaticUtils.log(ChatColor.GREEN, "ShopHandler loaded " + loaded + " shops, " +
                 "\nskippedNullShop: " + skippedNullShop +
                 ", skippedNullWorld:" + skippedNullWorld +
                 ", skippedNullLocation: " + skippedNullLoc);
@@ -168,7 +165,6 @@ public class ShopHandler {
                             name = WordUtils.capitalizeFully(item.getType().name().toLowerCase().replace("_", " "));
                         }
                     }
-                    StaticUtils.log(ChatColor.YELLOW, "name shouldve been grabbed");
 
                     if (meta.hasLore() && meta.getLore()!=null && !meta.getLore().isEmpty()) {
                         lore0 = String.valueOf(meta.getLore().get(0));

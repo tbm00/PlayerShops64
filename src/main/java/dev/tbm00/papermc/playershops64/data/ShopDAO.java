@@ -17,6 +17,7 @@ public class ShopDAO {
 
     public ShopDAO(MySQLConnection mySQL) {
         this.mySQL = mySQL;
+        StaticUtils.log(ChatColor.GREEN, "ShopDAO initialized.");
     }
 
     public List<Shop> getAllShops() {

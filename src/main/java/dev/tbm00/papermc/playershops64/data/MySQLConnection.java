@@ -24,6 +24,7 @@ public class MySQLConnection {
         setupConnectionPool();
         //clearOldTables();
         initializeDatabase();
+        StaticUtils.log(ChatColor.GREEN, "MySQLConnection initialized.");
     }
 
     private void loadSQLConfig() {

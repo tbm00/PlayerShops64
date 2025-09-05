@@ -50,7 +50,7 @@ public class StaticUtils {
      */
     public static void log(ChatColor chatColor, String... strings) {
 		for (String s : strings)
-            javaPlugin.getServer().getConsoleSender().sendMessage("[DSA64] " + chatColor + s);
+            javaPlugin.getServer().getConsoleSender().sendMessage("[PS64] " + chatColor + s);
 	}
 
     /**

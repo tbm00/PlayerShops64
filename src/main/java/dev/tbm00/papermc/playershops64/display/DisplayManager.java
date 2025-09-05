@@ -16,9 +16,8 @@ public class DisplayManager {
     private final Map<UUID, ShopDisplay> displays = new ConcurrentHashMap<>();
 
     public DisplayManager(PlayerShops64 javaPlugin) {
-        StaticUtils.log(ChatColor.YELLOW, "DisplayManager starting initialization.");
         this.javaPlugin = javaPlugin;
-        StaticUtils.log(ChatColor.YELLOW, "DisplayManager class initialized.");
+        StaticUtils.log(ChatColor.GREEN, "DisplayManager initialized.");
     }
 
     public ShopDisplay getOrCreate(UUID shopId, Shop shop) {
