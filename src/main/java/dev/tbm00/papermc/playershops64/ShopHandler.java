@@ -11,6 +11,7 @@ import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
@@ -144,7 +145,8 @@ public class ShopHandler {
     }
 
     public String formatShopText(Shop shop) {
-        String item = (shop.getItemStack()==null) ? "null" : shop.getItemStack().getType().name();
+        ItemStack item = shop.getItemStack();
+        String itemname = (item==null) ? "null" : item.getType().name();
         String stackSize = (!((1<=shop.getStackSize())&&(shop.getStackSize()<=64))) ? "error" : shop.getStackSize() + "";
         String buy = (shop.getBuyPrice()==null) ? "null" : (shop.getBuyPrice().compareTo(BigDecimal.valueOf(-1.0))==0) ? "disabled" : shop.getBuyPrice().toPlainString();
         String sell = (shop.getSellPrice()==null) ? "null" : (shop.getSellPrice().compareTo(BigDecimal.valueOf(-1.0))==0) ? "disabled" : shop.getSellPrice().toPlainString();
@@ -153,17 +155,27 @@ public class ShopHandler {
         String owner = (shop.getOwnerName()==null) ? "null" : shop.getOwnerName();
         String lore0 = "";
         try {
-            ItemMeta meta = shop.getItemStack().getItemMeta();
-            if (meta.hasLore() && meta.getLore()!=null && !meta.getLore().isEmpty()) {
-                lore0 = String.valueOf(meta.getLore().get(0));
+            if (item!=null) {
+                ItemMeta meta = item.getItemMeta();
+                if (meta.hasLore() && meta.getLore()!=null && !meta.getLore().isEmpty()) {
+                    lore0 = String.valueOf(meta.getLore().get(0));
+                }
             }
         } catch (Exception e) {e.printStackTrace();}
-        return item + " x " + stackSize
-                    + "\n" + lore0
-                    + "\nBuy for $" + buy
-                    + "\nSell for $" + sell
-                    + "\nStock: " + stock + ", Balance: " + balance
-                    + "\nOwner: " + owner;
+        if (lore0.isBlank()) {
+            return itemname + " &7x &f" + stackSize
+                        + "\n&7Buy for &a$" + buy
+                        + "\n&7Sell for &c$" + sell
+                        + "\n&7Stock: &e" + stock + "&7, Balance: &e$" + balance
+                        + "\n&7Owner: &e" + owner;
+        } else {
+            return itemname + " &7x &f" + stackSize
+                        + "\n" + lore0
+                        + "\n&7Buy for &a$" + buy
+                        + "\n&7Sell for &c$" + sell
+                        + "\n&7Stock: &e" + stock + "&7, Balance: &e$" + balance
+                        + "\n&7Owner: &e" + owner;
+        }
     }
 
     public boolean isLookingAtShop(Player player, Shop shop, double maxDistance) {

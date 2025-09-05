@@ -22,7 +22,7 @@ public class MySQLConnection {
         
         loadSQLConfig();
         setupConnectionPool();
-        clearOldTables();
+        //clearOldTables();
         initializeDatabase();
     }
 

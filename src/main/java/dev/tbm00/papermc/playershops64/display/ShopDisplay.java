@@ -5,21 +5,23 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joml.Matrix4f;
-
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.util.Vector;
 
 import net.kyori.adventure.text.Component;
-
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.Shop;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
@@ -28,13 +30,13 @@ public class ShopDisplay {
     private final PlayerShops64 javaPlugin;
     private final Shop shop;
 
-    private ItemDisplay itemDisplay;
+    private Item itemDisplay;
     private ItemDisplay glassDisplay;
     private TextDisplay textDisplay;
     public float glassScale;
     public float itemScale;
     private String holoColor;
-    public static double OFFX = 0.0, OFFY = 0.0, OFFZ = 0.0;
+    public static double OFFX = 0.0, OFFY = -0.2, OFFZ = 0.0;
 
     private final List<UUID> tracked = new ArrayList<>();
     private String lastText = "";
@@ -48,21 +50,30 @@ public class ShopDisplay {
     }
 
     public void clear() {
-        javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> {
+        Runnable task = () -> {
             if (itemDisplay != null && itemDisplay.isValid()) itemDisplay.remove();
             if (glassDisplay != null && glassDisplay.isValid()) glassDisplay.remove();
             if (textDisplay != null && textDisplay.isValid()) textDisplay.remove();
             tracked.clear();
-        });
+        };
+
+        // If plugin is disabled OR we are on the main thread, run immediately (no scheduler).
+        if (!javaPlugin.isEnabled() || Bukkit.isPrimaryThread()) {
+            task.run();
+            //StaticUtils.log(ChatColor.YELLOW, "Display cleared via main thread");
+        } else {
+            Bukkit.getScheduler().runTask(javaPlugin, task);
+            //StaticUtils.log(ChatColor.YELLOW, "Display cleared via scheduler");
+        }
     }
 
     public void update(World world, String text) {
         if (world == null || shop.getLocation() == null) return;
 
         Location base = shop.getLocation().clone();
-        updateItem(world, base, OFFX, OFFY, OFFZ);
-        updateGlass(world, base);
         updateText(world, base, text);
+        updateGlass(world, base);
+        updateItem(world, base, OFFX, OFFY, OFFZ);
     }
 
     private void updateItem(World world, Location base, double x, double y, double z) {
@@ -70,33 +81,37 @@ public class ShopDisplay {
         boolean isBlock = item.getType().isBlock() && item.getType() != Material.BARRIER;
         Location loc = base.clone().add(0.5 + x, (isBlock ? 0.4 : 1.4) + y, 0.5 + z);
 
+        // Remove any stray PS64 item display nearby
+        for (ItemDisplay nearby : world.getNearbyEntitiesByType(ItemDisplay.class, loc, 1.0)) {
+            if (!nearby.getPersistentDataContainer().has(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING)) continue;
+            if (!"item".equals(nearby.getPersistentDataContainer().get(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING))) continue;
+            nearby.remove();
+            tracked.remove(nearby.getUniqueId());
+        }
+
         if (itemDisplay == null || !itemDisplay.isValid() || itemDisplay.isDead()) {
-            // Remove any stray PS64 item display nearby
-            for (ItemDisplay nearby : world.getNearbyEntitiesByType(ItemDisplay.class, loc, 1.0)) {
-                if (!nearby.getPersistentDataContainer().has(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING)) continue;
-                if (!"item".equals(nearby.getPersistentDataContainer().get(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING))) continue;
-                nearby.remove();
-                tracked.remove(nearby.getUniqueId());
-            }
-            itemDisplay = world.spawn(loc, ItemDisplay.class, ent -> {
-                ent.setItemStack(item);
-                ent.setGravity(false);
+            itemDisplay = world.dropItem(loc, item, ent -> {
+                ent.setVelocity(new Vector(0, 0, 0));       // no initial fling
+                ent.setGravity(false);                       // keep it hovering
+                ent.setCustomNameVisible(false);
+                ent.setCanPlayerPickup(false);               // Paper API
+                ent.setCanMobPickup(false);                  // Paper API
+                ent.setUnlimitedLifetime(true);              // never despawn
                 ent.setPersistent(true);
-                ent.setNoPhysics(true);
-                ent.setViewRange(0.2f);
-                ent.setTransformationMatrix(new Matrix4f().scale(itemScale));
-                ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "item");
-                if (!tracked.contains(ent.getUniqueId())) tracked.add(ent.getUniqueId());
+                ent.setInvulnerable(true);
+                ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "item_drop");
             });
+            tracked.add(itemDisplay.getUniqueId());
         } else {
+            // keep the same stack & pin position
             itemDisplay.setItemStack(item);
-            // keep it pegged in place
+            itemDisplay.setVelocity(new Vector(0, 0, 0));
             itemDisplay.teleportAsync(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
         }
     }
 
     private void updateGlass(World world, Location base) {
-        Location loc = base.clone().add(0.5, 1.4, 0.5);
+        Location loc = base.clone().add(0.5, 1.5, 0.5); // 1.4->1.6
 
         if (glassDisplay == null || !glassDisplay.isValid() || glassDisplay.isDead()) {
             for (ItemDisplay nearby : world.getNearbyEntitiesByType(ItemDisplay.class, loc, 1.0)) {
@@ -121,7 +136,7 @@ public class ShopDisplay {
     }
 
     private void updateText(World world, Location base, String text) {
-        Location loc = base.clone().add(0.5, 1.8, 0.5);
+        Location loc = base.clone().add(0.5, 2.0, 0.5);  // 1.8->2.0
 
         if (textDisplay == null || !textDisplay.isValid() || textDisplay.isDead()) {
             for (TextDisplay nearby : world.getNearbyEntitiesByType(TextDisplay.class, loc, 1.0)) {
@@ -145,8 +160,9 @@ public class ShopDisplay {
             });
         }
 
-        if (!text.equals(lastText)) {
-            if (textDisplay != null) textDisplay.text(Component.text(text));
+        if (!text.equals(lastText) && textDisplay != null) {
+            Component comp = LegacyComponentSerializer.legacyAmpersand().deserialize(text);
+            textDisplay.text(comp);
             lastText = text;
         }
         if (textDisplay != null) {

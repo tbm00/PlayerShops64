@@ -109,9 +109,10 @@ public class PlayerShops64 extends JavaPlugin {
 	}
 
     /**
-     * Disables the plugin.
+     * Disables the plugin. (never gets used in my codebase)
      */
     private void disablePlugin() {
+        getLogger().info("PlayerShops64 disabling..! (1)");
         if (shopHandler!=null) shopHandler.shutdown();
         getServer().getPluginManager().disablePlugin(this);
     }
@@ -121,6 +122,7 @@ public class PlayerShops64 extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        getLogger().info("PlayerShops64 disabled..! ");
+        getLogger().info("PlayerShops64 disabling..! (2)");
+        if (shopHandler!=null) shopHandler.shutdown();
     }
 }
