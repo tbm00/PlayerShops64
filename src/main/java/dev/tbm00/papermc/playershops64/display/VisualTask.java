@@ -17,14 +17,12 @@ public class VisualTask extends BukkitRunnable {
     private final PlayerShops64 javaPlugin;
     private final ShopHandler shopHandler;
 
-    public int tickCycle;
-    public int viewDistance;
-    public int focusDistance;
+    private int viewDistance;
+    private int focusDistance;
 
     public VisualTask(PlayerShops64 javaPlugin, ShopHandler shopHandler) {
         this.javaPlugin = javaPlugin;
         this.shopHandler = shopHandler;
-        this.tickCycle = javaPlugin.configHandler.getDisplayTickCycle();
         this.viewDistance = javaPlugin.configHandler.getDisplayViewDistance();
         this.focusDistance = javaPlugin.configHandler.getDisplayFocusDistance();
         StaticUtils.log(ChatColor.GREEN, "VisualTask initialized.");
@@ -33,7 +31,7 @@ public class VisualTask extends BukkitRunnable {
     @Override
     public void run() {
         //StaticUtils.log(ChatColor.YELLOW, "VisualTask.run(): start");
-        Map<UUID, Shop> shops = shopHandler.getShopMap();
+        Map<UUID, Shop> shops = shopHandler.getShopView();
         if (shops == null || shops.isEmpty()) {
             //StaticUtils.log(ChatColor.YELLOW, "VisualTask.run(): shop map empty");
             return;

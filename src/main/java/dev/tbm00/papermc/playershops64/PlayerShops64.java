@@ -17,7 +17,7 @@ import dev.tbm00.papermc.playershops64.listener.ShopBaseBlock;
 public class PlayerShops64 extends JavaPlugin {
     public ConfigHandler configHandler;
     private MySQLConnection mysqlConnection;
-    private VaultHook vaultHook;
+    public VaultHook vaultHook;
     public ShopHandler shopHandler;
 
     @Override
@@ -28,20 +28,18 @@ public class PlayerShops64 extends JavaPlugin {
         if (getConfig().contains("enabled") && getConfig().getBoolean("enabled")) {
             
             StaticUtils.init(this);
-
-            configHandler = new ConfigHandler(this);
-
-            if (!setupMySQL()) disablePlugin();
-            
             StaticUtils.log(ChatColor.LIGHT_PURPLE,
                     ChatColor.DARK_PURPLE + "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
                     pdf.getName() + " v" + pdf.getVersion() + " created by tbm00",
                     ChatColor.DARK_PURPLE + "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
             );
 
+            configHandler = new ConfigHandler(this);
+
+            if (!setupMySQL()) disablePlugin();
             if (!setupHooks()) disablePlugin();
 
-            shopHandler = new ShopHandler(this, mysqlConnection, vaultHook);
+            shopHandler = new ShopHandler(this, mysqlConnection);
 
             // Register Listeners
             getServer().getPluginManager().registerEvents(new ServerStartup(this), this);
