@@ -2,6 +2,7 @@ package dev.tbm00.papermc.playershops64;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -11,6 +12,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -31,7 +33,8 @@ public class ShopHandler {
     private final ShopDAO dao;
     private final VaultHook economy;
     private final DisplayManager displayManager;
-    private final Map<UUID, Shop> shops = new LinkedHashMap<>(); 
+    private final Map<UUID, Shop> shops = new LinkedHashMap<>();
+    private final Map<World, Map<Long, Shop>> shopIndex = new HashMap<>();
 
     private VisualTask visualTask;
 
@@ -52,6 +55,7 @@ public class ShopHandler {
         StaticUtils.log(ChatColor.YELLOW, "ShopHandler loading shops from DB...");
         int loaded = 0, skippedNullShop = 0, skippedNullWorld = 0, skippedNullLoc = 0;
 
+        shopIndex.clear();
         for (Shop shop : dao.getAllShops()) {
             if (shop == null) {
                 skippedNullShop++;
@@ -71,6 +75,7 @@ public class ShopHandler {
             }
 
             shops.put(shop.getUuid(), shop);
+            indexShop(shop);
             loaded++;
         }
 
@@ -118,7 +123,9 @@ public class ShopHandler {
 
             // go back to main for memory + visuals
             javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> {
-                shops.put(shop.getUuid(), shop);
+                Shop prev = shops.put(shop.getUuid(), shop);
+                if (prev != null) deindexShop(prev);
+                indexShop(shop);
 
                 // instantly refresh this shop's display
                 ShopDisplay shopDisplay = displayManager.getOrCreate(shop.getUuid(), shop);
@@ -138,7 +145,8 @@ public class ShopHandler {
 
             // go back to main for memory + visuals
             javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> {
-                shops.remove(uuid);
+                Shop removed = shops.remove(uuid);
+                if (removed != null) deindexShop(removed);
                 displayManager.delete(uuid);
             });
         });
@@ -188,54 +196,88 @@ public class ShopHandler {
         }
     }
 
+    public Shop getShopInFocus(Player player) {
+        if (player == null) return null;
+        final double maxDistance = (double) javaPlugin.configHandler.getDisplayFocusDistance();
+
+        // 1) Fast path: target block
+        Block target = player.getTargetBlockExact((int) Math.ceil(maxDistance), FluidCollisionMode.NEVER);
+        if (target != null) {
+            return getIndexed(target.getWorld(), target.getX(), target.getY(), target.getZ());
+        }
+
+        // 2) Fallback: a single ray trace, still O(1) thanks to the index
+        Location eye = player.getEyeLocation();
+        Vector direction = eye.getDirection().normalize();
+        RayTraceResult result = player.getWorld().rayTrace(
+                eye, direction, maxDistance,
+                FluidCollisionMode.NEVER,
+                true,      // ignorePassableBlocks
+                0.1,       // ray size
+                entity -> false // ignore entities
+        );
+
+        if (result == null) return null;
+
+        Block hitBlock = result.getHitBlock();
+        if (hitBlock != null) {
+            return getShopAtBlock(hitBlock.getLocation());
+        } else {
+            Location hit = result.getHitPosition().toLocation(player.getWorld());
+            return getShopAtBlock(hit);
+        }
+    }
+
     public boolean isLookingAtShop(Player player, Shop shop, double maxDistance) {
-        if (player == null || shop == null || shop.getLocation() == null) return false;
+        if (player == null || shop == null || shop.getLocation() == null || shop.getWorld() == null) return false;
         if (!player.getWorld().equals(shop.getWorld())) return false;
 
-        Location eye = player.getEyeLocation();
-        Vector dir = eye.getDirection().normalize();
-
-        // Raytrace to a small AABB around the shop base block
-        Location shopLoc = shop.getLocation().clone().add(0.5, 0.5, 0.5);
-        double aabb = 0.6; // half-size
-
-        RayTraceResult rtr = player.getWorld().rayTrace(eye, dir, maxDistance, FluidCollisionMode.NEVER, true, 0.1, entity -> false);
-
-        if (rtr == null) return false;
-        Location hit = rtr.getHitPosition().toLocation(player.getWorld());
-
-        return Math.abs(hit.getX() - shopLoc.getX()) <= aabb &&
-               Math.abs(hit.getY() - shopLoc.getY()) <= aabb &&
-               Math.abs(hit.getZ() - shopLoc.getZ()) <= aabb;
+        Shop focused = getShopInFocus(player);
+        return focused != null && focused.getUuid().equals(shop.getUuid());
     }
 
     public boolean hasShopAtBlock(Location blockLocation) {
-        if (blockLocation == null) return false;
-        World world = blockLocation.getWorld();
-        int bx = blockLocation.getBlockX(), by = blockLocation.getBlockY(), bz = blockLocation.getBlockZ();
-        for (Shop shop : shops.values()) {
-            if (shop.getWorld() == null || shop.getLocation() == null) continue;
-            if (!shop.getWorld().equals(world)) continue;
-            Location shopLocation = shop.getLocation();
-            if (shopLocation.getBlockX() == bx && shopLocation.getBlockY() == by && shopLocation.getBlockZ() == bz) return true;
-        }
-        return false;
+        if (blockLocation == null || blockLocation.getWorld() == null) return false;
+        return getIndexed(blockLocation.getWorld(), blockLocation.getBlockX(), blockLocation.getBlockY(), blockLocation.getBlockZ()) != null;
     }
 
     public Shop getShopAtBlock(Location blockLocation) {
-        if (blockLocation == null) {
-            StaticUtils.log(ChatColor.RED, "blockLocation==null");
+        if (blockLocation == null || blockLocation.getWorld() == null) {
+            StaticUtils.log(ChatColor.RED, "blockLocation==null or world==null");
             return null;
         }
-        World world = blockLocation.getWorld();
-        int bx = blockLocation.getBlockX(), by = blockLocation.getBlockY(), bz = blockLocation.getBlockZ();
-        for (Shop shop : shops.values()) {
-            if (shop.getWorld() == null || shop.getLocation() == null) continue;
-            if (!shop.getWorld().equals(world)) continue;
-            Location shopLocation = shop.getLocation();
-            if (shopLocation.getBlockX() == bx && shopLocation.getBlockY() == by && shopLocation.getBlockZ() == bz) return shop;
+        Shop shop = getIndexed(blockLocation.getWorld(), blockLocation.getBlockX(), blockLocation.getBlockY(), blockLocation.getBlockZ());
+        if (shop == null) {
+            StaticUtils.log(ChatColor.RED, "blockLocation not found in shops");
         }
-        StaticUtils.log(ChatColor.RED, "blockLocation not found in shops");
-        return null;
+        return shop;
+    }
+
+    private static long packBlockPos(int x, int y, int z) {
+        // Same idea as Mojang’s BlockPos long packing
+        return ((x & 0x3FFFFFFL) << 38) | ((z & 0x3FFFFFFL) << 12) | (y & 0xFFFL);
+    }
+
+    private void indexShop(Shop shop) {
+        if (shop == null || shop.getWorld() == null || shop.getLocation() == null) return;
+        World w = shop.getWorld();
+        Map<Long, Shop> byPos = shopIndex.computeIfAbsent(w, k -> new HashMap<>());
+        long key = packBlockPos(shop.getLocation().getBlockX(), shop.getLocation().getBlockY(), shop.getLocation().getBlockZ());
+        byPos.put(key, shop);
+    }
+
+    private void deindexShop(Shop shop) {
+        if (shop == null || shop.getWorld() == null || shop.getLocation() == null) return;
+        Map<Long, Shop> byPos = shopIndex.get(shop.getWorld());
+        if (byPos == null) return;
+        long key = packBlockPos(shop.getLocation().getBlockX(), shop.getLocation().getBlockY(), shop.getLocation().getBlockZ());
+        byPos.remove(key);
+        if (byPos.isEmpty()) shopIndex.remove(shop.getWorld());
+    }
+
+    private Shop getIndexed(World world, int bx, int by, int bz) {
+        Map<Long, Shop> byPos = shopIndex.get(world);
+        if (byPos == null) return null;
+        return byPos.get(packBlockPos(bx, by, bz));
     }
 }
