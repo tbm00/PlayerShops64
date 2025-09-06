@@ -15,10 +15,10 @@ import dev.tbm00.papermc.playershops64.listener.ServerStartup;
 import dev.tbm00.papermc.playershops64.listener.ShopBaseBlock;
 
 public class PlayerShops64 extends JavaPlugin {
-    public ConfigHandler configHandler;
+    private ConfigHandler configHandler;
     private MySQLConnection mysqlConnection;
-    public VaultHook vaultHook;
-    public ShopHandler shopHandler;
+    private VaultHook vaultHook;
+    private ShopHandler shopHandler;
 
     @Override
     public void onEnable() {
@@ -113,6 +113,7 @@ public class PlayerShops64 extends JavaPlugin {
     private void disablePlugin() {
         getLogger().info("PlayerShops64 disabling..! (1)");
         if (shopHandler!=null) shopHandler.shutdown();
+        if (mysqlConnection != null) mysqlConnection.closeConnection();
         getServer().getPluginManager().disablePlugin(this);
     }
 
@@ -123,5 +124,19 @@ public class PlayerShops64 extends JavaPlugin {
     public void onDisable() {
         getLogger().info("PlayerShops64 disabling..! (2)");
         if (shopHandler!=null) shopHandler.shutdown();
+        if (mysqlConnection != null) mysqlConnection.closeConnection();
+    }
+
+    public ShopHandler getShopHandler() {
+        if (shopHandler == null) throw new IllegalStateException("ShopHandler not ready -- PlayerShops64 not fully enabled?");
+        return shopHandler;
+    }
+    public VaultHook getVaultHook() {
+        if (vaultHook == null) throw new IllegalStateException("VaultHook not ready -- PlayerShops64 not fully enabled?");
+        return vaultHook;
+    }
+    public ConfigHandler getConfigHandler() {
+        if (configHandler == null) throw new IllegalStateException("ConfigHandler not ready -- PlayerShops64 not fully enabled?");
+        return configHandler;
     }
 }

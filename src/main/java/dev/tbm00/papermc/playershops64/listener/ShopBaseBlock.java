@@ -51,7 +51,7 @@ public class ShopBaseBlock implements Listener {
         
         // Prevent duplicate shops at tsame location
         Location location = block.getLocation();
-        if (javaPlugin.shopHandler.hasShopAtBlock(location)) {
+        if (javaPlugin.getShopHandler().hasShopAtBlock(location)) {
             event.setCancelled(true);
             StaticUtils.sendMessage(event.getPlayer(), "&cThere is already a PlayerShop at this block.");
             return;
@@ -83,7 +83,7 @@ public class ShopBaseBlock implements Listener {
                             false,
                             false);
 
-        javaPlugin.shopHandler.upsertShop(shop);
+        javaPlugin.getShopHandler().upsertShop(shop);
         StaticUtils.sendMessage(owner, "&aCreated a new PlayerShop! Click to manage it, or sneak-left-click to start selling your held item");
         StaticUtils.log(ChatColor.GOLD, owner.getName() + " created a shop " + shop.getUuid() + " in " + world.getName()+ " @ " + block.getX() + "," + block.getY() + "," + block.getZ());
     }
@@ -122,7 +122,7 @@ public class ShopBaseBlock implements Listener {
 
         event.setCancelled(true);
         Player player = event.getPlayer();
-        Shop shop = javaPlugin.shopHandler.getShopAtBlock(block.getLocation());
+        Shop shop = javaPlugin.getShopHandler().getShopAtBlock(block.getLocation());
         if (shop == null) {
             StaticUtils.sendMessage(player, "&cShop data not found for this block. Try relog or contact staff.");
             return;
@@ -160,14 +160,14 @@ public class ShopBaseBlock implements Listener {
                 hand.setAmount(handCount-1);
             } else {player.getInventory().setItemInMainHand(null);}
 
-            javaPlugin.shopHandler.upsertShop(shop);
+            javaPlugin.getShopHandler().upsertShop(shop);
             StaticUtils.sendMessage(player, "&aShop item set to &e" + one.getType().name());
             return;
         }
 
         if (isSneaking && action==Action.LEFT_CLICK_BLOCK) {
             if (isOwner) {
-                javaPlugin.shopHandler.removeShop(shop.getUuid());
+                javaPlugin.getShopHandler().removeShop(shop.getUuid());
                 block.setType(Material.AIR, false);
                 StaticUtils.sendMessage(player, "&aDeleted shop!");
                 StaticUtils.giveItem(player, StaticUtils.prepPlayerShopItemStack(1));

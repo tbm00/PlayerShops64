@@ -2,6 +2,7 @@ package dev.tbm00.papermc.playershops64;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class ShopHandler {
         this.displayManager = new DisplayManager(javaPlugin);
         this.visualTask = new VisualTask(javaPlugin, this);
 
-        this.visualTask.runTaskTimer(javaPlugin, 20L, Math.max(1L, javaPlugin.configHandler.getDisplayTickCycle()));
+        this.visualTask.runTaskTimer(javaPlugin, 20L, Math.max(1L, javaPlugin.getConfigHandler().getDisplayTickCycle()));
         StaticUtils.log(ChatColor.GREEN, "ShopHandler initialized.");
         loadShops();
     }
@@ -100,9 +101,9 @@ public class ShopHandler {
         return Collections.unmodifiableMap(shops);
     }
 
-    //public Shop getShop(UUID uuid) {
-    //    return shops.get(uuid);
-    //}
+    public Shop getShop(UUID uuid) {
+        return copyOf(shops.get(uuid));
+    }
 
     public void upsertShop(Shop shop) {
         if (shop == null || shop.getUuid() == null) {
@@ -196,12 +197,12 @@ public class ShopHandler {
 
     public Shop getShopInFocus(Player player) {
         if (player == null) return null;
-        final double maxDistance = (double) javaPlugin.configHandler.getDisplayFocusDistance();
+        final double maxDistance = (double) javaPlugin.getConfigHandler().getDisplayFocusDistance();
 
         // 1) Fast path: target block
         Block target = player.getTargetBlockExact((int) Math.ceil(maxDistance), FluidCollisionMode.NEVER);
         if (target != null) {
-            return getIndexed(target.getWorld(), target.getX(), target.getY(), target.getZ());
+            return getIndexedShop(target.getWorld(), target.getX(), target.getY(), target.getZ());
         }
 
         // 2) Fallback: a single ray trace, still O(1) thanks to the index
@@ -232,7 +233,7 @@ public class ShopHandler {
 
     public boolean hasShopAtBlock(Location location) {
         if (location == null || location.getWorld() == null) return false;
-        return getIndexed(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ()) != null;
+        return getIndexedShop(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ()) != null;
     }
 
     public Shop getShopAtBlock(Location location) {
@@ -240,7 +241,7 @@ public class ShopHandler {
             StaticUtils.log(ChatColor.RED, "location==null or world==null");
             return null;
         }
-        Shop shop = getIndexed(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
+        Shop shop = getIndexedShop(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
         if (shop == null) {
             StaticUtils.log(ChatColor.RED, "location not found in shopIndex");
         }
@@ -277,15 +278,38 @@ public class ShopHandler {
         if (byPos.isEmpty()) shopIndex.remove(worldId);
     }
 
-    private Shop getIndexed(World world, int bx, int by, int bz) {
-        UUID id = getIndexedUuid(world, bx, by, bz);
-        return id == null ? null : shops.get(id);
+    private Shop getIndexedShop(World world, int bx, int by, int bz) {
+        UUID id = getIndexedShopUuid(world, bx, by, bz);
+        Shop live = (id == null) ? null : shops.get(id);
+        return copyOf(live);
     }
 
-    private UUID getIndexedUuid(World world, int bx, int by, int bz) {
+    private UUID getIndexedShopUuid(World world, int bx, int by, int bz) {
         if (world == null) return null;
         Map<Long, UUID> byPos = shopIndex.get(world.getUID());
         if (byPos == null) return null;
         return byPos.get(packBlockPos(bx, by, bz));
+    }
+
+    private Shop copyOf(Shop s) {
+        if (s == null) return null;
+
+        // Clone mutable fields (Location, ItemStack, Date); keep immutable/shared-safe ones (UUID, BigDecimal, World).
+        return new Shop(
+            s.getUuid(),
+            s.getOwnerUuid(),
+            s.getOwnerName(),
+            s.getWorld(),
+            s.getLocation() == null ? null : s.getLocation().clone(),
+            s.getItemStack() == null ? null : s.getItemStack().clone(),
+            s.getStackSize(),
+            s.getItemStock(),
+            s.getMoneyStock(),
+            s.getBuyPrice(),
+            s.getSellPrice(),
+            s.getLastTransactionDate() == null ? null : new Date(s.getLastTransactionDate().getTime()),
+            s.getInfiniteMoney(),
+            s.getInfiniteStock()
+        );
     }
 }

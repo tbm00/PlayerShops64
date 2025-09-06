@@ -129,7 +129,7 @@ public class StaticUtils {
      */
     public static void sendMessage(CommandSender target, String string) {
         if (!string.isBlank())
-            target.spigot().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', javaPlugin.configHandler.getChatPrefix() + string)));
+            target.spigot().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', javaPlugin.getConfigHandler().getChatPrefix() + string)));
     }
 
     /**

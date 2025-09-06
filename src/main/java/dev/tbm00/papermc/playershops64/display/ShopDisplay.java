@@ -33,10 +33,10 @@ public class ShopDisplay {
     private Item itemDisplay;
     private ItemDisplay glassDisplay;
     private TextDisplay textDisplay;
-    public float glassScale;
-    public float itemScale;
+    private float glassScale;
+    private float itemScale;
     private String holoColor;
-    public static double OFFX = 0.0, OFFY = 0.0, OFFZ = 0.0;
+    private static double OFFX = 0.0, OFFY = 0.0, OFFZ = 0.0;
 
     private final List<UUID> tracked = new ArrayList<>();
     private String lastText = "";
@@ -44,9 +44,9 @@ public class ShopDisplay {
     public ShopDisplay(PlayerShops64 javaPlugin, Shop shop) {
         this.javaPlugin = javaPlugin;
         this.shop = shop;
-        this.glassScale = (float) javaPlugin.configHandler.getDisplayGlassScale();
-        this.itemScale = (float) javaPlugin.configHandler.getDisplayItemScale();
-        this.holoColor = javaPlugin.configHandler.getDisplayHoloColor();
+        this.glassScale = (float) javaPlugin.getConfigHandler().getDisplayGlassScale();
+        this.itemScale = (float) javaPlugin.getConfigHandler().getDisplayItemScale();
+        this.holoColor = javaPlugin.getConfigHandler().getDisplayHoloColor();
     }
 
     public void clear() {

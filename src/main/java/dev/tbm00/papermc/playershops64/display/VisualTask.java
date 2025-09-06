@@ -23,8 +23,8 @@ public class VisualTask extends BukkitRunnable {
     public VisualTask(PlayerShops64 javaPlugin, ShopHandler shopHandler) {
         this.javaPlugin = javaPlugin;
         this.shopHandler = shopHandler;
-        this.viewDistance = javaPlugin.configHandler.getDisplayViewDistance();
-        this.focusDistance = javaPlugin.configHandler.getDisplayFocusDistance();
+        this.viewDistance = javaPlugin.getConfigHandler().getDisplayViewDistance();
+        this.focusDistance = javaPlugin.getConfigHandler().getDisplayFocusDistance();
         StaticUtils.log(ChatColor.GREEN, "VisualTask initialized.");
     }
 

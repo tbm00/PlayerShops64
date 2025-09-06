@@ -20,7 +20,7 @@ public class ServerStartup implements Listener {
         ran = true;
         
         javaPlugin.getServer().getScheduler().runTaskLater(javaPlugin, () -> {
-            javaPlugin.shopHandler.loadShops();
+            javaPlugin.getShopHandler().loadShops();
         }, 600L);
     }
 }
