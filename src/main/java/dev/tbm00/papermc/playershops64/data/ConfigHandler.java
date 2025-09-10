@@ -14,8 +14,7 @@ public class ConfigHandler {
     private int displayTickCycle = 5;
     private int displayViewDistance = 16;
     private int displayFocusDistance = 5;
-    private double displayGlassScale = 1.0;
-    private double displayItemScale = 1.0;
+    private double displayDisplayHeight = 0.0;
     private String displayHoloColor = "60,0,0,0";
 
     /**
@@ -53,8 +52,7 @@ public class ConfigHandler {
             displayTickCycle = section.getInt("tick-cycle", 5);
             displayViewDistance = section.getInt("view-distance", 16);
             displayFocusDistance = section.getInt("focus-distance", 5);
-            displayGlassScale = section.getDouble("glass-scale", 1.0);
-            displayItemScale = section.getDouble("item-scale", 1.0);
+            displayDisplayHeight = section.getDouble("glass-height", 0.0);
             displayHoloColor = section.getString("holo-color", "60,0,0,0");
         }
     }
@@ -77,12 +75,8 @@ public class ConfigHandler {
         return displayFocusDistance;
     }
 
-    public double getDisplayGlassScale() {
-        return displayGlassScale;
-    }
-
-    public double getDisplayItemScale() {
-        return displayItemScale;
+    public double getDisplayDisplayHeight() {
+        return displayDisplayHeight;
     }
 
     public String getDisplayHoloColor() {

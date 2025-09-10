@@ -33,10 +33,10 @@ public class ShopDisplay {
     private Item itemDisplay;
     private ItemDisplay glassDisplay;
     private TextDisplay textDisplay;
-    private float glassScale;
-    private float itemScale;
+    private float displayHeight;
     private String holoColor;
-    private static double OFFX = 0.0, OFFY = 0.0, OFFZ = 0.0;
+    private static double OFFX = 0.5, OFFY = 1.5, OFFZ = 0.5;
+    private static float GLASS_SCALE = (float) 0.675; 
 
     private final List<UUID> tracked = new ArrayList<>();
     private String lastText = "";
@@ -44,8 +44,7 @@ public class ShopDisplay {
     public ShopDisplay(PlayerShops64 javaPlugin, Shop shop) {
         this.javaPlugin = javaPlugin;
         this.shop = shop;
-        this.glassScale = (float) javaPlugin.getConfigHandler().getDisplayGlassScale();
-        this.itemScale = (float) javaPlugin.getConfigHandler().getDisplayItemScale();
+        this.displayHeight = (float) javaPlugin.getConfigHandler().getDisplayDisplayHeight();
         this.holoColor = javaPlugin.getConfigHandler().getDisplayHoloColor();
     }
 
@@ -73,12 +72,12 @@ public class ShopDisplay {
         Location base = shop.getLocation().clone();
         updateText(world, base, text);
         updateGlass(world, base);
-        updateItem(world, base, OFFX, OFFY, OFFZ);
+        updateItem(world, base);
     }
 
-    private void updateItem(World world, Location base, double x, double y, double z) {
+    private void updateItem(World world, Location base) {
         ItemStack item = (shop.getItemStack() != null) ? shop.getItemStack() : new ItemStack(Material.BARRIER);
-        Location loc = base.clone().add(0.5 + x, 1.2 + y, 0.5 + z);
+        Location loc = base.clone().add(OFFX, OFFY+displayHeight-0.3, OFFZ);
 
         // Remove any stray PS64 item display nearby
         /*for (Item nearby : world.getNearbyEntitiesByType(Item.class, loc, 1.0)) {
@@ -110,7 +109,7 @@ public class ShopDisplay {
     }
 
     private void updateGlass(World world, Location base) {
-        Location loc = base.clone().add(0.5, 1.5, 0.5); // 1.4->1.6
+        Location loc = base.clone().add(OFFX, OFFY+displayHeight, OFFZ);
 
         if (glassDisplay == null || !glassDisplay.isValid() || glassDisplay.isDead()) {
             for (ItemDisplay nearby : world.getNearbyEntitiesByType(ItemDisplay.class, loc, 1.0)) {
@@ -125,7 +124,7 @@ public class ShopDisplay {
                 ent.setPersistent(true);
                 ent.setNoPhysics(true);
                 ent.setViewRange(0.2f);
-                ent.setTransformationMatrix(new Matrix4f().scale(glassScale));
+                ent.setTransformationMatrix(new Matrix4f().scale(GLASS_SCALE));
                 ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "glass");
                 if (!tracked.contains(ent.getUniqueId())) tracked.add(ent.getUniqueId());
             });
@@ -135,7 +134,7 @@ public class ShopDisplay {
     }
 
     private void updateText(World world, Location base, String text) {
-        Location loc = base.clone().add(0.5, 2.0, 0.5);  // 1.8->2.0
+        Location loc = base.clone().add(OFFX, OFFY+displayHeight+0.45, OFFZ);
 
         if (textDisplay == null || !textDisplay.isValid() || textDisplay.isDead()) {
             for (TextDisplay nearby : world.getNearbyEntitiesByType(TextDisplay.class, loc, 1.0)) {
