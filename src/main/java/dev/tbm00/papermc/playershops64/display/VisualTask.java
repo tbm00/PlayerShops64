@@ -50,8 +50,8 @@ public class VisualTask extends BukkitRunnable {
             }
 
             // Get/build display
-            UUID id = shop.getUuid();
-            ShopDisplay shopDisplay = shopHandler.getDisplayManager().getOrCreate(id, shop);
+            UUID shopId = shop.getUuid();
+            ShopDisplay shopDisplay = shopHandler.getDisplayManager().getOrCreate(shopId);
             if (shopDisplay == null) {
                 StaticUtils.log(ChatColor.YELLOW, "VisualTask.run(): EXIT - shopDisplay null");
                 continue;

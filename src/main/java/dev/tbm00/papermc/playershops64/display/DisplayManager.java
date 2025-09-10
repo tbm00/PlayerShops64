@@ -8,7 +8,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
-import dev.tbm00.papermc.playershops64.data.Shop;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class DisplayManager {
@@ -20,9 +19,9 @@ public class DisplayManager {
         StaticUtils.log(ChatColor.GREEN, "DisplayManager initialized.");
     }
 
-    public ShopDisplay getOrCreate(UUID shopId, Shop shop) {
-        if (shopId == null || shop == null) return null;
-        return displays.computeIfAbsent(shopId, id -> new ShopDisplay(javaPlugin, shop));
+    public ShopDisplay getOrCreate(UUID shopId) {
+        if (shopId == null) return null;
+        return displays.computeIfAbsent(shopId, id -> new ShopDisplay(javaPlugin, shopId));
     }
 
     public ShopDisplay get(UUID shopId) {

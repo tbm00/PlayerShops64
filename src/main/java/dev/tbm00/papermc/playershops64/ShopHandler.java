@@ -127,7 +127,7 @@ public class ShopHandler {
                 indexShop(shop);
 
                 // instantly refresh this shop's display
-                ShopDisplay shopDisplay = displayManager.getOrCreate(shop.getUuid(), shop);
+                ShopDisplay shopDisplay = displayManager.getOrCreate(shop.getUuid());
                 if (shopDisplay != null) shopDisplay.update(shop.getWorld(), formatShopText(shop));
             });
         });
@@ -279,12 +279,12 @@ public class ShopHandler {
     }
 
     private Shop getIndexedShop(World world, int bx, int by, int bz) {
-        UUID id = getIndexedShopUuid(world, bx, by, bz);
-        Shop live = (id == null) ? null : shops.get(id);
+        UUID shopId = getIndexedShopId(world, bx, by, bz);
+        Shop live = (shopId == null) ? null : shops.get(shopId);
         return copyOf(live);
     }
 
-    private UUID getIndexedShopUuid(World world, int bx, int by, int bz) {
+    private UUID getIndexedShopId(World world, int bx, int by, int bz) {
         if (world == null) return null;
         Map<Long, UUID> byPos = shopIndex.get(world.getUID());
         if (byPos == null) return null;

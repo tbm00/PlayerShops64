@@ -28,7 +28,7 @@ import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ShopDisplay {
     private final PlayerShops64 javaPlugin;
-    private final Shop shop;
+    private final UUID shopId;
 
     private Item itemDisplay;
     private ItemDisplay glassDisplay;
@@ -41,9 +41,9 @@ public class ShopDisplay {
     private final List<UUID> tracked = new ArrayList<>();
     private String lastText = "";
 
-    public ShopDisplay(PlayerShops64 javaPlugin, Shop shop) {
+    public ShopDisplay(PlayerShops64 javaPlugin, UUID shopId) {
         this.javaPlugin = javaPlugin;
-        this.shop = shop;
+        this.shopId = shopId;
         this.displayHeight = (float) javaPlugin.getConfigHandler().getDisplayDisplayHeight();
         this.holoColor = javaPlugin.getConfigHandler().getDisplayHoloColor();
     }
@@ -67,15 +67,16 @@ public class ShopDisplay {
     }
 
     public void update(World world, String text) {
-        if (world == null || shop.getLocation() == null) return;
+        Shop shop = javaPlugin.getShopHandler().getShop(shopId);
+        if (world == null || shop == null || shop.getLocation() == null) return;
 
         Location base = shop.getLocation().clone();
         updateText(world, base, text);
         updateGlass(world, base);
-        updateItem(world, base);
+        updateItem(world, base, shop);
     }
 
-    private void updateItem(World world, Location base) {
+    private void updateItem(World world, Location base, Shop shop) {
         ItemStack item = (shop.getItemStack() != null) ? shop.getItemStack() : new ItemStack(Material.BARRIER);
         Location loc = base.clone().add(OFFX, OFFY+displayHeight-0.3, OFFZ);
 
@@ -95,7 +96,7 @@ public class ShopDisplay {
                 ent.setCanPlayerPickup(false);               // Paper API
                 ent.setCanMobPickup(false);                  // Paper API
                 ent.setUnlimitedLifetime(true);              // never despawn
-                ent.setPersistent(true);
+                ent.setPersistent(false);
                 ent.setInvulnerable(true);
                 ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "item");
             });
@@ -121,7 +122,7 @@ public class ShopDisplay {
             glassDisplay = world.spawn(loc, ItemDisplay.class, ent -> {
                 ent.setItemStack(new ItemStack(Material.GLASS));
                 ent.setGravity(false);
-                ent.setPersistent(true);
+                ent.setPersistent(false);
                 ent.setNoPhysics(true);
                 ent.setViewRange(0.2f);
                 ent.setTransformationMatrix(new Matrix4f().scale(GLASS_SCALE));
@@ -139,7 +140,7 @@ public class ShopDisplay {
         if (textDisplay == null || !textDisplay.isValid() || textDisplay.isDead()) {
             for (TextDisplay nearby : world.getNearbyEntitiesByType(TextDisplay.class, loc, 1.0)) {
                 if (!nearby.getPersistentDataContainer().has(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING)) continue;
-                if (!"line".equals(nearby.getPersistentDataContainer().get(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING))) continue;
+                if (!"holo".equals(nearby.getPersistentDataContainer().get(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING))) continue;
                 nearby.remove();
                 tracked.remove(nearby.getUniqueId());
             }
@@ -149,11 +150,11 @@ public class ShopDisplay {
                 ent.setBackgroundColor(parseColor(holoColor));
                 ent.setShadowed(false);
                 ent.setVisibleByDefault(false); // shown when focused
-                ent.setPersistent(true);
+                ent.setPersistent(false);
                 ent.setNoPhysics(true);
                 ent.setGravity(false);
                 ent.setViewRange(0.2f);
-                ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "line");
+                ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "holo");
                 if (!tracked.contains(ent.getUniqueId())) tracked.add(ent.getUniqueId());
             });
         }
@@ -206,10 +207,11 @@ public class ShopDisplay {
 
     /** Basic visibility heuristic to cull by distance/world. */
     public boolean shouldSee(Player player, int viewDistance) {
-        if (player == null || shop.getLocation() == null || shop.getWorld() == null) return false;
+        Shop shop = javaPlugin.getShopHandler().getShop(shopId);
+        if (player == null || shop == null || shop.getLocation() == null || shop.getWorld() == null) return false;
         if (!player.getWorld().equals(shop.getWorld())) return false;
         return shop.getLocation().distance(player.getLocation()) <= viewDistance;
     }
 
-    public Shop getShop() { return shop; }
+    //public Shop getShop() { return javaPlugin.getShopHandler().getShop(shopId); }
 }
