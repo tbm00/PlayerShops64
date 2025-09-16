@@ -103,6 +103,7 @@ public class GuiUtils {
 
     public static void handleClickSearch(InventoryClickEvent event, boolean isAdmin) {
         event.setCancelled(true);
+        event.getWhoClicked().closeInventory();
         new SearchGui(javaPlugin, (Player) event.getWhoClicked(), isAdmin);
     }
 

@@ -9,6 +9,8 @@ import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 public class ConfigHandler {
     private final PlayerShops64 javaPlugin;
 
+    private boolean floodgateEnabled = false;
+
     private String chatPrefix;
     
     private int displayTickCycle = 5;
@@ -26,12 +28,22 @@ public class ConfigHandler {
     public ConfigHandler(PlayerShops64 javaPlugin) {
         this.javaPlugin = javaPlugin;
         try {
+            loadHookSection();
             loadLanguageSection();
             loadDisplaySection();
             StaticUtils.log(ChatColor.GREEN, "ConfigHandler initialized.");
         } catch (Exception e) {
             StaticUtils.log(ChatColor.RED, "Caught exception loading config: " + e.getMessage());
         }
+    }
+
+    /**
+     * Loads the "lang" section of the configuration.
+     */
+    private void loadHookSection() {
+        ConfigurationSection section = javaPlugin.getConfig().getConfigurationSection("hooks");
+        if (section!=null)
+            floodgateEnabled = section.contains("floodgate") ? section.getBoolean("floodgate") : false;
     }
 
     /**
@@ -55,6 +67,11 @@ public class ConfigHandler {
             displayDisplayHeight = section.getDouble("glass-height", 0.0);
             displayHoloColor = section.getString("holo-color", "60,0,0,0");
         }
+    }
+
+    // Hooks
+    public boolean isFloodgateEnabled() {
+        return floodgateEnabled;
     }
 
     // Language

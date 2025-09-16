@@ -74,6 +74,9 @@ public class PlayerShops64 extends JavaPlugin {
         if (!setupVault()) {
             StaticUtils.log(ChatColor.RED, "Vault hook failed -- disabling plugin!");
             return false;
+        } if (!checkFloodgate()) {
+            StaticUtils.log(ChatColor.RED, "Floodgate hook failed -- disabling plugin!");
+            return false;
         }
         return true;
     }
@@ -93,6 +96,19 @@ public class PlayerShops64 extends JavaPlugin {
         }
 
         StaticUtils.log(ChatColor.GREEN, "Vault hooked.");
+        return true;
+    }
+
+    /**
+     * Attempts to hook into the Vault plugin.
+     *
+     * @return true if the hook was successful, false otherwise.
+     */
+    private boolean checkFloodgate() {
+        if (!configHandler.isFloodgateEnabled()) return true;
+        if (!isPluginAvailable("Floodgate")) return false;
+
+        StaticUtils.log(ChatColor.GREEN, "Floodgate hooked.");
         return true;
     }
 

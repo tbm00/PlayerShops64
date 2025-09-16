@@ -3,6 +3,9 @@
 
 enabled: true
 
+hooks:
+  floodgate: true
+
 mysql:
   host: 'host'
   port: 3306

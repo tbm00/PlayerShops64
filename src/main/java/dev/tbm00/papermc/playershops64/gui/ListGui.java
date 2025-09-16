@@ -31,9 +31,9 @@ public class ListGui {
     boolean isAdmin;
     QueryType queryType;
     String query;
+    SortType sortType;
 
     List<Map.Entry<UUID, Shop>> shops;
-    SortType sortType = SortType.UNSORTED;
     
     public ListGui(PlayerShops64 javaPlugin, Map<UUID, Shop> shopView, Player viewer, SortType sortType, QueryType queryType, String query, boolean isAdmin) {
         this.javaPlugin = javaPlugin;
