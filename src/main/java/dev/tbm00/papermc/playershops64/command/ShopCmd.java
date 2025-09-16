@@ -13,6 +13,9 @@ import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
+import dev.tbm00.papermc.playershops64.data.enums.QueryType;
+import dev.tbm00.papermc.playershops64.data.enums.SortType;
+import dev.tbm00.papermc.playershops64.gui.ListGui;
 import dev.tbm00.papermc.playershops64.utils.*;
 
 public class ShopCmd implements TabExecutor {
@@ -49,36 +52,31 @@ public class ShopCmd implements TabExecutor {
         switch (subCmd) {
             case "help":
                 return handleHelpCmd(player);
-            case "buy":
-                return handleBuyCmd(player, args);
+            case "menu":
+                return handleMenuCmd(player);
+            case "own":
+                return handleOwnCmd(player);
             default: {
                 StaticUtils.sendMessage(sender, "&cNo applicable argument provided!");
                 return true;
             }
         }
     }
-
-    private boolean handleBuyCmd(Player player, String[] args) {
-        Integer amount = 1;
-        if (args.length>1) {
-            amount = Integer.parseInt(args[1]);
-        }
-
-        StaticUtils.giveItem(player, StaticUtils.prepPlayerShopItemStack(amount));
-        player.sendMessage(ChatColor.GREEN + "You should've received "+amount+" lectern(s) with the PDC key!");
-        return true;
-    }
     
-    /**
-     * Handles the sub command for the help menu.
-     * 
-     * @param player the command sender
-     * @return true after displaying help menu
-     */
     private boolean handleHelpCmd(Player player) {
         player.sendMessage(ChatColor.DARK_PURPLE + "--- " + ChatColor.LIGHT_PURPLE + "Player Shop Commands" + ChatColor.DARK_PURPLE + " ---\n"
             + ChatColor.WHITE + "/testshop" + ChatColor.GRAY + " Base player command\n"
         );
+        return true;
+    }
+
+    private boolean handleMenuCmd(Player player) {
+        new ListGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), player, SortType.MATERIAL, QueryType.NO_QUERY, null, false);
+        return true;
+    }
+
+    private boolean handleOwnCmd(Player player) {
+        new ListGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), player, SortType.MATERIAL, QueryType.PLAYER_UUID, player.getUniqueId().toString(), false);
         return true;
     }
 

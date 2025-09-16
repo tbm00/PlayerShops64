@@ -296,4 +296,23 @@ public class StaticUtils {
         }
     }
 
+    public static boolean isShopBeingEdited(Shop shop) {
+        if (shop.getCurrentEditor()!=null) return true;
+        else return false;
+    }
+
+    public static boolean canPlayerEditShop(Shop shop, Player player) {
+        if (!isShopBeingEdited(shop)) return true;
+        if (shop.getCurrentEditor().equals(player.getUniqueId())) return true;
+
+        sendMessage(player, "&cThis shop is being used by " + javaPlugin.getServer().getOfflinePlayer(shop.getCurrentEditor()).getName());
+        return false;
+    }
+
+    public static void teleportPlayerToShop(Player player, Shop shop) {
+        double x=shop.getLocation().getX(), y=shop.getLocation().getY(), z=shop.getLocation().getZ();
+        String world=shop.getWorld().getName();
+
+        teleportPlayer(player, world, x, y+1, z);
+    }
 }

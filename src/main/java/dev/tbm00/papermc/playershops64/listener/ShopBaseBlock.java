@@ -81,7 +81,8 @@ public class ShopBaseBlock implements Listener {
                             BigDecimal.valueOf(50.0),
                             null,
                             false,
-                            false);
+                            false,
+                            null);
 
         javaPlugin.getShopHandler().upsertShop(shop);
         StaticUtils.sendMessage(owner, "&aCreated a new PlayerShop! Click to manage it, or sneak-left-click to start selling your held item");

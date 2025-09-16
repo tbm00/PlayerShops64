@@ -47,7 +47,7 @@ public class PlayerShops64 extends JavaPlugin {
 
             // Register Commands
             getCommand("testshop").setExecutor(new ShopCmd(this));
-            getCommand("testshopadmin").setExecutor(new AdminCmd());
+            getCommand("testshopadmin").setExecutor(new AdminCmd(this));
         }
     }
 
