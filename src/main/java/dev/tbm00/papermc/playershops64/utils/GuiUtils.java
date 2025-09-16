@@ -5,21 +5,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import net.md_5.bungee.api.ChatColor;
-
 import dev.triumphteam.gui.builder.item.ItemBuilder;
 import dev.triumphteam.gui.guis.Gui;
 import dev.triumphteam.gui.guis.PaginatedGui;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
-import dev.tbm00.papermc.playershops64.data.ConfigHandler;
 import dev.tbm00.papermc.playershops64.data.Shop;
 import dev.tbm00.papermc.playershops64.data.enums.QueryType;
 import dev.tbm00.papermc.playershops64.data.enums.SortType;
@@ -29,7 +28,7 @@ import dev.tbm00.papermc.playershops64.gui.SearchGui;
 public class GuiUtils {
     private static PlayerShops64 javaPlugin;
 
-    public static void init(PlayerShops64 javaPlugin, ConfigHandler configHandler) {
+    public static void init(PlayerShops64 javaPlugin) {
         GuiUtils.javaPlugin = javaPlugin;
     }
 
@@ -57,12 +56,14 @@ public class GuiUtils {
 
         if (!args[0].isBlank()) {
             try {
-                targetUUID = javaPlugin.getServer().getOfflinePlayer(targetName).getUniqueId().toString();
+                OfflinePlayer target = javaPlugin.getServer().getOfflinePlayer(targetName);
+                if (target.hasPlayedBefore()) targetUUID = target.getUniqueId().toString();
             } catch (Exception e) {
-                e.printStackTrace();
+                StaticUtils.log(ChatColor.RED, "Caught exception getting offline player while searching shops: " + e.getMessage());
             }
         }
         if (targetUUID!=null) {
+            //StaticUtils.log(ChatColor.YELLOW, "calling ListGui(), query type: PLAYER_UUID " + targetName + " " + targetUUID);
             new ListGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), sender, SortType.MATERIAL, QueryType.PLAYER_UUID, targetUUID, isAdmin);
             return true;
         }
@@ -80,6 +81,7 @@ public class GuiUtils {
         if (query==null || query.isEmpty()) return false;
         query = query.replace("_", " ");
         
+        //StaticUtils.log(ChatColor.YELLOW, "calling ListGui(), query type: STRING '" + query + "'");
         new ListGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), sender, SortType.MATERIAL, QueryType.STRING, query, isAdmin);
         return true;
     }
@@ -228,10 +230,19 @@ public class GuiUtils {
     }
 
     public static void addGuiItemShop(PaginatedGui gui, Shop shop, Player viewer, boolean isAdmin) {
+        boolean emptyShop = false;
         double buyPrice = shop.getBuyPrice().doubleValue(), sellPrice = shop.getSellPrice().doubleValue(),
                 balance = shop.getMoneyStock().doubleValue();
         int stock = shop.getItemStock();
-        ItemStack item = shop.getItemStack().clone();
+
+        ItemStack item = null; 
+        if (shop.getItemStack()==null) {
+            emptyShop = true;
+            item = new ItemStack(Material.BARRIER);
+        } else {
+            item = shop.getItemStack().clone();
+        }
+        
         ItemMeta meta = item.getItemMeta();
         List<String> lore = new ArrayList<>();
         String priceLine = "", firstLine=null;
@@ -267,9 +278,14 @@ public class GuiUtils {
 
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
 
-        if (meta.getDisplayName()==null || meta.getDisplayName().isBlank())
-            firstLine = StaticUtils.formatMaterial(item.getType()) + " &7x &f" + shop.getStackSize();
-        else firstLine = meta.getDisplayName() + " &7x &f" + shop.getStackSize();
+        if (emptyShop) {
+            firstLine = "&c(no shop item)";
+        } else {
+            if (meta.getDisplayName()==null || meta.getDisplayName().isBlank())
+                firstLine = StaticUtils.formatMaterial(item.getType()) + " &7x &f" + shop.getStackSize();
+            else firstLine = meta.getDisplayName() + " &7x &f" + shop.getStackSize();
+        }
+
         meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', firstLine));
 
         meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);

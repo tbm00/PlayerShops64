@@ -27,6 +27,7 @@ public class PlayerShops64 extends JavaPlugin {
 
         if (getConfig().contains("enabled") && getConfig().getBoolean("enabled")) {
             StaticUtils.init(this);
+            GuiUtils.init(this);
             StaticUtils.log(ChatColor.LIGHT_PURPLE,
                     ChatColor.DARK_PURPLE + "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
                     pdf.getName() + " v" + pdf.getVersion() + " created by tbm00",
