@@ -1,6 +1,5 @@
 package dev.tbm00.papermc.playershops64;
 
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -8,15 +7,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.commons.lang.WordUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
@@ -98,7 +94,9 @@ public class ShopHandler {
     }
 
     public Map<UUID, Shop> getShopView() {
-        return Collections.unmodifiableMap(shops);
+        Map<UUID, Shop> copy = new LinkedHashMap<>(shops.size());
+        for (var e : shops.entrySet()) copy.put(e.getKey(), copyOf(e.getValue()));
+        return Collections.unmodifiableMap(copy);
     }
 
     public Shop getShop(UUID uuid) {
@@ -128,7 +126,7 @@ public class ShopHandler {
 
                 // instantly refresh this shop's display
                 ShopDisplay shopDisplay = displayManager.getOrCreate(shop.getUuid());
-                if (shopDisplay != null) shopDisplay.update(shop.getWorld(), formatShopText(shop));
+                if (shopDisplay != null) shopDisplay.update(shop.getWorld(), StaticUtils.formatHologramText(shop));
             });
         });
     }
@@ -149,50 +147,6 @@ public class ShopHandler {
                 displayManager.delete(uuid);
             });
         });
-    }
-
-    public String formatShopText(Shop shop) {
-        ItemStack item = shop.getItemStack();
-        String name = (item==null) ? "null" : item.getType().name();
-        String stackSize = (!((1<=shop.getStackSize())&&(shop.getStackSize()<=64))) ? "error" : shop.getStackSize() + "";
-        String buy = (shop.getBuyPrice()==null) ? "null" : (shop.getBuyPrice().compareTo(BigDecimal.valueOf(-1.0))==0) ? "disabled" : shop.getBuyPrice().toPlainString();
-        String sell = (shop.getSellPrice()==null) ? "null" : (shop.getSellPrice().compareTo(BigDecimal.valueOf(-1.0))==0) ? "disabled" : shop.getSellPrice().toPlainString();
-        String stock = (shop.getItemStock()==-1) ? "infinite" : shop.getItemStock() + "";
-        String balance = (shop.getMoneyStock()==null) ? "null" : (shop.getMoneyStock().compareTo(BigDecimal.valueOf(-1.0))==0) ? "infinite" : shop.getMoneyStock().toPlainString();
-        String owner = (shop.getOwnerName()==null) ? "null" : shop.getOwnerName();
-        String lore0 = "";
-        try {
-            if (item!=null) {
-                ItemMeta meta = item.getItemMeta();
-                if (meta!=null) {
-                    if (meta.hasDisplayName()) name = meta.getDisplayName();
-                    if (name.isBlank()) {
-                        name = meta.getItemName();
-                        if (name.isBlank()) {
-                            name = WordUtils.capitalizeFully(item.getType().name().toLowerCase().replace("_", " "));
-                        }
-                    }
-
-                    if (meta.hasLore() && meta.getLore()!=null && !meta.getLore().isEmpty()) {
-                        lore0 = String.valueOf(meta.getLore().get(0));
-                    }
-                }
-            }
-        } catch (Exception e) {e.printStackTrace();}
-        if (lore0.isBlank()) {
-            return name + " &7x &f" + stackSize
-                        + "\n&7Buy for &a$" + buy
-                        + "\n&7Sell for &c$" + sell
-                        + "\n&7Stock: &e" + stock + "&7, Balance: &e$" + balance
-                        + "\n&7Owner: &e" + owner;
-        } else {
-            return name + " &7x &f" + stackSize
-                        + "\n" + lore0
-                        + "\n&7Buy for &a$" + buy
-                        + "\n&7Sell for &c$" + sell
-                        + "\n&7Stock: &e" + stock + "&7, Balance: &e$" + balance
-                        + "\n&7Owner: &e" + owner;
-        }
     }
 
     public Shop getShopInFocus(Player player) {
@@ -308,8 +262,9 @@ public class ShopHandler {
             s.getBuyPrice(),
             s.getSellPrice(),
             s.getLastTransactionDate() == null ? null : new Date(s.getLastTransactionDate().getTime()),
-            s.getInfiniteMoney(),
-            s.getInfiniteStock()
+            s.hasInfiniteMoney(),
+            s.hasInfiniteStock(),
+            s.getDescription()
         );
     }
 }

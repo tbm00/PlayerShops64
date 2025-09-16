@@ -16,14 +16,19 @@ public class MySQLConnection {
     private HikariDataSource dataSource;
     private JavaPlugin javaPlugin;
     private HikariConfig config;
+    private static String[] TABLES = {
+            "playershops64_shops"
+    };
+    
 
     public MySQLConnection(JavaPlugin javaPlugin) {
         this.javaPlugin = javaPlugin;
         
         loadSQLConfig();
         setupConnectionPool();
-        //clearOldTables();
+        //clearTables();
         initializeDatabase();
+        updateTables();
         StaticUtils.log(ChatColor.GREEN, "MySQLConnection initialized.");
     }
 
@@ -69,7 +74,7 @@ public class MySQLConnection {
     }
 
     private void initializeDatabase() {
-        final String shopTable = "CREATE TABLE IF NOT EXISTS playershops64_shops ("
+        final String shopTable = "CREATE TABLE IF NOT EXISTS "+TABLES[0]+" ("
           + "  `uuid` CHAR(36) NOT NULL,"
           + "  `owner_uuid` CHAR(36) NOT NULL,"
           + "  `owner_name` VARCHAR(32) NOT NULL,"
@@ -84,6 +89,7 @@ public class MySQLConnection {
           + "  `last_tx` DATETIME NULL,"
           + "  `inf_money` TINYINT(1) NOT NULL DEFAULT 0,"
           + "  `inf_stock` TINYINT(1) NOT NULL DEFAULT 0,"
+          + "  `description` VARCHAR(256) NULL,"
           + "  PRIMARY KEY (`uuid`),"
           + "  KEY `idx_owner_uuid` (`owner_uuid`),"
           + "  KEY `idx_world` (`world`),"
@@ -99,21 +105,32 @@ public class MySQLConnection {
     }
 
     @SuppressWarnings("unused")
-    private void clearOldTables() {
-        String[] oldTables = {
-            "playershops64_shops"
-        };
-    
+    private void updateTables() {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
     
-            for (String tbl : oldTables) {
-                stmt.executeUpdate("DROP TABLE IF EXISTS `" + tbl + "`;");
-                StaticUtils.log(ChatColor.YELLOW, "Dropped old table '" + tbl + "' (if it existed).");
-            }
-    
+            stmt.executeUpdate(
+                    "ALTER TABLE `"+TABLES[0]+"` " +
+                    "ADD COLUMN `description` VARCHAR(256) NULL AFTER `inf_stock`"
+                );
+            StaticUtils.log(ChatColor.YELLOW, "Updated table '"+TABLES[0]+"' with 'description' column.");
         } catch (SQLException e) {
-            StaticUtils.log(ChatColor.RED, "Failed to drop old tables: " + e.getMessage());
+            if (e.getErrorCode() == 1060) return;
+            else StaticUtils.log(ChatColor.RED, "Failed to update tables'"+TABLES[0]+"' with 'description' column: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private void clearTables() {
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+    
+            for (String tbl : TABLES) {
+                stmt.executeUpdate("DROP TABLE IF EXISTS `" + tbl + "`;");
+                StaticUtils.log(ChatColor.YELLOW, "Dropped table '" + tbl + "' if it existed.");
+            }
+        } catch (SQLException e) {
+            StaticUtils.log(ChatColor.RED, "Failed to drop tables: " + e.getMessage());
         }
     }
 }

@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.commons.lang.WordUtils;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -25,6 +27,7 @@ import org.bukkit.persistence.PersistentDataType;
 import net.md_5.bungee.api.chat.TextComponent;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
+import dev.tbm00.papermc.playershops64.data.Shop;
 
 public class StaticUtils {
     private static PlayerShops64 javaPlugin;
@@ -248,4 +251,49 @@ public class StaticUtils {
             return false;
         }
     }
+
+    public static String formatHologramText(Shop shop) {
+        ItemStack item = shop.getItemStack();
+        String name = (item==null) ? "null" : item.getType().name();
+        String stackSize = (!((1<=shop.getStackSize())&&(shop.getStackSize()<=64))) ? "error" : shop.getStackSize() + "";
+        String buy = (shop.getBuyPrice()==null) ? "null" : (shop.getBuyPrice().compareTo(BigDecimal.valueOf(-1.0))==0) ? "disabled" : shop.getBuyPrice().toPlainString();
+        String sell = (shop.getSellPrice()==null) ? "null" : (shop.getSellPrice().compareTo(BigDecimal.valueOf(-1.0))==0) ? "disabled" : shop.getSellPrice().toPlainString();
+        String stock = (shop.hasInfiniteStock()) ? "infinite" : shop.getItemStock() + "";
+        String balance = (shop.hasInfiniteMoney()) ? "infinite" : (shop.getMoneyStock()==null) ? "null" : shop.getMoneyStock().toPlainString();
+        String owner = (shop.getOwnerName()==null) ? "null" : shop.getOwnerName();
+        String lore0 = "";
+        try {
+            if (item!=null) {
+                ItemMeta meta = item.getItemMeta();
+                if (meta!=null) {
+                    if (meta.hasDisplayName()) name = meta.getDisplayName();
+                    if (name.isBlank()) {
+                        name = meta.getItemName();
+                        if (name.isBlank()) {
+                            name = WordUtils.capitalizeFully(item.getType().name().toLowerCase().replace("_", " "));
+                        }
+                    }
+
+                    if (meta.hasLore() && meta.getLore()!=null && !meta.getLore().isEmpty()) {
+                        lore0 = String.valueOf(meta.getLore().get(0));
+                    }
+                }
+            }
+        } catch (Exception e) {e.printStackTrace();}
+        if (lore0.isBlank()) {
+            return name + " &7x &f" + stackSize
+                        + "\n&7Buy for &a$" + buy
+                        + "\n&7Sell for &c$" + sell
+                        + "\n&7Stock: &e" + stock + "&7, Balance: &e$" + balance
+                        + "\n&7Owner: &e" + owner;
+        } else {
+            return name + " &7x &f" + stackSize
+                        + "\n" + lore0
+                        + "\n&7Buy for &a$" + buy
+                        + "\n&7Sell for &c$" + sell
+                        + "\n&7Stock: &e" + stock + "&7, Balance: &e$" + balance
+                        + "\n&7Owner: &e" + owner;
+        }
+    }
+
 }

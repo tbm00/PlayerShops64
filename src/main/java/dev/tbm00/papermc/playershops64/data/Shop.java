@@ -12,6 +12,7 @@ import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 
 public class Shop {
+    // on SQL
     private UUID uuid; // generated when the shop is created (shop base block is placed)
     private UUID ownerUuid; // minecraft player's uuid
     private String ownerName; // minecraft player's username
@@ -26,6 +27,10 @@ public class Shop {
     private Date lastTransactionDate; // null if no transactions ever
     private boolean infiniteMoney; // only enabled by admins
     private boolean infiniteStock; // only enabled by admins
+    private String description; // null if not set
+
+    // NOT on SQL
+    private UUID currentEditor; // null for none
 
     /**
      * Constructs a Shop with all properties initialized.
@@ -43,7 +48,8 @@ public class Shop {
                 BigDecimal sellPrice,
                 Date lastTransactionDate,
                 boolean infiniteMoney,
-                boolean infiniteStock
+                boolean infiniteStock,
+                String description
                 ) {
         this.uuid = uuid;
         this.ownerUuid = ownerUuid;
@@ -59,6 +65,8 @@ public class Shop {
         this.lastTransactionDate = lastTransactionDate;
         this.infiniteMoney = infiniteMoney;
         this.infiniteStock = infiniteStock;
+        this.description = description;
+        this.currentEditor = null;
     }
 
     // --- Getters ---
@@ -110,12 +118,20 @@ public class Shop {
         return lastTransactionDate;
     }
 
-    public boolean getInfiniteMoney() {
+    public boolean hasInfiniteMoney() {
         return infiniteMoney;
     }
 
-    public boolean getInfiniteStock() {
+    public boolean hasInfiniteStock() {
         return infiniteStock;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public UUID getCurrentEditor() {
+        return currentEditor;
     }
 
     // --- Setters ---
@@ -185,5 +201,14 @@ public class Shop {
 
     public void setInfiniteStock(boolean infiniteStock) {
         this.infiniteStock = infiniteStock;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+
+    public void setCurrentEditor(UUID currentEditor) {
+        this.currentEditor = currentEditor;
     }
 }

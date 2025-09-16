@@ -58,7 +58,7 @@ public class VisualTask extends BukkitRunnable {
             }
 
             // Build text
-            String text = shopHandler.formatShopText(shop);
+            String text = StaticUtils.formatHologramText(shop);
 
             // Update entities
             shopDisplay.update(world, text);

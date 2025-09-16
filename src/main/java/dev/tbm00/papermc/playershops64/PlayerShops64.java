@@ -1,11 +1,6 @@
 package dev.tbm00.papermc.playershops64;
 
 import org.bukkit.ChatColor;
-import org.bukkit.World;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.ItemDisplay;
-import org.bukkit.entity.TextDisplay;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -31,7 +26,6 @@ public class PlayerShops64 extends JavaPlugin {
         final PluginDescriptionFile pdf = this.getDescription();
 
         if (getConfig().contains("enabled") && getConfig().getBoolean("enabled")) {
-
             StaticUtils.init(this);
             StaticUtils.log(ChatColor.LIGHT_PURPLE,
                     ChatColor.DARK_PURPLE + "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
