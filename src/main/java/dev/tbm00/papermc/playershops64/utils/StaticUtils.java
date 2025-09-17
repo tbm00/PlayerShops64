@@ -39,6 +39,8 @@ public class StaticUtils {
     public static NamespacedKey DISPLAY_KEY;
     public static NamespacedKey SHOP_KEY;
 
+    public static String CATEGORY_GUI_TITLE = "Shop Categories";
+
     public static void init(PlayerShops64 javaPlugin) {
         StaticUtils.javaPlugin = javaPlugin;
         SHOP_KEY = new NamespacedKey(javaPlugin, "shop-base");
@@ -89,8 +91,6 @@ public class StaticUtils {
     /**
      * Formats material to title case
      * 
-     * @param amount the material to format
-     * @return the formatted string
      */
     public static String formatMaterial(Material material) {
         if (material == null) return "null";
@@ -100,6 +100,22 @@ public class StaticUtils {
             builder.append(word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase() + " ");
      
         return builder.toString().trim();
+    }
+
+    /**
+     * Converts String to a Material
+     */
+    public static Material parseMaterial(String name) {
+        if (name == null || name.isBlank()) return null;
+
+        Material m = Material.matchMaterial(name);
+        if (m != null) return m;
+        try {
+            return Material.valueOf(name.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ignored) {
+            log(ChatColor.RED, "Unknown material in config.yml: '" + name + "'");
+            return null;
+        }
     }
 
     /**

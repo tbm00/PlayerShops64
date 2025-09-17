@@ -3,15 +3,15 @@ package dev.tbm00.papermc.playershops64.display;
 import java.util.Map;
 import java.util.UUID;
 
-import dev.tbm00.papermc.playershops64.PlayerShops64;
-import dev.tbm00.papermc.playershops64.ShopHandler;
-import dev.tbm00.papermc.playershops64.data.Shop;
-import dev.tbm00.papermc.playershops64.utils.StaticUtils;
-
 import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+
+import dev.tbm00.papermc.playershops64.PlayerShops64;
+import dev.tbm00.papermc.playershops64.ShopHandler;
+import dev.tbm00.papermc.playershops64.data.Shop;
+import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class VisualTask extends BukkitRunnable {
     private final PlayerShops64 javaPlugin;
@@ -80,14 +80,5 @@ public class VisualTask extends BukkitRunnable {
                 //StaticUtils.log(ChatColor.YELLOW, "VisualTask.run().forEachPlayer(): "+player.getName()+" in range -> show, focused: "+focused);
             }
         }
-    }
-
-    // isNearbyShop(player, shop, radius / 2.0);
-    private boolean isNearbyShop(Player p, Shop shop, double halfRadius) {
-        if (!p.getWorld().equals(shop.getWorld())) return false;
-        double dx = Math.abs(p.getLocation().getX() - shop.getLocation().getX());
-        double dy = Math.abs(p.getLocation().getY() - shop.getLocation().getY());
-        double dz = Math.abs(p.getLocation().getZ() - shop.getLocation().getZ());
-        return dx <= halfRadius && dy <= halfRadius && dz <= halfRadius;
     }
 }

@@ -4,7 +4,7 @@
 enabled: true
 
 hooks:
-  floodgate: true
+  floodgate: false
 
 mysql:
   host: 'host'
@@ -27,8 +27,1022 @@ lang:
   prefix: "&8[&fShop&8] &7"
 
 display:
-  tick-cycle: 5
-  view-distance: 16
-  focus-distance: 5
+  tick-cycle: 5 # ticks
+  view-distance: 16 # blocks
+  focus-distance: 5 # blocks
   display-height: 0.2
   holo-color: "60,0,0,0" # ARGB(%,R,G,B)
+
+gui:
+  categories:
+    19: # slot
+      name: "Popular"
+      lore: "&6Click to open Popular shop categories"
+      material: END_CRYSTAL
+      queries: 
+        0: # slot
+          material: TNT
+          name: "&fTNT"
+          lore: "&7Click to find TNT shops"
+          query: "tnt"
+        1: # slot
+          material: END_CRYSTAL
+          name: "&fEnd Crystal"
+          lore: "&7Click to find end crystal shops"
+          query: "end_crystal"
+        2: # slot
+          material: ENCHANTED_GOLDEN_APPLE
+          name: "&fGolden Apples"
+          lore: "&7Click to find gapple shops"
+          query: "golden_apple"
+        3: # slot
+          material: TOTEM_OF_UNDYING
+          name: "&fTotems"
+          lore: "&7Click to find totem shops"
+          query: "totem"
+        4: # slot
+          material: VILLAGER_SPAWN_EGG
+          name: "&fSpawn Eggs"
+          lore: "&7Click to find spawn egg shops"
+          query: "spawn_egg"
+        5: # slot
+          material: SPAWNER
+          name: "&fSpawners"
+          lore: "&bClick to find mob spawner shops"
+          query: "spawner"
+        6: # slot
+          material: TRIPWIRE_HOOK
+          name: "&fCrate Keys"
+          lore: "&7Click to find crate key shops"
+          query: "key"
+        7: # slot
+          material: SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE
+          name: "&fArmor Trims"
+          lore: "&bClick to find armor trim shops"
+          query: "template"
+        8: # slot
+          material: ENCHANTED_BOOK
+          name: "&fEnchanted Books"
+          lore: "&7Click to find enchant book shops"
+          query: "enchanted_book"
+        9: # slot
+          material: NETHERITE_HELMET
+          name: "&fHelmets"
+          lore: "&7Click to find helmet shops"
+          query: "helmet"
+        10: # slot
+          material: NETHERITE_CHESTPLATE
+          name: "&fChestplates"
+          lore: "&7Click to find chestplate shops"
+          query: "chestplate"
+        11: # slot
+          material: NETHERITE_LEGGINGS
+          name: "&fLeggings"
+          lore: "&7Click to find leggings shops"
+          query: "leggings"
+        12: # slot
+          material: NETHERITE_BOOTS
+          name: "&fBoots"
+          lore: "&7Click to find boots shops"
+          query: "boots"
+        13: # slot
+          material: NETHERITE_SWORD
+          name: "&fSwords"
+          lore: "&7Click to find sword shops"
+          query: "sword"
+        14: # slot
+          material: NETHERITE_PICKAXE
+          name: "&fPickaxes"
+          lore: "&7Click to find pickaxe shops"
+          query: "pickaxe"
+        15: # slot
+          material: NETHERITE_AXE
+          name: "&fAxes"
+          lore: "&7Click to find axe shops"
+          query: "axe"
+        16: # slot
+          material: NETHERITE_SHOVEL
+          name: "&fShovels"
+          lore: "&7Click to find shovel shops"
+          query: "shovel"
+        17: # slot
+          material: NETHERITE_HOE
+          name: "&fHoes"
+          lore: "&7Click to find hoe shops"
+          query: "hoe"
+        18: # slot
+          material: FISHING_ROD
+          name: "&fFishing Rods"
+          lore: "&7Click to find fishing rod shops"
+          query: "fishing_rod"
+        19: # slot
+          material: BOW
+          name: "&fBows"
+          lore: "&7Click to find bow shops"
+          query: "bow"
+        20: # slot
+          material: CROSSBOW
+          name: "&fCrossbows"
+          lore: "&7Click to find crossbow shops"
+          query: "crossbow"
+        21: # slot
+          material: TRIDENT
+          name: "&fTridents"
+          lore: "&7Click to find trident shops"
+          query: "trident"
+        22: # slot
+          material: SHIELD
+          name: "&fShields"
+          lore: "&7Click to find shield shops"
+          query: "shield"
+        23: # slot
+          material: ELYTRA
+          name: "&fElytras"
+          lore: "&7Click to find elytra shops"
+          query: "elytra"
+
+    20: # slot
+      name: "Block"
+      lore: "&6Click to open Block shop categories"
+      material: GRASS_BLOCK
+      queries: 
+        0: # slot
+          material: GRASS_BLOCK
+          name: "&fGrass Block"
+          lore: "&7Click to find grass block shops"
+          query: "grass_block"
+        1: # slot
+          material: DIRT
+          name: "&fDirt"
+          lore: "&7Click to find dirt shops"
+          query: "dirt"
+        2: # slot
+          material: GRAVEL
+          name: "&fGravel"
+          lore: "&7Click to find gravel shops"
+          query: "gravel"
+        3: # slot
+          material: COBBLESTONE
+          name: "&fCobblestone"
+          lore: "&7Click to find cobblestone shops"
+          query: "cobblestone"
+        4: # slot
+          material: MOSSY_COBBLESTONE
+          name: "&fMossy Cobblestone"
+          lore: "&7Click to find mossy cobblestone shops"
+          query: "mossy_cobblestone"
+        5: # slot
+          material: STONE
+          name: "&fStone"
+          lore: "&7Click to find stone shops"
+          query: "stone"
+        6: # slot
+          material: SMOOTH_STONE
+          name: "&fSmooth Stone"
+          lore: "&7Click to find smooth stone shops"
+          query: "smooth_stone"
+        7: # slot
+          material: GRANITE
+          name: "&fGranite"
+          lore: "&7Click to find granite shops"
+          query: "granite"
+        8: # slot
+          material: DIORITE
+          name: "&fDiorite"
+          lore: "&7Click to find diorite shops"
+          query: "diorite"
+        9: # slot
+          material: ANDESITE
+          name: "&fAndesite"
+          lore: "&7Click to find andesite shops"
+          query: "andesite"
+        10: # slot
+          material: OAK_LOG
+          name: "&fOak Log"
+          lore: "&7Click to find oak log shops"
+          query: "oak_log"
+        11: # slot
+          material: SPRUCE_LOG
+          name: "&fSpruce Log"
+          lore: "&7Click to find spruce log shops"
+          query: "spruce_log"
+        12: # slot
+          material: BIRCH_LOG
+          name: "&fBirch Log"
+          lore: "&7Click to find birch log shops"
+          query: "birch_log"
+        13: # slot
+          material: JUNGLE_LOG
+          name: "&fJungle Log"
+          lore: "&7Click to find jungle log shops"
+          query: "jungle_log"
+        14: # slot
+          material: ACACIA_LOG
+          name: "&fAcacia Log"
+          lore: "&7Click to find acacia log shops"
+          query: "acacia_log"
+        15: # slot
+          material: DARK_OAK_LOG
+          name: "&fDark Oak Log"
+          lore: "&7Click to find dark oak log shops"
+          query: "dark_oak_log"
+        16: # slot
+          material: MANGROVE_LOG
+          name: "&fMangrove Log"
+          lore: "&7Click to find mangrove log shops"
+          query: "mangrove_log"
+        17: # slot
+          material: CHERRY_LOG
+          name: "&fCherry Log"
+          lore: "&7Click to find cherry log shops"
+          query: "cherry_log"
+        18: # slot
+          material: WARPED_STEM
+          name: "&fWarped Stem"
+          lore: "&7Click to find warped stem shops"
+          query: "warped_stem"
+        19: # slot
+          material: CRIMSON_STEM
+          name: "&fCrimson Stem"
+          lore: "&7Click to find crimson stem shops"
+          query: "crimson_stem"
+        20: # slot
+          material: SAND
+          name: "&fSand"
+          lore: "&7Click to find sand shops"
+          query: "sand"
+        21: # slot
+          material: SANDSTONE
+          name: "&fSandstone"
+          lore: "&7Click to find sandstone shops"
+          query: "sandstone"
+        22: # slot
+          material: NETHERRACK
+          name: "&fNetherrack"
+          lore: "&7Click to find netherrack shops"
+          query: "netherrack"
+        23: # slot
+          material: GLOWSTONE
+          name: "&fGlowstone"
+          lore: "&7Click to find glowstone shops"
+          query: "glowstone"
+        24: # slot
+          material: SOUL_SAND
+          name: "&fSoul Sand"
+          lore: "&7Click to find soul sand shops"
+          query: "soul_sand"
+        25: # slot
+          material: BASALT
+          name: "&fBasalt"
+          lore: "&7Click to find basalt shops"
+          query: "basalt"
+        26: # slot
+          material: END_STONE
+          name: "&fEnd Stone"
+          lore: "&7Click to find end stone shops"
+          query: "end_stone"
+        27: # slot
+          material: PRISMARINE
+          name: "&fPrismarine"
+          lore: "&7Click to find prismarine shops"
+          query: "prismarine"
+        28: # slot
+          material: SEA_LANTERN
+          name: "&fSea Lantern"
+          lore: "&7Click to find sea lantern shops"
+          query: "sea_lantern"
+        29: # slot
+          material: BLACKSTONE
+          name: "&fBlackstone"
+          lore: "&7Click to find blackstone shops"
+          query: "blackstone"
+        30: # slot
+          material: END_STONE_BRICKS
+          name: "&fEnd Stone Bricks"
+          lore: "&7Click to find end stone bricks shops"
+          query: "end_stone_bricks"
+        31: # slot
+          material: PRISMARINE_BRICKS
+          name: "&fPrismarine Bricks"
+          lore: "&7Click to find prismarine bricks shops"
+          query: "prismarine_bricks"
+        32: # slot
+          material: QUARTZ_BRICKS
+          name: "&fQuartz Bricks"
+          lore: "&7Click to find quartz bricks shops"
+          query: "quartz_bricks"
+        33: # slot
+          material: STONE_BRICKS
+          name: "&fStone Bricks"
+          lore: "&7Click to find stone bricks shops"
+          query: "stone_bricks"
+        34: # slot
+          material: DEEPSLATE_BRICKS
+          name: "&fDeepslate Bricks"
+          lore: "&7Click to find deepslate bricks shops"
+          query: "deepslate_bricks"
+        35: # slot
+          material: POLISHED_BLACKSTONE_BRICKS
+          name: "&fPolished Blackstone Bricks"
+          lore: "&7Click to find polished blackstone bricks shops"
+          query: "polished_blackstone_bricks"
+        36: # slot
+          material: NETHER_BRICKS
+          name: "&fNether Bricks"
+          lore: "&7Click to find nether bricks shops"
+          query: "nether_bricks"
+        37: # slot
+          material: RED_NETHER_BRICKS
+          name: "&fRed Nether Bricks"
+          lore: "&7Click to find red nether bricks shops"
+          query: "red_nether_bricks"
+        38: # slot
+          material: BRICKS
+          name: "&fBricks"
+          lore: "&7Click to find bricks shops"
+          query: "bricks"
+        39: # slot
+          material: OBSIDIAN
+          name: "&fObsidian"
+          lore: "&7Click to find obsidian shops"
+          query: "obsidian"
+        40: # slot
+          material: ICE
+          name: "&fIce"
+          lore: "&7Click to find ice shops"
+          query: "ice"
+        41: # slot
+          material: QUARTZ_BLOCK
+          name: "&fQuartz Block"
+          lore: "&7Click to find quartz block shops"
+          query: "quartz_block"
+        42: # slot
+          material: OCHRE_FROGLIGHT
+          name: "&fOchre Froglight"
+          lore: "&7Click to find ochre froglight shops"
+          query: "ochre_froglight"
+        43: # slot
+          material: PEARLESCENT_FROGLIGHT
+          name: "&fPearlescent Froglight"
+          lore: "&7Click to find pearlescent froglight shops"
+          query: "pearlescent_froglight"
+        44: # slot
+          material: VERDANT_FROGLIGHT
+          name: "&fVerdant Froglight"
+          lore: "&7Click to find verdant froglight shops"
+          query: "verdant_froglight"
+
+    21: # slot
+      name: "Ore"
+      lore: "&6Click to open Ore shop categories"
+      material: DIAMOND
+      queries: 
+        0: # slot
+          material: FLINT
+          name: "&fFlint"
+          lore: "&7Click to find flint shops"
+          query: "flint"
+        1: # slot
+          material: COAL
+          name: "&fCoal"
+          lore: "&7Click to find coal shops"
+          query: "coal"
+        2: # slot
+          material: IRON_INGOT
+          name: "&fIron Ingot"
+          lore: "&7Click to find iron ingot shops"
+          query: "iron_ingot"
+        3: # slot
+          material: COPPER_INGOT
+          name: "&fCopper Ingot"
+          lore: "&7Click to find copper ingot shops"
+          query: "copper_ingot"
+        4: # slot
+          material: GOLD_INGOT
+          name: "&fGold Ingot"
+          lore: "&7Click to find gold ingot shops"
+          query: "gold_ingot"
+        5: # slot
+          material: EMERALD
+          name: "&fEmerald"
+          lore: "&7Click to find emerald shops"
+          query: "emerald"
+        6: # slot
+          material: DIAMOND
+          name: "&fDiamond"
+          lore: "&7Click to find diamond shops"
+          query: "diamond"
+        7: # slot
+          material: NETHERITE_INGOT
+          name: "&fNetherite Ingot"
+          lore: "&7Click to find netherite ingot shops"
+          query: "netherite_ingot"
+        8: # slot
+          material: QUARTZ
+          name: "&fQuartz"
+          lore: "&7Click to find quartz shops"
+          query: "quartz"
+        9: # slot
+          material: LAPIS_LAZULI
+          name: "&fLapis Lazuli"
+          lore: "&7Click to find lapis lazuli shops"
+          query: "lapis_lazuli"
+        10: # slot
+          material: AMETHYST_SHARD
+          name: "&fAmethyst Shard"
+          lore: "&7Click to find amethyst shard shops"
+          query: "amethyst_shard"
+        11: # slot
+          material: REDSTONE
+          name: "&fRedstone Dust"
+          lore: "&7Click to find redstone dust shops"
+          query: "redstone"
+        12: # slot
+          material: GLOWSTONE_DUST
+          name: "&fGlowstone Dust"
+          lore: "&7Click to find glowstone shops"
+          query: "glowstone"
+
+    22: # slot
+      name: "Food"
+      lore: "&6Click to open Food shop categories"
+      material: COOKED_BEEF
+      queries: 
+        0: # slot
+          material: CHORUS_FRUIT
+          name: "&fChorus Fruit"
+          lore: "&7Click to find chorus fruit shops"
+          query: "chorus_fruit"
+        1: # slot
+          material: MELON_SLICE
+          name: "&fMelon Slice"
+          lore: "&7Click to find melon slice shops"
+          query: "melon_slice"
+        2: # slot
+          material: SWEET_BERRIES
+          name: "&fSweet Berries"
+          lore: "&7Click to find sweet berries shops"
+          query: "sweet_berries"
+        3: # slot
+          material: GLOW_BERRIES
+          name: "&fGlow Berries"
+          lore: "&7Click to find glow berries shops"
+          query: "glow_berries"
+        4: # slot
+          material: BAKED_POTATO
+          name: "&fBaked Potato"
+          lore: "&7Click to find baked potato shops"
+          query: "baked_potato"
+        5: # slot
+          material: CARROT
+          name: "&fCarrot"
+          lore: "&7Click to find carrot shops"
+          query: "carrot"
+        6: # slot
+          material: GOLDEN_CARROT
+          name: "&fGolden Carrot"
+          lore: "&7Click to find golden carrot shops"
+          query: "golden_carrot"
+        7: # slot
+          material: BEETROOT
+          name: "&fBeetroot"
+          lore: "&7Click to find beetroot shops"
+          query: "beetroot"
+        8: # slot
+          material: BEETROOT_SOUP
+          name: "&fBeetroot Soup"
+          lore: "&7Click to find beetroot soup shops"
+          query: "beetroot_soup"
+        9: # slot
+          material: MUSHROOM_STEW
+          name: "&fMushroom Stew"
+          lore: "&7Click to find mushroom stew shops"
+          query: "mushroom_stew"
+        10: # slot
+          material: RABBIT_STEW
+          name: "&fRabbit Stew"
+          lore: "&7Click to find rabbit stew shops"
+          query: "rabbit_stew"
+        11: # slot
+          material: HONEY_BOTTLE
+          name: "&fHoney Bottle"
+          lore: "&7Click to find honey bottle shops"
+          query: "honey_bottle"
+        12: # slot
+          material: COOKIE
+          name: "&fCookie"
+          lore: "&7Click to find cookie shops"
+          query: "cookie"
+        13: # slot
+          material: CAKE
+          name: "&fCake"
+          lore: "&7Click to find cake shops"
+          query: "cake"
+        14: # slot
+          material: PUMPKIN_PIE
+          name: "&fPumpkin Pie"
+          lore: "&7Click to find pumpkin pie shops"
+          query: "pumpkin_pie"
+        15: # slot
+          material: BREAD
+          name: "&fBread"
+          lore: "&7Click to find bread shops"
+          query: "bread"
+        16: # slot
+          material: COOKED_COD
+          name: "&fCooked Cod"
+          lore: "&7Click to find cooked cod shops"
+          query: "cooked_cod"
+        17: # slot
+          material: COOKED_SALMON
+          name: "&fCooked Salmon"
+          lore: "&7Click to find cooked salmon shops"
+          query: "cooked_salmon"
+        18: # slot
+          material: COOKED_RABBIT
+          name: "&fCooked Rabbit"
+          lore: "&7Click to find cooked rabbit shops"
+          query: "cooked_rabbit"
+        19: # slot
+          material: COOKED_CHICKEN
+          name: "&fCooked Chicken"
+          lore: "&7Click to find cooked chicken shops"
+          query: "cooked_chicken"
+        20: # slot
+          material: COOKED_PORKCHOP
+          name: "&fCooked Porkchop"
+          lore: "&7Click to find cooked porkchop shops"
+          query: "cooked_porkchop"
+        21: # slot
+          material: COOKED_BEEF
+          name: "&fCooked Beef"
+          lore: "&7Click to find cooked beef shops"
+          query: "cooked_beef"
+        22: # slot
+          material: COOKED_MUTTON
+          name: "&fCooked Mutton"
+          lore: "&7Click to find cooked mutton shops"
+          query: "cooked_mutton"
+        23: # slot
+          material: APPLE
+          name: "&fApple"
+          lore: "&7Click to find apple shops"
+          query: "apple"
+        24: # slot
+          material: GOLDEN_APPLE
+          name: "&fGolden Apple"
+          lore: "&7Click to find gapple shops"
+          query: "golden_apple"
+        25: # slot
+          material: ENCHANTED_GOLDEN_APPLE
+          name: "&fEnchanted Golden Apple"
+          lore: "&7Click to find egapple shops"
+          query: "enchanted_golden_apple"
+
+    23: # slot
+      name: "Farming"
+      lore: "&6Click to open Farming shop categories"
+      material: WHEAT
+      queries: 
+        0: # slot
+          material: WHEAT_SEEDS
+          name: "&fWheat Seeds"
+          lore: "&7Click to find wheat seeds shops"
+          query: "wheat_seeds"
+        1: # slot
+          material: BEETROOT_SEEDS
+          name: "&fBeetroot Seeds"
+          lore: "&7Click to find beetroot seeds shops"
+          query: "beetroot_seeds"
+        2: # slot
+          material: PUMPKIN_SEEDS
+          name: "&fPumpkin Seeds"
+          lore: "&7Click to find pumpkin seeds shops"
+          query: "pumpkin_seeds"
+        3: # slot
+          material: MELON_SEEDS
+          name: "&fMelon Seeds"
+          lore: "&7Click to find melon seeds shops"
+          query: "melon_seeds"
+        4: # slot
+          material: BAMBOO
+          name: "&fBamboo"
+          lore: "&7Click to find bamboo shops"
+          query: "bamboo"
+        5: # slot
+          material: NETHER_WART
+          name: "&fNether Wart"
+          lore: "&7Click to find nether wart shops"
+          query: "nether_wart"
+        6: # slot
+          material: SUGAR_CANE
+          name: "&fSugar Cane"
+          lore: "&7Click to find sugar cane shops"
+          query: "sugar_cane"
+        7: # slot
+          material: WHEAT
+          name: "&fWheat"
+          lore: "&7Click to find wheat shops"
+          query: "wheat"
+        8: # slot
+          material: BEETROOT
+          name: "&fBeetroot"
+          lore: "&7Click to find beetroot shops"
+          query: "beetroot"
+        9: # slot
+          material: PUMPKIN
+          name: "&fPumpkin"
+          lore: "&7Click to find pumpkin shops"
+          query: "pumpkin"
+        10: # slot
+          material: CACTUS
+          name: "&fCactus"
+          lore: "&7Click to find cactus shops"
+          query: "cactus"
+        11: # slot
+          material: KELP
+          name: "&fKelp"
+          lore: "&7Click to find kelp shops"
+          query: "kelp"
+        12: # slot
+          material: COCOA_BEANS
+          name: "&fCocoa Beans"
+          lore: "&7Click to find cocoa beans shops"
+          query: "cocoa_beans"
+        13: # slot
+          material: SWEET_BERRIES
+          name: "&fSweet Berries"
+          lore: "&7Click to find sweet berries shops"
+          query: "sweet_berries"
+        14: # slot
+          material: BROWN_MUSHROOM
+          name: "&fBrown Mushroom"
+          lore: "&7Click to find brown mushroom shops"
+          query: "brown_mushroom"
+        15: # slot
+          material: RED_MUSHROOM
+          name: "&fRed Mushroom"
+          lore: "&7Click to find red mushroom shops"
+          query: "red_mushroom"
+        16: # slot
+          material: OAK_SAPLING
+          name: "&fOak Sapling"
+          lore: "&7Click to find oak sapling shops"
+          query: "oak_sapling"
+        17: # slot
+          material: SPRUCE_SAPLING
+          name: "&fSpruce Sapling"
+          lore: "&7Click to find spruce sapling shops"
+          query: "spruce_sapling"
+        18: # slot
+          material: BIRCH_SAPLING
+          name: "&fBirch Sapling"
+          lore: "&7Click to find birch sapling shops"
+          query: "birch_sapling"
+        19: # slot
+          material: JUNGLE_SAPLING
+          name: "&fJungle Sapling"
+          lore: "&7Click to find jungle sapling shops"
+          query: "jungle_sapling"
+        20: # slot
+          material: ACACIA_SAPLING
+          name: "&fAcacia Sapling"
+          lore: "&7Click to find acacia sapling shops"
+          query: "acacia_sapling"
+        21: # slot
+          material: DARK_OAK_SAPLING
+          name: "&fDark Oak Sapling"
+          lore: "&7Click to find dark oak sapling shops"
+          query: "dark_oak_sapling"
+        22: # slot
+          material: OAK_LEAVES
+          name: "&fOak Leaves"
+          lore: "&7Click to find oak leaves shops"
+          query: "oak_leaves"
+        23: # slot
+          material: SPRUCE_LEAVES
+          name: "&fSpruce Leaves"
+          lore: "&7Click to find spruce leaves shops"
+          query: "spruce_leaves"
+        24: # slot
+          material: BIRCH_LEAVES
+          name: "&fBirch Leaves"
+          lore: "&7Click to find birch leaves shops"
+          query: "birch_leaves"
+        25: # slot
+          material: JUNGLE_LEAVES
+          name: "&fJungle Leaves"
+          lore: "&7Click to find jungle leaves shops"
+          query: "jungle_leaves"
+        26: # slot
+          material: ACACIA_LEAVES
+          name: "&fAcacia Leaves"
+          lore: "&7Click to find acacia leaves shops"
+          query: "acacia_leaves"
+        27: # slot
+          material: DARK_OAK_LEAVES
+          name: "&fDark Oak Leaves"
+          lore: "&7Click to find dark oak leaves shops"
+          query: "dark_oak_leaves"
+        28: # slot
+          material: WEEPING_VINES
+          name: "&fWeeping Vines"
+          lore: "&7Click to find weeping vines shops"
+          query: "weeping_vines"
+        29: # slot
+          material: CRIMSON_FUNGUS
+          name: "&fCrimson Fungus"
+          lore: "&7Click to find crimson fungus shops"
+          query: "crimson_fungus"
+        30: # slot
+          material: CRIMSON_ROOTS
+          name: "&fCrimson Roots"
+          lore: "&7Click to find crimson roots shops"
+          query: "crimson_roots"
+        31: # slot
+          material: TWISTING_VINES
+          name: "&fTwisting Vines"
+          lore: "&7Click to find twisting vines shops"
+          query: "twisting_vines"
+        32: # slot
+          material: WARPED_FUNGUS
+          name: "&fWarped Fungus"
+          lore: "&7Click to find warped fungus shops"
+          query: "warped_fungus"
+        33: # slot
+          material: WARPED_ROOTS
+          name: "&fWarped Roots"
+          lore: "&7Click to find warped roots shops"
+          query: "warped roots"
+        34: # slot
+          material: NETHER_SPROUTS
+          name: "&fNether Sprouts"
+          lore: "&7Click to find nether sprouts shops"
+          query: "nether_sprouts"
+        35: # slot
+          material: HONEYCOMB
+          name: "&fHoneycomb"
+          lore: "&7Click to find honeycomb shops"
+          query: "honeycomb"
+        36: # slot
+          material: DEAD_BUSH
+          name: "&fDead Bush"
+          lore: "&7Click to find dead bush shops"
+          query: "dead_bush"
+        37: # slot
+          material: FERN
+          name: "&fFern"
+          lore: "&7Click to find fern shops"
+          query: "fern"
+        38: # slot
+          material: POPPY
+          name: "&fPoppy"
+          lore: "&7Click to find poppy shops"
+          query: "poppy"
+        39: # slot
+          material: TORCHFLOWER_SEEDS
+          name: "&fTorchflower Seeds"
+          lore: "&7Click to find torchflower seeds shops"
+          query: "torchflower_seeds"
+        40: # slot
+          material: PITCHER_POD
+          name: "&fPitcher Pod"
+          lore: "&7Click to find pitcher pod shops"
+          query: "pitcher_pod"
+        41: # slot
+          material: SEAGRASS
+          name: "&fSeagrass"
+          lore: "&7Click to find seagrass shops"
+          query: "seagrass"
+
+    24: # slot
+      name: "Mob Drop"
+      lore: "&6Click to open Mob Drop shop categories"
+      material: STRING
+      queries: 
+        0: # slot
+          material: ROTTEN_FLESH
+          name: "&fRotten Flesh"
+          lore: "&7Click to find rotten flesh shops"
+          query: "rotten_flesh"
+        1: # slot
+          material: BONE
+          name: "&fBone"
+          lore: "&7Click to find bone shops"
+          query: "bone"
+        2: # slot
+          material: ARROW
+          name: "&fArrow"
+          lore: "&7Click to find arrow shops"
+          query: "arrow"
+        3: # slot
+          material: STRING
+          name: "&fString"
+          lore: "&7Click to find string shops"
+          query: "string"
+        4: # slot
+          material: SPIDER_EYE
+          name: "&fSpider Eye"
+          lore: "&7Click to find spider eye shops"
+          query: "spider_eye"
+        5: # slot
+          material: ENDER_PEARL
+          name: "&fEnder Pearl"
+          lore: "&7Click to find ender pearl shops"
+          query: "ender_pearl"
+        6: # slot
+          material: SLIME_BALL
+          name: "&fSlime Ball"
+          lore: "&7Click to find slime ball shops"
+          query: "slime_ball"
+        7: # slot
+          material: PRISMARINE_CRYSTALS
+          name: "&fPrismarine Crystals"
+          lore: "&7Click to find prismarine crystals shops"
+          query: "prismarine_crystals"
+        8: # slot
+          material: PRISMARINE_SHARD
+          name: "&fPrismarine Shard"
+          lore: "&7Click to find prismarine shard shops"
+          query: "prismarine_shard"
+        9: # slot
+          material: STICK
+          name: "&fStick"
+          lore: "&7Click to find stick shops"
+          query: "stick"
+        10: # slot
+          material: BLAZE_ROD
+          name: "&fBlaze Rod"
+          lore: "&7Click to find blaze rod shops"
+          query: "blaze_rod"
+        11: # slot
+          material: MAGMA_CREAM
+          name: "&fMagma Cream"
+          lore: "&7Click to find magma cream shops"
+          query: "magma_cream"
+        12: # slot
+          material: GHAST_TEAR
+          name: "&fGhast Tear"
+          lore: "&7Click to find ghast tear shops"
+          query: "ghast_tear"
+        13: # slot
+          material: LEATHER
+          name: "&fLeather"
+          lore: "&7Click to find leather shops"
+          query: "leather"
+        14: # slot
+          material: RABBIT_HIDE
+          name: "&fRabbit Hide"
+          lore: "&7Click to find rabbit hide shops"
+          query: "rabbit_hide"
+        15: # slot
+          material: RABBIT_FOOT
+          name: "&fRabbit Foot"
+          lore: "&7Click to find rabbit foot shops"
+          query: "rabbit_foot"
+        16: # slot
+          material: INK_SAC
+          name: "&fInk Sac"
+          lore: "&7Click to find ink sac shops"
+          query: "ink_sac"
+        17: # slot
+          material: FEATHER
+          name: "&fFeather"
+          lore: "&7Click to find feather shops"
+          query: "feather"
+        18: # slot
+          material: EGG
+          name: "&fEgg"
+          lore: "&7Click to find egg shops"
+          query: "egg"
+        19: # slot
+          material: PHANTOM_MEMBRANE
+          name: "&fPhantom Membrane"
+          lore: "&7Click to find phantom membrane shops"
+          query: "phantom_membrane"
+        20: # slot
+          material: WHITE_WOOL
+          name: "&fWhite Wool"
+          lore: "&7Click to find white wool shops"
+          query: "white_wool"
+        21: # slot
+          material: SHULKER_SHELL
+          name: "&fShulker Shell"
+          lore: "&7Click to find shulker shell shops"
+          query: "shulker_shell"
+        22: # slot
+          material: NAUTILUS_SHELL
+          name: "&fNautilus Shell"
+          lore: "&7Click to find nautilus shell shops"
+          query: "nautilus_shell"
+        23: # slot
+          material: GUNPOWDER
+          name: "&fGunpowder"
+          lore: "&7Click to find gunpowder shops"
+          query: "gunpowder"
+        24: # slot
+          material: GLOWSTONE_DUST
+          name: "&fGlowstone Dust"
+          lore: "&7Click to find glowstone dust shops"
+          query: "glowstone_dust"
+        25: # slot
+          material: SUGAR
+          name: "&fSugar"
+          lore: "&7Click to find sugar shops"
+          query: "sugar"
+        26: # slot
+          material: GLASS_BOTTLE
+          name: "&fGlass Bottle"
+          lore: "&7Click to find glass bottle shops"
+          query: "glass_bottle"
+        27: # slot
+          material: GUNPOWDER
+          name: "&fGunpowder"
+          lore: "&7Click to find gunpowder shops"
+          query: "gunpowder"
+
+    25: # slot
+      name: "Redstone"
+      lore: "&6Click to open Redstone shop categories"
+      material: REDSTONE
+      queries: 
+        0: # slot
+          material: REDSTONE
+          name: "&fRedstone Dust"
+          lore: "&7Click to find redstone dust shops"
+          query: "redstone"
+        1: # slot
+          material: REDSTONE_TORCH
+          name: "&fRedstone Torch"
+          lore: "&7Click to find redstone torch shops"
+          query: "redstone_torch"
+        2: # slot
+          material: LEVER
+          name: "&fLever"
+          lore: "&7Click to find lever shops"
+          query: "lever"
+        3: # slot
+          material: REPEATER
+          name: "&fRedstone Repeater"
+          lore: "&7Click to find repeater shops"
+          query: "repeater"
+        4: # slot
+          material: COMPARATOR
+          name: "&fRedstone Comparator"
+          lore: "&7Click to find comparator shops"
+          query: "comparator"
+        5: # slot
+          material: OBSERVER
+          name: "&fObserver"
+          lore: "&7Click to find observer shops"
+          query: "observer"
+        6: # slot
+          material: HOPPER
+          name: "&fHopper"
+          lore: "&7Click to find hopper shops"
+          query: "hopper"
+        7: # slot
+          material: DISPENSER
+          name: "&fDispenser"
+          lore: "&7Click to find dispenser shops"
+          query: "dispenser"
+        8: # slot
+          material: DROPPER
+          name: "&fDropper"
+          lore: "&7Click to find dropper shops"
+          query: "dropper"
+        9: # slot
+          material: PISTON
+          name: "&fPiston"
+          lore: "&7Click to find piston shops"
+          query: "piston"
+        10: # slot
+          material: POWERED_RAIL
+          name: "&fRail"
+          lore: "&7Click to find rail shops"
+          query: "rail"
+        11: # slot
+          material: REDSTONE_LAMP
+          name: "&fRedstone Lamp"
+          lore: "&7Click to find redstone lamp shops"
+          query: "redstone_lamp"
+        12: # slot
+          material: DAYLIGHT_DETECTOR
+          name: "&fDaylight Detector"
+          lore: "&7Click to find daylight detector shops"
+          query: "daylight_detector"
+        13: # slot
+          material: NOTE_BLOCK
+          name: "&fNote Block"
+          lore: "&7Click to find note block shops"
+          query: "note_block"
+        14: # slot
+          material: OAK_BUTTON
+          name: "&fButton"
+          lore: "&7Click to find button shops"
+          query: "button"
+        15: # slot
+          material: LIGHT_WEIGHTED_PRESSURE_PLATE
+          name: "&fPressure Plate"
+          lore: "&7Click to find pressure plate shops"
+          query: "pressure_plate"

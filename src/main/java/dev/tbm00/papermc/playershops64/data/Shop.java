@@ -10,7 +10,6 @@ import org.bukkit.inventory.ItemStack;
 
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
-
 public class Shop {
     // on SQL
     private UUID uuid; // generated when the shop is created (shop base block is placed)
@@ -206,7 +205,6 @@ public class Shop {
     public void setDescription(String description) {
         this.description = description;
     }
-
 
     public void setCurrentEditor(UUID currentEditor) {
         this.currentEditor = currentEditor;

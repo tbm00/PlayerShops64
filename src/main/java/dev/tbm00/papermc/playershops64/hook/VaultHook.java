@@ -3,9 +3,10 @@ package dev.tbm00.papermc.playershops64.hook;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import dev.tbm00.papermc.playershops64.PlayerShops64;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
+
+import dev.tbm00.papermc.playershops64.PlayerShops64;
 
 public class VaultHook {
     public Economy pl;

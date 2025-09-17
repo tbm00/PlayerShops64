@@ -3,6 +3,7 @@ package dev.tbm00.papermc.playershops64.data;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -76,7 +77,7 @@ public class ShopDAO {
         final String sql = "INSERT INTO playershops64_shops " +
             "(uuid, owner_uuid, owner_name, world, location, itemstack_b64, stack_size, " +
             " item_stock, money_stock, buy_price, sell_price, last_tx, inf_money, inf_stock, description) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
             "ON DUPLICATE KEY UPDATE " +
             " owner_uuid=VALUES(owner_uuid), " +
             " owner_name=VALUES(owner_name), " +
@@ -195,7 +196,7 @@ public class ShopDAO {
     }
 
     private void bindBigDecimalOrNull(PreparedStatement ps, int idx, BigDecimal v) throws SQLException {
-        if (v == null) ps.setNull(idx, Types.DECIMAL); 
+        if (v == null) ps.setNull(idx, Types.VARCHAR); 
         else ps.setBigDecimal(idx, v);
     }
 

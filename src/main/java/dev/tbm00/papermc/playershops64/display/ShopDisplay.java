@@ -22,6 +22,7 @@ import org.bukkit.util.Vector;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.Shop;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;

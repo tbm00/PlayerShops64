@@ -16,7 +16,7 @@ import org.bukkit.entity.Player;
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.enums.QueryType;
 import dev.tbm00.papermc.playershops64.data.enums.SortType;
-import dev.tbm00.papermc.playershops64.gui.ListGui;
+import dev.tbm00.papermc.playershops64.gui.ListShopsGui;
 import dev.tbm00.papermc.playershops64.utils.*;
 
 public class AdminCmd implements TabExecutor {
@@ -80,7 +80,7 @@ public class AdminCmd implements TabExecutor {
     }
 
     private boolean handleMenuCmd(Player player) {
-        new ListGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), player, SortType.MATERIAL, QueryType.NO_QUERY, null, true);
+        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), player, SortType.MATERIAL, QueryType.NO_QUERY, null, true);
         return true;
     }
 

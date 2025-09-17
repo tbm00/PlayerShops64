@@ -3,6 +3,7 @@ package dev.tbm00.papermc.playershops64.listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServerLoadEvent;
+
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 
 public class ServerStartup implements Listener {

@@ -7,10 +7,10 @@ import java.sql.Statement;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-import dev.tbm00.papermc.playershops64.utils.StaticUtils;
-
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class MySQLConnection {
     private HikariDataSource dataSource;
@@ -104,7 +104,7 @@ public class MySQLConnection {
         }
     }
 
-    @SuppressWarnings("unused")
+    //@SuppressWarnings("unused")
     private void updateTables() {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
