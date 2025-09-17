@@ -146,12 +146,12 @@ public class ShopBaseBlock implements Listener {
                 } else return;
             } else {
                 if (action==Action.LEFT_CLICK_BLOCK || action==Action.RIGHT_CLICK_BLOCK) {
-                    GuiUtils.openGuiManage(player, shop);
+                    GuiUtils.openGuiManage(player, shop.getUuid());
                     return;
                 } else return;
             }
         } else {
-            GuiUtils.openGuiTransaction(player, shop);
+            GuiUtils.openGuiTransaction(player, shop.getUuid());
             return;
         }
     }

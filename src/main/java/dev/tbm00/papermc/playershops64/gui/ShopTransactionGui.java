@@ -1,5 +1,136 @@
 package dev.tbm00.papermc.playershops64.gui;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import dev.triumphteam.gui.builder.item.ItemBuilder;
+import dev.triumphteam.gui.guis.Gui;
+
+import dev.tbm00.papermc.playershops64.PlayerShops64;
+import dev.tbm00.papermc.playershops64.data.Shop;
+import dev.tbm00.papermc.playershops64.utils.StaticUtils;
+
 public class ShopTransactionGui {
-    // TODO: create ShopTransactionGui for player+shop
+    PlayerShops64 javaPlugin;
+    Gui gui;
+    String label;
+    Player viewer;
+    UUID shopUuid;
+    Shop shop;
+    int quantity;
+    int stock;
+    
+    public ShopTransactionGui(PlayerShops64 javaPlugin, Player viewer, UUID shopUuid, int quantity) {
+        this.javaPlugin = javaPlugin;
+        this.viewer = viewer;
+        this.shopUuid = shopUuid;
+        this.shop = javaPlugin.getShopHandler().getShop(shopUuid);
+        this.quantity = quantity;
+        this.stock = shop.getItemStock();
+
+        if (javaPlugin.getShopHandler().canPlayerEditShop(shopUuid, viewer)) {
+            javaPlugin.getShopHandler().setCurrentShopEditor(shopUuid, viewer);
+            StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened the shop's gui");
+        }
+        else return;
+
+        label = "Shop Transaction";
+
+        gui = new Gui(6, label);
+
+        setup();
+
+        gui.updateTitle(label);
+        gui.disableAllInteractions();
+        gui.open(viewer);
+        gui.setCloseGuiAction(event -> {
+            StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed the shop's gui");
+            javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid);
+        });
+    }
+
+    /**
+     * Sets up all buttons.
+     */
+    private void setup() {
+        ItemStack item = new ItemStack(Material.GLASS);
+        ItemMeta meta = item.getItemMeta();
+        List<String> lore = new ArrayList<>();
+
+        
+        { // Sale Item
+            ItemStack shopItem = shop.getItemStack();
+            shopItem.setAmount(quantity);
+            gui.setItem(2, 5, ItemBuilder.from(shopItem).asGuiItem(event -> {event.setCancelled(true);}));
+        }
+
+        { // Sell Button
+            lore.add("&8-----------------------");
+            lore.add("&6Click to &csell " + quantity + " &6for $" + (quantity*javaPlugin.getShopHandler().getShopSellPriceForOne(shop)));
+            meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cConfirm Sell"));
+            item.setItemMeta(meta);
+            item.setType(Material.RED_BANNER);
+            gui.setItem(2, 3, ItemBuilder.from(item).asGuiItem(event -> {event.setCancelled(true);})); // TODO: call/create handleClickSell(event, shopUuid, quantity)
+            lore.clear();
+        }
+
+        { // Buy Button
+            lore.add("&8-----------------------");
+            lore.add("&6Click to &abuy " + quantity + " &6for $" + (quantity*javaPlugin.getShopHandler().getShopBuyPriceForOne(shop)));
+            meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aConfirm Buy"));
+            item.setItemMeta(meta);
+            item.setType(Material.GREEN_BANNER);
+            gui.setItem(2, 7, ItemBuilder.from(item).asGuiItem(event -> {event.setCancelled(true);})); // TODO: call/create handleClickBuy(event, shopUuid, quantity)
+            lore.clear();
+        }
+
+        { // Deposit Buttons
+            if (quantity>64) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -64, 4, 1);
+            if (quantity>1) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 4, 4);
+
+            if (quantity>32) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -32, 5, 1);
+            if (quantity>16) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -16, 5, 2);
+            if (quantity>8) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -8, 5, 3);
+            if (quantity>4) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -4, 5, 4);
+
+            if (quantity>50) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -50, 6, 1);
+            if (quantity>25) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -25, 6, 2);
+            if (quantity>10) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -10, 6, 3);
+            if (quantity>5) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -5, 6, 4);
+
+            if (stock>1) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, 1, 4, 6);
+            if (stock>64) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, 64, 4, 9);
+
+            if (stock>4) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 4, 5, 6);
+            if (stock>8) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 8, 5, 7);
+            if (stock>16) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 16, 5, 8);
+            if (stock>32) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 32, 5, 9);
+
+            if (stock>5) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 5, 6, 6);
+            if (stock>10) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 10, 6, 7);
+            if (stock>25) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 25, 6, 8);
+            if (stock>50) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 50, 6, 9);
+        }
+    }
+
+    private void addQuantityButton(ItemStack item, ItemMeta meta, List<String> lore, Material material, String name, int amount, int row, int col) {
+        lore.clear();
+        meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&f"+amount));
+        item.setItemMeta(meta);
+        item.setType(material);
+        if (amount<0) item.setAmount((-1*amount));
+        else item.setAmount(amount);
+        gui.setItem(row, col, ItemBuilder.from(item).asGuiItem(event -> {new ShopTransactionGui(javaPlugin, (Player) event.getWhoClicked(), shopUuid, quantity+amount);}));
+        lore.clear();
+    }
 }

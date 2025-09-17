@@ -202,6 +202,46 @@ public class ShopHandler {
         return shop;
     }
 
+    public double getShopBuyPriceForOne(Shop shop) {
+        if (shop==null) return 0;
+        
+        return shop.getBuyPrice().doubleValue()/shop.getStackSize();
+    }
+
+    public double getShopSellPriceForOne(Shop shop) {
+        if (shop==null) return 0;
+        
+        return shop.getSellPrice().doubleValue()/shop.getStackSize();
+    }
+
+    public boolean canPlayerEditShop(UUID shopUuid, Player player) {
+        if (!isShopBeingEdited(shopUuid)) return true;
+
+        Shop shop = getShop(shopUuid);
+        if (shop.getCurrentEditor().equals(player.getUniqueId())) return true;
+
+        StaticUtils.sendMessage(player, "&cThis shop is being used by " + javaPlugin.getServer().getOfflinePlayer(shop.getCurrentEditor()).getName());
+        return false;
+    }
+
+    public boolean isShopBeingEdited(UUID shopUuid) {
+        Shop shop = getShop(shopUuid);
+        if (shop.getCurrentEditor()!=null) return true;
+        else return false;
+    }
+
+    public void setCurrentShopEditor(UUID shopUuid, Player player) {
+        Shop shop = getShop(shopUuid);
+        shop.setCurrentEditor(player.getUniqueId());
+        upsertShop(shop);
+    }
+
+    public void clearCurrentShopEditor(UUID shopUuid) {
+        Shop shop = getShop(shopUuid);
+        shop.setCurrentEditor(null);
+        upsertShop(shop);
+    }
+
     private static long packBlockPos(int x, int y, int z) {
         // Same idea as Mojang’s BlockPos long packing
         return ((x & 0x3FFFFFFL) << 38) | ((z & 0x3FFFFFFL) << 12) | (y & 0xFFFL);

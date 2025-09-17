@@ -1,6 +1,7 @@
 package dev.tbm00.papermc.playershops64.utils;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -24,6 +25,7 @@ import dev.tbm00.papermc.playershops64.gui.ListShopsGui;
 import dev.tbm00.papermc.playershops64.gui.ListCategoriesGui;
 import dev.tbm00.papermc.playershops64.gui.ListQueriesGui;
 import dev.tbm00.papermc.playershops64.gui.SearchGui;
+import dev.tbm00.papermc.playershops64.gui.ShopTransactionGui;
 
 public class GuiUtils {
     private static PlayerShops64 javaPlugin;
@@ -32,17 +34,17 @@ public class GuiUtils {
         GuiUtils.javaPlugin = javaPlugin;
     }
 
-    public static boolean openGuiTransaction(Player player, Shop shop) {
-        if (!StaticUtils.canPlayerEditShop(shop, player)) return false;
+    public static boolean openGuiTransaction(Player player, UUID shopUuid) {
+        if (!javaPlugin.getShopHandler().canPlayerEditShop(shopUuid, player)) return false;
 
-        // TODO: call ShopTransactionGui for player+shop
+        new ShopTransactionGui(javaPlugin, player, shopUuid, 1);
         return true;
     }
 
-    public static boolean openGuiManage(Player player, Shop shop) {
-        if (!StaticUtils.canPlayerEditShop(shop, player)) return false;
+    public static boolean openGuiManage(Player player, UUID shopUuid) {
+        if (!javaPlugin.getShopHandler().canPlayerEditShop(shopUuid, player)) return false;
 
-        // TODO: call ShopManageGui for player+shop
+        // TODO: call ShopManageGui for player+shopUuid
         return true;
     }
 
@@ -119,7 +121,7 @@ public class GuiUtils {
         event.setCancelled(true);
         
         if (event.isShiftClick() && (isAdmin || sender.getUniqueId().equals(shop.getOwnerUuid()))) {
-            openGuiManage(sender, shop);
+            openGuiManage(sender, shop.getUuid());
         } else StaticUtils.teleportPlayerToShop(sender, shop);
     }
 
