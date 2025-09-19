@@ -1,5 +1,6 @@
 package dev.tbm00.papermc.playershops64.gui;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -63,15 +64,15 @@ public class ShopTransactionGui {
         ItemMeta meta = item.getItemMeta();
         List<String> lore = new ArrayList<>();
         
-        { // Sale Item
+        if (shop.getItemStack()!=null) { // Sale Item
             ItemStack shopItem = shop.getItemStack();
             shopItem.setAmount(quantity);
             gui.setItem(2, 5, ItemBuilder.from(shopItem).asGuiItem(event -> {event.setCancelled(true);}));
         }
 
-        { // Sell Button
+        if (shop.getSellPrice()!=null) { // Sell Button
             lore.add("&8-----------------------");
-            lore.add("&6Click to &csell " + quantity + " &6for $" + (quantity*ShopUtils.getShopSellPriceForOne(shop)));
+            lore.add("&6Click to &csell " + quantity + " &6for $" + (ShopUtils.getShopSellPriceForOne(shop).multiply(BigDecimal.valueOf(quantity))));
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cConfirm Sell"));
             item.setItemMeta(meta);
@@ -82,16 +83,16 @@ public class ShopTransactionGui {
             lore.clear();
         }
 
-        { // Buy Button
+        if (shop.getBuyPrice()!=null) { // Buy Button
             lore.add("&8-----------------------");
-            lore.add("&6Click to &abuy " + quantity + " &6for $" + (quantity*ShopUtils.getShopBuyPriceForOne(shop)));
+            lore.add("&6Click to &abuy " + quantity + " &6for $" + (ShopUtils.getShopBuyPriceForOne(shop).multiply(BigDecimal.valueOf(quantity))));
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aConfirm Buy"));
             item.setItemMeta(meta);
             item.setType(Material.GREEN_BANNER);
             gui.setItem(2, 7, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        ShopUtils.buyFromShop(viewer, shopUuid, quantity);})); // TODO: call/create ShopHandler.buyFromShop(event, shop/shopUuid, quantity)
+                                                                        /*ShopUtils.buyFromShop(viewer, shopUuid, quantity);*/})); // TODO: call/create ShopHandler.buyFromShop(event, shop/shopUuid, quantity)
             lore.clear();
         }
 

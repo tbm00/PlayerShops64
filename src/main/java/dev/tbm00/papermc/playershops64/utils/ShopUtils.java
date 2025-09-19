@@ -1,6 +1,7 @@
 package dev.tbm00.papermc.playershops64.utils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.UUID;
 
@@ -52,8 +53,8 @@ public class ShopUtils {
 
     public static void sellToShop(Player player, UUID shopUuid, int quantity) {
         if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player + " tried to sell to shop " + shopUuid + " off the main thread -- trying again during next tick on main thread!");
             javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> sellToShop(player, shopUuid, quantity));
-            StaticUtils.log(ChatColor.RED, player + " tried to sell to shop " + shopUuid + " off the main thread..!");
             return;
         }
 
@@ -67,69 +68,106 @@ public class ShopUtils {
 
         Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
         if (shop == null) {
-            StaticUtils.sendMessage(player, "&cShop not found.");
+            StaticUtils.sendMessage(player, "&cShop not found..!");
+            javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid);
             return;
         }
 
         if (quantity <= 0) {
             StaticUtils.sendMessage(player, "&cInvalid quantity.");
+            javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid);
             return;
         }
 
+        int w_quantity = quantity;
+
         ItemStack saleItem = shop.getItemStack();
-        if (saleItem == null) {
+        if (saleItem == null || saleItem.getType().isAir()) {
             StaticUtils.sendMessage(player, "&cThis shop has no item set.");
+            javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid);
             return;
         }
 
         int playerHas = StaticUtils.countMatchingItems(player, saleItem);
         if (playerHas < quantity) {
-            StaticUtils.sendMessage(player, "&cYou only have &e" + playerHas + "&c of that item.");
+            /*StaticUtils.sendMessage(player, "&cYou don't have enough items -- you only have " + playerHas + "!");
+            javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid);
+            return;*/
+            w_quantity = playerHas;
+        } if (playerHas <= 0) {
+            StaticUtils.sendMessage(player, "&cYou don't have any matching items to sell!");
+        }
+
+        if (shop.getSellPrice()==null || shop.getSellPrice().compareTo(BigDecimal.ZERO)<0) {
+            StaticUtils.sendMessage(player, "&cThis shop is not buying (sell-to is disabled)!");
+            javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid);
             return;
         }
 
-        BigDecimal per = BigDecimal.valueOf(getShopSellPriceForOne(shop));
-        BigDecimal totalPrice = StaticUtils.normalizeBigDecimal(per.multiply(BigDecimal.valueOf((long)quantity)) );
-        if (!shop.hasInfiniteMoney() && shop.getMoneyStock().doubleValue() < totalPrice.doubleValue()) {
-            StaticUtils.sendMessage(player, "&cThe shop doesn't have enough funds to buy that right now.");
+        BigDecimal perItem = getShopSellPriceForOne(shop);
+        if (perItem == null || perItem.compareTo(BigDecimal.ZERO) <= 0) {
+            StaticUtils.sendMessage(player, "&cInternal error: invalid per item sell price..!");
+            javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid);
             return;
         }
 
-        // Apply effects on main thread
-        boolean removedItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, quantity);
+        BigDecimal totalPrice = StaticUtils.normalizeBigDecimal( perItem.multiply(BigDecimal.valueOf(w_quantity)) );
+        if (!shop.hasInfiniteMoney()) {
+            BigDecimal moneyStock = shop.getMoneyStock() == null ? BigDecimal.ZERO : shop.getMoneyStock();
+            if (moneyStock.compareTo(totalPrice) < 0) {
+                // Compute max affordable quantity with floor division
+                int shopCanAfford = moneyStock.divide(perItem, 0, RoundingMode.DOWN).intValue();
+                if (shopCanAfford<=0) {
+                    StaticUtils.sendMessage(player, "&cThe shop can't afford to buy any right now.");
+                    javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid);
+                    return;
+                }
+
+                w_quantity = shopCanAfford;
+                totalPrice = StaticUtils.normalizeBigDecimal( perItem.multiply(BigDecimal.valueOf(w_quantity)) );
+                /*StaticUtils.sendMessage(player, "&cThe shop doesn't have enough funds to buy that right now.");
+                javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid);
+                return;*/
+            }
+        }
+
+        boolean removedItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, w_quantity);
         if (!removedItemsFromPlayer) {
-            StaticUtils.sendMessage(player, "&cError removing " +quantity+ " " + saleItem.getItemMeta().getDisplayName() + "&r&c from your inventory..!");
+            StaticUtils.sendMessage(player, "&cError removing " +w_quantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
+            javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid);
             return;
         }
 
-        boolean gaveMoneyToPlayer = javaPlugin.getVaultHook().giveMoney((OfflinePlayer) player, totalPrice.doubleValue());
+        boolean gaveMoneyToPlayer = (javaPlugin.getVaultHook()==null) ? false: javaPlugin.getVaultHook().giveMoney((OfflinePlayer) player, totalPrice.doubleValue());
         if (!gaveMoneyToPlayer) {
-            // rollback items if you want strong guarantees
-            StaticUtils.addToInventoryOrDrop(player, saleItem, quantity);
+            StaticUtils.addToInventoryOrDrop(player, saleItem, w_quantity);
             StaticUtils.sendMessage(player, "&cPayment failed, nothing was sold!");
+            javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid);
             return;
         }
 
-        // Update shop copy, then persist
-        if (!shop.hasInfiniteStock()) shop.setItemStock(shop.getItemStock() + quantity);
+        if (!shop.hasInfiniteStock()) shop.setItemStock(shop.getItemStock() + w_quantity);
         if (!shop.hasInfiniteMoney()) shop.setMoneyStock(shop.getMoneyStock().subtract(totalPrice));
         shop.setLastTransactionDate(new Date());
 
         javaPlugin.getShopHandler().upsertShop(shop);
-        StaticUtils.sendMessage(player, "&fSold " + quantity + " x " + StaticUtils.getItemName(saleItem) + " &rfor &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
+        javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid);
+        StaticUtils.sendMessage(player, "&fSold " + w_quantity + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
     }
 
     // Getters
-    public static double getShopBuyPriceForOne(Shop shop) {
-        if (shop==null) return 0;
+    public static BigDecimal getShopBuyPriceForOne(Shop shop) {
+        if (shop==null) return null;
+        if (shop.getBuyPrice()==null) return null;
         
-        return shop.getBuyPrice().doubleValue()/shop.getStackSize();
+        return shop.getBuyPrice().divide(BigDecimal.valueOf(shop.getStackSize()), 2, RoundingMode.DOWN);
     }
 
-    public static double getShopSellPriceForOne(Shop shop) {
-        if (shop==null) return 0;
+    public static BigDecimal getShopSellPriceForOne(Shop shop) {
+        if (shop==null) return null;
+        if (shop.getSellPrice()==null) return null;
         
-        return shop.getSellPrice().doubleValue()/shop.getStackSize();
+        return shop.getSellPrice().divide(BigDecimal.valueOf(shop.getStackSize()), 2, RoundingMode.DOWN);
     }
 
     // One offs
@@ -144,8 +182,8 @@ public class ShopUtils {
         ItemStack item = shop.getItemStack();
         String name = StaticUtils.getItemName(item);
         String stackSize = (!((1<=shop.getStackSize())&&(shop.getStackSize()<=64))) ? "error" : shop.getStackSize() + "";
-        String buy = (shop.getBuyPrice()==null) ? "null" : (shop.getBuyPrice().compareTo(BigDecimal.valueOf(-1.0))==0) ? "disabled" : StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue());
-        String sell = (shop.getSellPrice()==null) ? "null" : (shop.getSellPrice().compareTo(BigDecimal.valueOf(-1.0))==0) ? "disabled" : StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue());
+        String buy = (shop.getBuyPrice()==null) ? "disabled" : StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue());
+        String sell = (shop.getSellPrice()==null) ? "disabled" : StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue());
         String stock = (shop.hasInfiniteStock()) ? "∞" : shop.getItemStock() + "";
         String balance = (shop.hasInfiniteMoney()) ? "∞" : (shop.getMoneyStock()==null) ? "null" : StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue());
         String owner = (shop.getOwnerName()==null) ? "null" : shop.getOwnerName();

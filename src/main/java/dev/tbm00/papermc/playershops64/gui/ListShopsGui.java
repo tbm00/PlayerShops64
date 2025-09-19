@@ -150,12 +150,13 @@ public class ListShopsGui {
                 shops.sort((entry1, entry2) -> {
                     Shop shop1 = entry1.getValue();
                     Shop shop2 = entry2.getValue();
-                    double buy1 = shop1.getBuyPrice().doubleValue();
-                    double buy2 = shop2.getBuyPrice().doubleValue();
 
-                    if (buy1 == -1 && buy2 == -1) return 0; // no movement
-                    if (buy1 == -1) return 1;  // shop1 goes after shop2
-                    if (buy2 == -1) return -1; // shop2 goes after shop1
+                    Double buy1 = (shop1.getBuyPrice()==null) ? null : shop1.getBuyPrice().doubleValue();
+                    Double buy2 = (shop2.getBuyPrice()==null) ? null : shop2.getBuyPrice().doubleValue();
+
+                    if (buy1 == null && buy2 == null) return 0; // no movement
+                    if (buy1 == null) return 1;  // shop1 goes after shop2
+                    if (buy2 == null) return -1; // shop2 goes after shop1
 
                     double unit1 = buy1 / shop1.getStackSize();
                     double unit2 = buy2 / shop2.getStackSize();
@@ -167,12 +168,12 @@ public class ListShopsGui {
                 shops.sort((entry1, entry2) -> {
                     Shop shop1 = entry1.getValue();
                     Shop shop2 = entry2.getValue();
-                    double sell1 = shop1.getSellPrice().doubleValue();
-                    double sell2 = shop2.getSellPrice().doubleValue();
+                    Double sell1 = (shop1.getSellPrice()==null) ? null : shop1.getSellPrice().doubleValue();
+                    Double sell2 = (shop2.getSellPrice()==null) ? null : shop2.getSellPrice().doubleValue();
 
-                    if (sell1 == -1 && sell2 == -1) return 0; // no movement
-                    if (sell1 == -1) return 1;  // shop1 goes after shop2
-                    if (sell2 == -1) return -1; // shop2 goes after shop1
+                    if (sell1 == null && sell2 == null) return 0; // no movement
+                    if (sell1 == null) return 1;  // shop1 goes after shop2
+                    if (sell2 == null) return -1; // shop2 goes after shop1
 
                     double unit1 = sell1 / shop1.getStackSize();
                     double unit2 = sell2 / shop2.getStackSize();
@@ -184,8 +185,8 @@ public class ListShopsGui {
                 shops.sort((entry1, entry2) -> {
                     Shop shop1 = entry1.getValue();
                     Shop shop2 = entry2.getValue();
-                    double bal1 = shop1.getMoneyStock().doubleValue();
-                    double bal2 = shop2.getMoneyStock().doubleValue();
+                    Double bal1 = (shop1.getMoneyStock()==null) ? null : shop1.getMoneyStock().doubleValue();
+                    Double bal2 = (shop2.getMoneyStock()==null) ? null : shop2.getMoneyStock().doubleValue();
 
                     //if (shop1.isAdminShop() && shop2.isAdminShop()) return 0;  // no movement
                     //if (shop1.isAdminShop()) return -1;  // shop2 goes after shop1
@@ -255,7 +256,9 @@ public class ListShopsGui {
     }
 
     private boolean passValidActiveChecks(Shop shop) {
-        double buyPrice = shop.getBuyPrice().doubleValue(), sellPrice = shop.getSellPrice().doubleValue(), balance = shop.getMoneyStock().doubleValue();
+        Double buyPrice = (shop.getBuyPrice()==null) ? null : shop.getBuyPrice().doubleValue();
+        Double sellPrice = (shop.getSellPrice()==null) ? null : shop.getSellPrice().doubleValue();
+        Double balance = (shop.getMoneyStock()==null) ? null : shop.getMoneyStock().doubleValue();
         int stock = shop.getItemStock(), stackSize = shop.getStackSize();
 
         if (buyPrice<0 && sellPrice<0) return false; // if buy-from & sell-to are both disabled
@@ -340,8 +343,9 @@ public class ListShopsGui {
 
     private void addGuiItemShop(Shop shop) {
         boolean emptyShop = false;
-        double buyPrice = shop.getBuyPrice().doubleValue(), sellPrice = shop.getSellPrice().doubleValue(),
-                balance = shop.getMoneyStock().doubleValue();
+        Double buyPrice = (shop.getBuyPrice()==null) ? null : shop.getBuyPrice().doubleValue();
+        Double sellPrice = (shop.getSellPrice()==null) ? null : shop.getSellPrice().doubleValue();
+        Double balance = (shop.getMoneyStock()==null) ? null : shop.getMoneyStock().doubleValue();
         int stock = shop.getItemStock();
 
         ItemStack item = null; 
