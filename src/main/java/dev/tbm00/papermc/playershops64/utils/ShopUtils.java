@@ -50,6 +50,75 @@ public class ShopUtils {
         return shopUuid;
     }
 
+    public static void sellToShop(Player player, UUID shopUuid, int quantity) {
+        if (!Bukkit.isPrimaryThread()) {
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> sellToShop(player, shopUuid, quantity));
+            StaticUtils.log(ChatColor.RED, player + " tried to sell to shop " + shopUuid + " off the main thread..!");
+            return;
+        }
+
+        // Re-guard
+        if (!javaPlugin.getShopHandler().canPlayerEditShop(shopUuid, player)) {
+            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            return;
+        } else {
+            javaPlugin.getShopHandler().setCurrentShopEditor(shopUuid, player);
+        }
+
+        Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+        if (shop == null) {
+            StaticUtils.sendMessage(player, "&cShop not found.");
+            return;
+        }
+
+        if (quantity <= 0) {
+            StaticUtils.sendMessage(player, "&cInvalid quantity.");
+            return;
+        }
+
+        ItemStack saleItem = shop.getItemStack();
+        if (saleItem == null) {
+            StaticUtils.sendMessage(player, "&cThis shop has no item set.");
+            return;
+        }
+
+        int playerHas = StaticUtils.countMatchingItems(player, saleItem);
+        if (playerHas < quantity) {
+            StaticUtils.sendMessage(player, "&cYou only have &e" + playerHas + "&c of that item.");
+            return;
+        }
+
+        BigDecimal per = BigDecimal.valueOf(getShopSellPriceForOne(shop));
+        BigDecimal totalPrice = StaticUtils.normalizeBigDecimal(per.multiply(BigDecimal.valueOf((long)quantity)) );
+        if (!shop.hasInfiniteMoney() && shop.getMoneyStock().doubleValue() < totalPrice.doubleValue()) {
+            StaticUtils.sendMessage(player, "&cThe shop doesn't have enough funds to buy that right now.");
+            return;
+        }
+
+        // Apply effects on main thread
+        boolean removedItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, quantity);
+        if (!removedItemsFromPlayer) {
+            StaticUtils.sendMessage(player, "&cError removing " +quantity+ " " + saleItem.getItemMeta().getDisplayName() + "&r&c from your inventory..!");
+            return;
+        }
+
+        boolean gaveMoneyToPlayer = javaPlugin.getVaultHook().giveMoney((OfflinePlayer) player, totalPrice.doubleValue());
+        if (!gaveMoneyToPlayer) {
+            // rollback items if you want strong guarantees
+            StaticUtils.addToInventoryOrDrop(player, saleItem, quantity);
+            StaticUtils.sendMessage(player, "&cPayment failed, nothing was sold!");
+            return;
+        }
+
+        // Update shop copy, then persist
+        if (!shop.hasInfiniteStock()) shop.setItemStock(shop.getItemStock() + quantity);
+        if (!shop.hasInfiniteMoney()) shop.setMoneyStock(shop.getMoneyStock().subtract(totalPrice));
+        shop.setLastTransactionDate(new Date());
+
+        javaPlugin.getShopHandler().upsertShop(shop);
+        StaticUtils.sendMessage(player, "&fSold " + quantity + " x " + StaticUtils.getItemName(saleItem) + " &rfor &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
+    }
+
     // Getters
     public static double getShopBuyPriceForOne(Shop shop) {
         if (shop==null) return 0;
