@@ -74,7 +74,7 @@ public class AdminCmd implements TabExecutor {
             amount = Integer.parseInt(args[1]);
         }
 
-        StaticUtils.giveItem(player, StaticUtils.prepPlayerShopItemStack(amount));
+        StaticUtils.addToInventoryOrDrop(player, ShopUtils.prepPlayerShopItemStack(amount));
         player.sendMessage(ChatColor.GREEN + "You should've received "+amount+" lectern(s) with the PDC key!");
         return true;
     }

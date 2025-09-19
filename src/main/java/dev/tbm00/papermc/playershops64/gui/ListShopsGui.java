@@ -237,15 +237,17 @@ public class ListShopsGui {
     private boolean passStringChecks(Shop shop, ItemStack shopItem) {
         String query_ = query.replace(" ", "_");
 
-        String mat = shopItem.getType().toString();
+        String materialName = shopItem.getType().toString();
         ItemMeta meta = shopItem.getItemMeta();
-        String name = meta.getDisplayName();
+        String displayName = (meta.hasDisplayName()) ? meta.getDisplayName() : "";
+        String itemName = (meta.hasItemName()) ? meta.getItemName() : "";
         String desc = shop.getDescription();
-        if (mat!=null && StringUtils.containsIgnoreCase(mat, query)) return true; // if material contains query
-        if (mat!=null && StringUtils.containsIgnoreCase(mat, query_)) return true; // if material contains query_
-        else if (name!=null && StringUtils.containsIgnoreCase(name, query)) return true; // if itemName contains query
-        else if (desc!=null && StringUtils.containsIgnoreCase(desc, query)) return true; // if description contains query
-        else if (shop.getOwnerUuid()!=null && shop.getOwnerName()!=null && StringUtils.containsIgnoreCase(shop.getOwnerName(), query)) {
+        if (materialName!=null && StringUtils.containsIgnoreCase(materialName, query)) return true; // if material contains query
+        if (materialName!=null && StringUtils.containsIgnoreCase(materialName, query_)) return true; // if material contains query_
+        if (displayName!=null && StringUtils.containsIgnoreCase(displayName, query)) return true; // if displayName contains query
+        if (itemName!=null && StringUtils.containsIgnoreCase(itemName, query)) return true; // if itemName contains query
+        if (desc!=null && StringUtils.containsIgnoreCase(desc, query)) return true; // if description contains query
+        if (shop.getOwnerUuid()!=null && shop.getOwnerName()!=null && StringUtils.containsIgnoreCase(shop.getOwnerName(), query)) {
             return true; // if ownerName contains query
         }
 
@@ -359,15 +361,15 @@ public class ListShopsGui {
         lore.add("&8-----------------------");
         lore.add("&c" + shop.getDescription());
 
-        if (buyPrice>=0) priceLine = "&7B: &a$" + StaticUtils.formatInt(buyPrice) + " ";
-        if (sellPrice>=0) priceLine += "&7S: &c$" + StaticUtils.formatInt(sellPrice);
+        if (buyPrice>=0) priceLine = "&7B: &a$" + StaticUtils.formatDoubleUS(buyPrice) + " ";
+        if (sellPrice>=0) priceLine += "&7S: &c$" + StaticUtils.formatDoubleUS(sellPrice);
         lore.add(priceLine);
 
         if (stock<0) lore.add("&7Stock: &e∞");
         else lore.add("&7Stock: &e" + stock);
 
         if (shop.hasInfiniteMoney()) lore.add("&7Balance: &e$&e∞");
-        else lore.add("&7Balance: &e$" + StaticUtils.formatInt(balance));
+        else lore.add("&7Balance: &e$" + StaticUtils.formatDoubleUS(balance));
 
         if (ownerUuid!=null && (!shop.hasInfiniteMoney() && !shop.hasInfiniteStock()))
             lore.add("&7Owner: &f" + shop.getOwnerName());
@@ -388,9 +390,7 @@ public class ListShopsGui {
         if (emptyShop) {
             firstLine = "&c(no shop item)";
         } else {
-            if (meta.getDisplayName()==null || meta.getDisplayName().isBlank())
-                firstLine = StaticUtils.formatMaterial(item.getType()) + " &7x &f" + shop.getStackSize();
-            else firstLine = meta.getDisplayName() + " &7x &f" + shop.getStackSize();
+            firstLine = StaticUtils.getItemName(item) + " &7x &f" + shop.getStackSize();
         }
 
         meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', firstLine));

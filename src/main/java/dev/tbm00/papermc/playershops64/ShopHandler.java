@@ -160,7 +160,7 @@ public class ShopHandler {
         return false;
     }
 
-    public boolean isShopBeingEdited(UUID shopUuid) {
+    private boolean isShopBeingEdited(UUID shopUuid) {
         Shop shop = getShop(shopUuid);
         if (shop.getCurrentEditor()!=null) return true;
         else return false;

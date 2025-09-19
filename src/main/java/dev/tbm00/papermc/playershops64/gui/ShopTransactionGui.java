@@ -76,7 +76,9 @@ public class ShopTransactionGui {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cConfirm Sell"));
             item.setItemMeta(meta);
             item.setType(Material.RED_BANNER);
-            gui.setItem(2, 3, ItemBuilder.from(item).asGuiItem(event -> {event.setCancelled(true);})); // TODO: call/create ShopHandler.handleClickSell(event, shop/shopUuid, quantity)
+            gui.setItem(2, 3, ItemBuilder.from(item).asGuiItem(event -> {
+                                                                        event.setCancelled(true);
+                                                                        ShopUtils.sellToShop(viewer, shopUuid, quantity);})); // TODO: call/create ShopHandler.sellToShop(event, shop/shopUuid, quantity)
             lore.clear();
         }
 
@@ -87,7 +89,9 @@ public class ShopTransactionGui {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aConfirm Buy"));
             item.setItemMeta(meta);
             item.setType(Material.GREEN_BANNER);
-            gui.setItem(2, 7, ItemBuilder.from(item).asGuiItem(event -> {event.setCancelled(true);})); // TODO: call/create ShopHandler.handleClickBuy(event, shop/shopUuid, quantity)
+            gui.setItem(2, 7, ItemBuilder.from(item).asGuiItem(event -> {
+                                                                        event.setCancelled(true);
+                                                                        ShopUtils.buyFromShop(viewer, shopUuid, quantity);})); // TODO: call/create ShopHandler.buyFromShop(event, shop/shopUuid, quantity)
             lore.clear();
         }
 

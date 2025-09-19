@@ -95,7 +95,7 @@ public class ShopBaseBlock implements Listener {
                     javaPlugin.getShopHandler().removeShop(shop.getUuid());
                     block.setType(Material.AIR, false);
                     StaticUtils.sendMessage(player, "&aDeleted shop!");
-                    StaticUtils.giveItem(player, StaticUtils.prepPlayerShopItemStack(1));
+                    StaticUtils.addToInventoryOrDrop(player, ShopUtils.prepPlayerShopItemStack(1));
                     return;
                 } else if (action==Action.RIGHT_CLICK_BLOCK) { // Set shop item
                     ItemStack hand = player.getInventory().getItemInMainHand();
@@ -121,7 +121,7 @@ public class ShopBaseBlock implements Listener {
                     } else {player.getInventory().setItemInMainHand(null);}
 
                     javaPlugin.getShopHandler().upsertShop(shop);
-                    StaticUtils.sendMessage(player, "&aShop item set to &e" + one.getType().name());
+                    StaticUtils.sendMessage(player, "&aShop item set to &e" + StaticUtils.getItemName(one));
                     return;
                 } else return;
             } else {

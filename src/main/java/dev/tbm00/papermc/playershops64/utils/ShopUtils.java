@@ -1,15 +1,19 @@
 package dev.tbm00.papermc.playershops64.utils;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.UUID;
 
-import org.apache.commons.lang.WordUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.Shop;
@@ -69,26 +73,18 @@ public class ShopUtils {
 
     public static String formatHologramText(Shop shop) {
         ItemStack item = shop.getItemStack();
-        String name = (item==null) ? "null" : item.getType().name();
+        String name = StaticUtils.getItemName(item);
         String stackSize = (!((1<=shop.getStackSize())&&(shop.getStackSize()<=64))) ? "error" : shop.getStackSize() + "";
-        String buy = (shop.getBuyPrice()==null) ? "null" : (shop.getBuyPrice().compareTo(BigDecimal.valueOf(-1.0))==0) ? "disabled" : shop.getBuyPrice().toPlainString();
-        String sell = (shop.getSellPrice()==null) ? "null" : (shop.getSellPrice().compareTo(BigDecimal.valueOf(-1.0))==0) ? "disabled" : shop.getSellPrice().toPlainString();
-        String stock = (shop.hasInfiniteStock()) ? "infinite" : shop.getItemStock() + "";
-        String balance = (shop.hasInfiniteMoney()) ? "infinite" : (shop.getMoneyStock()==null) ? "null" : shop.getMoneyStock().toPlainString();
+        String buy = (shop.getBuyPrice()==null) ? "null" : (shop.getBuyPrice().compareTo(BigDecimal.valueOf(-1.0))==0) ? "disabled" : StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue());
+        String sell = (shop.getSellPrice()==null) ? "null" : (shop.getSellPrice().compareTo(BigDecimal.valueOf(-1.0))==0) ? "disabled" : StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue());
+        String stock = (shop.hasInfiniteStock()) ? "∞" : shop.getItemStock() + "";
+        String balance = (shop.hasInfiniteMoney()) ? "∞" : (shop.getMoneyStock()==null) ? "null" : StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue());
         String owner = (shop.getOwnerName()==null) ? "null" : shop.getOwnerName();
         String lore0 = "";
         try {
             if (item!=null) {
                 ItemMeta meta = item.getItemMeta();
                 if (meta!=null) {
-                    if (meta.hasDisplayName()) name = meta.getDisplayName();
-                    if (name.isBlank()) {
-                        name = meta.getItemName();
-                        if (name.isBlank()) {
-                            name = WordUtils.capitalizeFully(item.getType().name().toLowerCase().replace("_", " "));
-                        }
-                    }
-
                     if (meta.hasLore() && meta.getLore()!=null && !meta.getLore().isEmpty()) {
                         lore0 = String.valueOf(meta.getLore().get(0));
                     }
@@ -111,4 +107,21 @@ public class ShopUtils {
         }
     }
 
+    /**
+     * Prepares an base block ItemStack for usage.
+     * 
+     * @param amount the amount to give
+     */
+    public static ItemStack prepPlayerShopItemStack(Integer amount) {
+        ItemStack lectern = new ItemStack(Material.LECTERN);
+        ItemMeta meta = lectern.getItemMeta();
+
+        meta.getPersistentDataContainer().set(StaticUtils.SHOP_KEY, PersistentDataType.STRING, "true");
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aPlayerShop"));
+
+        if (amount!=null) lectern.setItemMeta(meta);
+        lectern.setAmount(amount);
+
+        return lectern;
+    }
 }
