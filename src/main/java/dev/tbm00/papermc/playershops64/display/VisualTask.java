@@ -11,6 +11,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.ShopHandler;
 import dev.tbm00.papermc.playershops64.data.Shop;
+import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class VisualTask extends BukkitRunnable {
@@ -58,7 +59,7 @@ public class VisualTask extends BukkitRunnable {
             }
 
             // Build text
-            String text = StaticUtils.formatHologramText(shop);
+            String text = ShopUtils.formatHologramText(shop);
 
             // Update entities
             shopDisplay.update(world, text);

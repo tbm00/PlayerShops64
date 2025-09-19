@@ -1,9 +1,5 @@
 package dev.tbm00.papermc.playershops64.listener;
 
-import java.math.BigDecimal;
-import java.util.UUID;
-
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -27,6 +23,7 @@ import org.bukkit.persistence.PersistentDataType;
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.Shop;
 import dev.tbm00.papermc.playershops64.utils.GuiUtils;
+import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ShopBaseBlock implements Listener {
@@ -67,26 +64,9 @@ public class ShopBaseBlock implements Listener {
         Player owner = event.getPlayer();
         World world = block.getWorld();
 
+        ShopUtils.createShop(owner, world, location);
 
-        Shop shop = new Shop(UUID.randomUUID(),
-                            owner.getUniqueId(),
-                            owner.getName(),
-                            world,
-                            location,
-                            null,
-                            1,
-                            0,
-                            BigDecimal.ZERO,
-                            BigDecimal.valueOf(100.0),
-                            BigDecimal.valueOf(50.0),
-                            null,
-                            false,
-                            false,
-                            null);
-
-        javaPlugin.getShopHandler().upsertShop(shop);
         StaticUtils.sendMessage(owner, "&aCreated a new PlayerShop! Click to manage it, or sneak-left-click to start selling your held item");
-        StaticUtils.log(ChatColor.GOLD, owner.getName() + " created a shop " + shop.getUuid() + " in " + world.getName()+ " @ " + block.getX() + "," + block.getY() + "," + block.getZ());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -151,7 +131,7 @@ public class ShopBaseBlock implements Listener {
                 } else return;
             }
         } else {
-            GuiUtils.openGuiTransaction(player, shop.getUuid());
+            GuiUtils.openGuiTransaction(player, shop.getUuid(), null);
             return;
         }
     }

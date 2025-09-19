@@ -19,18 +19,17 @@ import dev.tbm00.papermc.playershops64.utils.GuiUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ListCategoriesGui {
-    PlayerShops64 javaPlugin;
-    Gui gui;
-    String label;
-    Player viewer;
-    boolean isAdmin;
+    private final PlayerShops64 javaPlugin;
+    private final Gui gui;
+    private final Player viewer;
+    private final boolean isAdmin;
+    private String label;
     
     public ListCategoriesGui(PlayerShops64 javaPlugin, Player viewer, boolean isAdmin) {
         this.javaPlugin = javaPlugin;
         this.viewer = viewer;
         this.isAdmin = isAdmin;
         label = StaticUtils.CATEGORY_GUI_TITLE;
-
         gui = new Gui(6, label);
 
         setupFooter();

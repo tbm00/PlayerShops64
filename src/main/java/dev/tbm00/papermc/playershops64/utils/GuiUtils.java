@@ -34,10 +34,11 @@ public class GuiUtils {
         GuiUtils.javaPlugin = javaPlugin;
     }
 
-    public static boolean openGuiTransaction(Player player, UUID shopUuid) {
+    public static boolean openGuiTransaction(Player player, UUID shopUuid, Integer quantity) {
         if (!javaPlugin.getShopHandler().canPlayerEditShop(shopUuid, player)) return false;
 
-        new ShopTransactionGui(javaPlugin, player, shopUuid, 1);
+        if (quantity==null) new ShopTransactionGui(javaPlugin, player, shopUuid, 1);
+        else new ShopTransactionGui(javaPlugin, player, shopUuid, quantity);
         return true;
     }
 
@@ -67,7 +68,7 @@ public class GuiUtils {
         }
         if (targetUUID!=null) {
             StaticUtils.log(ChatColor.YELLOW, "calling ListGui(), query type: PLAYER_UUID " + targetName + " " + targetUUID);
-            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), sender, SortType.MATERIAL, QueryType.PLAYER_UUID, targetUUID, isAdmin);
+            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), sender, isAdmin, SortType.MATERIAL, QueryType.PLAYER_UUID, targetUUID);
             return true;
         }
 
@@ -84,24 +85,25 @@ public class GuiUtils {
         if (query==null || query.isEmpty()) return false;
         else {
             StaticUtils.log(ChatColor.YELLOW, "calling ListGui(), query type: STRING '" + query + "'");
-            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), sender, SortType.MATERIAL, QueryType.STRING, query, isAdmin);
+            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), sender, isAdmin, SortType.MATERIAL, QueryType.STRING, query);
             return true;
         }
     }
 
     public static void handleClickListAll(InventoryClickEvent event, boolean isAdmin) {
         event.setCancelled(false);
-        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), (Player) event.getWhoClicked(), SortType.MATERIAL, QueryType.NO_QUERY, null, isAdmin);
+        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), (Player) event.getWhoClicked(), isAdmin, SortType.MATERIAL, QueryType.NO_QUERY, null);
     }
 
     public static void handleClickSortList(InventoryClickEvent event, SortType sortType, QueryType queryType, String query, boolean isAdmin) {
         event.setCancelled(false);
-        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), (Player) event.getWhoClicked(), sortType, queryType, query, isAdmin);
+        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), (Player) event.getWhoClicked(), isAdmin, sortType, queryType, query);
     }
 
     public static void handleClickYourShops(InventoryClickEvent event, boolean isAdmin) {
         event.setCancelled(false);
-        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), (Player) event.getWhoClicked(), SortType.MATERIAL, QueryType.PLAYER_UUID, ((Player) event.getWhoClicked()).getUniqueId().toString(), isAdmin);
+        Player p = (Player) event.getWhoClicked();
+        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), p, isAdmin, SortType.MATERIAL, QueryType.PLAYER_UUID, p.getUniqueId().toString());
     }
 
     public static void handleClickSearch(InventoryClickEvent event, boolean isAdmin) {
@@ -122,7 +124,7 @@ public class GuiUtils {
         
         if (event.isShiftClick() && (isAdmin || sender.getUniqueId().equals(shop.getOwnerUuid()))) {
             openGuiManage(sender, shop.getUuid());
-        } else StaticUtils.teleportPlayerToShop(sender, shop);
+        } else ShopUtils.teleportPlayerToShop(sender, shop);
     }
 
     public static void handleClickCategory(InventoryClickEvent event, boolean isAdmin) {
@@ -132,12 +134,12 @@ public class GuiUtils {
 
     public static void handleClickSearchCategory(InventoryClickEvent event, GuiSearchCategory category, boolean isAdmin) {
         event.setCancelled(true);
-        new ListQueriesGui(javaPlugin, (Player) event.getWhoClicked(), category, isAdmin);
+        new ListQueriesGui(javaPlugin, (Player) event.getWhoClicked(), isAdmin, category);
     }
 
     public static void handleClickSearchQuery(InventoryClickEvent event, GuiSearchQuery query, boolean isAdmin) {
         event.setCancelled(true);
-        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), (Player) event.getWhoClicked(), SortType.MATERIAL, QueryType.STRING, query.getQuery(), isAdmin);
+        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), (Player) event.getWhoClicked(), isAdmin, SortType.MATERIAL, QueryType.STRING, query.getQuery());
     }
 
     public static void handleClickMainMenu(InventoryClickEvent event) {

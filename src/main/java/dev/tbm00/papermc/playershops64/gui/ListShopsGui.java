@@ -26,25 +26,25 @@ import dev.tbm00.papermc.playershops64.utils.GuiUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ListShopsGui {
-    PlayerShops64 javaPlugin;
-    PaginatedGui gui;
-    String label;
-    Player viewer;
-    boolean isAdmin;
-    QueryType queryType;
-    String query;
-    SortType sortType;
+    //private final PlayerShops64 javaPlugin;
+    private final PaginatedGui gui;
+    private final Player viewer;
+    private final boolean isAdmin;
+    private final SortType sortType;
+    private final QueryType queryType;
+    private final String query;
+    private String label;
 
-    List<Map.Entry<UUID, Shop>> shops;
+    private List<Map.Entry<UUID, Shop>> shops;
     
-    public ListShopsGui(PlayerShops64 javaPlugin, Map<UUID, Shop> shopView, Player viewer, SortType sortType, QueryType queryType, String query, boolean isAdmin) {
-        this.javaPlugin = javaPlugin;
-        this.shops = new ArrayList<>(shopView.entrySet());
+    public ListShopsGui(PlayerShops64 javaPlugin, Map<UUID, Shop> shopView, Player viewer, boolean isAdmin, SortType sortType, QueryType queryType, String query) {
+        //this.javaPlugin = javaPlugin;
+        shops = new ArrayList<>(shopView.entrySet());
         this.viewer = viewer;
+        this.isAdmin = isAdmin;
         this.sortType = sortType;
         this.queryType = queryType;
         this.query = query;
-        this.isAdmin = isAdmin;
         switch (queryType) {
             case NO_QUERY:
                 label = "All Shops";
@@ -58,9 +58,7 @@ public class ListShopsGui {
             default:
                 label = "Shops";
                 break;
-        }
-
-        gui = new PaginatedGui(6, 45, label);
+        } gui = new PaginatedGui(6, 45, label);
 
         setupFooter();
         preProcessShops();

@@ -71,12 +71,12 @@ public class ShopCmd implements TabExecutor {
     }
 
     private boolean handleMenuCmd(Player player) {
-        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), player, SortType.MATERIAL, QueryType.NO_QUERY, null, false);
+        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), player, false, SortType.MATERIAL, QueryType.NO_QUERY, null);
         return true;
     }
 
     private boolean handleOwnCmd(Player player) {
-        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), player, SortType.MATERIAL, QueryType.PLAYER_UUID, player.getUniqueId().toString(), false);
+        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), player, false, SortType.MATERIAL, QueryType.PLAYER_UUID, player.getUniqueId().toString());
         return true;
     }
 

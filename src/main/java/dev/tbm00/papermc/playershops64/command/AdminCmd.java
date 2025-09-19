@@ -80,7 +80,7 @@ public class AdminCmd implements TabExecutor {
     }
 
     private boolean handleMenuCmd(Player player) {
-        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), player, SortType.MATERIAL, QueryType.NO_QUERY, null, true);
+        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), player, true, SortType.MATERIAL, QueryType.NO_QUERY, null);
         return true;
     }
 

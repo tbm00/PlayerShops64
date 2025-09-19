@@ -15,36 +15,35 @@ import dev.triumphteam.gui.guis.Gui;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.Shop;
+import dev.tbm00.papermc.playershops64.utils.GuiUtils;
+import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ShopTransactionGui {
-    PlayerShops64 javaPlugin;
-    Gui gui;
-    String label;
-    Player viewer;
-    UUID shopUuid;
-    Shop shop;
-    int quantity;
-    int stock;
+    //private final PlayerShops64 javaPlugin;
+    private final Gui gui;
+    private final Player viewer;
+    private final UUID shopUuid;
+    private final Shop shop;
+    private final int quantity;
+    private String label;
     
     public ShopTransactionGui(PlayerShops64 javaPlugin, Player viewer, UUID shopUuid, int quantity) {
-        this.javaPlugin = javaPlugin;
+        //this.javaPlugin = javaPlugin;
         this.viewer = viewer;
         this.shopUuid = shopUuid;
         this.shop = javaPlugin.getShopHandler().getShop(shopUuid);
-        this.quantity = quantity;
-        this.stock = shop.getItemStock();
+        this.quantity = Math.max(quantity, 1);
+        this.gui = new Gui(6, label);
 
         if (javaPlugin.getShopHandler().canPlayerEditShop(shopUuid, viewer)) {
             javaPlugin.getShopHandler().setCurrentShopEditor(shopUuid, viewer);
             StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened the shop's gui");
-        }
-        else return;
+        } else return;
 
         label = "Shop Transaction";
 
-        gui = new Gui(6, label);
-
+       
         setup();
 
         gui.updateTitle(label);
@@ -63,7 +62,6 @@ public class ShopTransactionGui {
         ItemStack item = new ItemStack(Material.GLASS);
         ItemMeta meta = item.getItemMeta();
         List<String> lore = new ArrayList<>();
-
         
         { // Sale Item
             ItemStack shopItem = shop.getItemStack();
@@ -73,23 +71,23 @@ public class ShopTransactionGui {
 
         { // Sell Button
             lore.add("&8-----------------------");
-            lore.add("&6Click to &csell " + quantity + " &6for $" + (quantity*javaPlugin.getShopHandler().getShopSellPriceForOne(shop)));
+            lore.add("&6Click to &csell " + quantity + " &6for $" + (quantity*ShopUtils.getShopSellPriceForOne(shop)));
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cConfirm Sell"));
             item.setItemMeta(meta);
             item.setType(Material.RED_BANNER);
-            gui.setItem(2, 3, ItemBuilder.from(item).asGuiItem(event -> {event.setCancelled(true);})); // TODO: call/create handleClickSell(event, shopUuid, quantity)
+            gui.setItem(2, 3, ItemBuilder.from(item).asGuiItem(event -> {event.setCancelled(true);})); // TODO: call/create ShopHandler.handleClickSell(event, shop/shopUuid, quantity)
             lore.clear();
         }
 
         { // Buy Button
             lore.add("&8-----------------------");
-            lore.add("&6Click to &abuy " + quantity + " &6for $" + (quantity*javaPlugin.getShopHandler().getShopBuyPriceForOne(shop)));
+            lore.add("&6Click to &abuy " + quantity + " &6for $" + (quantity*ShopUtils.getShopBuyPriceForOne(shop)));
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aConfirm Buy"));
             item.setItemMeta(meta);
             item.setType(Material.GREEN_BANNER);
-            gui.setItem(2, 7, ItemBuilder.from(item).asGuiItem(event -> {event.setCancelled(true);})); // TODO: call/create handleClickBuy(event, shopUuid, quantity)
+            gui.setItem(2, 7, ItemBuilder.from(item).asGuiItem(event -> {event.setCancelled(true);})); // TODO: call/create ShopHandler.handleClickBuy(event, shop/shopUuid, quantity)
             lore.clear();
         }
 
@@ -107,18 +105,18 @@ public class ShopTransactionGui {
             if (quantity>10) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -10, 6, 3);
             if (quantity>5) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -5, 6, 4);
 
-            if (stock>1) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, 1, 4, 6);
-            if (stock>64) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, 64, 4, 9);
+            addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, 1, 4, 6);
+            addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, 64, 4, 9);
 
-            if (stock>4) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 4, 5, 6);
-            if (stock>8) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 8, 5, 7);
-            if (stock>16) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 16, 5, 8);
-            if (stock>32) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 32, 5, 9);
+            addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 4, 5, 6);
+            addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 8, 5, 7);
+            addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 16, 5, 8);
+            addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 32, 5, 9);
 
-            if (stock>5) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 5, 6, 6);
-            if (stock>10) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 10, 6, 7);
-            if (stock>25) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 25, 6, 8);
-            if (stock>50) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 50, 6, 9);
+            addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 5, 6, 6);
+            addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 10, 6, 7);
+            addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 25, 6, 8);
+            addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 50, 6, 9);
         }
     }
 
@@ -130,7 +128,7 @@ public class ShopTransactionGui {
         item.setType(material);
         if (amount<0) item.setAmount((-1*amount));
         else item.setAmount(amount);
-        gui.setItem(row, col, ItemBuilder.from(item).asGuiItem(event -> {new ShopTransactionGui(javaPlugin, (Player) event.getWhoClicked(), shopUuid, quantity+amount);}));
+        gui.setItem(row, col, ItemBuilder.from(item).asGuiItem(event -> {GuiUtils.openGuiTransaction(viewer, shopUuid, quantity+amount);}));
         lore.clear();
     }
 }
