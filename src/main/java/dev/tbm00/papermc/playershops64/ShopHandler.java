@@ -150,59 +150,39 @@ public class ShopHandler {
         });
     }
 
-    public boolean canPlayerEditShop(UUID shopUuid, Player player) {
-        if (!isShopBeingEdited(shopUuid)) return true;
-
+    public void unlockShop(UUID shopUuid, UUID expectedEditor) {
         Shop shop = getShop(shopUuid);
-        if (shop.getCurrentEditor().equals(player.getUniqueId())) return true;
-
-        StaticUtils.sendMessage(player, "&cThis shop is being used by " + javaPlugin.getServer().getOfflinePlayer(shop.getCurrentEditor()).getName());
-        return false;
-    }
-
-    private boolean isShopBeingEdited(UUID shopUuid) {
-        Shop shop = getShop(shopUuid);
-        if (shop.getCurrentEditor()!=null) return true;
-        else return false;
-    }
-
-    public void setCurrentShopEditor(UUID shopUuid, Player player) {
-        Shop shop = getShop(shopUuid);
-        shop.setCurrentEditor(player.getUniqueId());
-        shops.put(shopUuid, shop);
-        upsertShop(shop);
-    }
-
-    public void clearCurrentShopEditor(UUID shopUuid, UUID expectedEditor) {
-        Shop shop = getShop(shopUuid);
-        if (shop.getCurrentEditor()!=null && shop.getCurrentEditor().equals(expectedEditor)) {
-            shop.setCurrentEditor(null);
-            shops.put(shopUuid, shop);
-            upsertShop(shop);
-        } else {
-            StaticUtils.log(ChatColor.RED, "CRITICAL ERROR: A shop's currentEditor doesn't match expected value:" +
+        if (shop.getCurrentEditor()==null) {
+            StaticUtils.log(ChatColor.RED, "CRITICAL ERROR: A shop's currentEditor lock doesn't match expected value:" +
+                                            "\nShop: " + shopUuid.toString() +
+                                            "\nExpected: " + expectedEditor.toString() +
+                                            "\nActual: (null)");
+        } else if (!shop.getCurrentEditor().equals(expectedEditor)) {
+            StaticUtils.log(ChatColor.RED, "CRITICAL ERROR: A shop's currentEditor lock doesn't match expected value:" +
                                             "\nShop: " + shopUuid.toString() +
                                             "\nExpected: " + expectedEditor.toString() +
                                             "\nActual: " + shop.getCurrentEditor().toString());
+        } else {
+            shop.setCurrentEditor(null);
+            shops.put(shopUuid, shop);
         }
-    } /* public void clearCurrentShopEditor(UUID shopUuid) {
-        Shop shop = getShop(shopUuid);
-        shop.setCurrentEditor(null);
-        shops.put(shopUuid, shop);
-        upsertShop(shop);
-    } */
+    } 
 
     public boolean tryLockShop(UUID shopUuid, Player player) {
         Shop shop = getShop(shopUuid);
 
+        boolean accessed = false;
         if (shop == null)
-            return false;
+            accessed = true;
         if (shop.getCurrentEditor() != null && !shop.getCurrentEditor().equals(player.getUniqueId())) 
+            accessed = false;
+        if (!accessed) {
+            StaticUtils.sendMessage(player, "&cThis shop is being used by " + javaPlugin.getServer().getOfflinePlayer(shop.getCurrentEditor()).getName());
             return false;
+        }
         
         shop.setCurrentEditor(player.getUniqueId());
         shops.put(shopUuid, shop);
-        upsertShop(shop);
         return true;
     }
 
@@ -324,4 +304,34 @@ public class ShopHandler {
             s.getDescription()
         );
     }
+
+    /*private boolean canPlayerEditShop(UUID shopUuid, Player player) {
+        if (!isShopBeingEdited(shopUuid)) return true;
+
+        Shop shop = getShop(shopUuid);
+        if (shop.getCurrentEditor().equals(player.getUniqueId())) return true;
+
+        StaticUtils.sendMessage(player, "&cThis shop is being used by " + javaPlugin.getServer().getOfflinePlayer(shop.getCurrentEditor()).getName());
+        return false;
+    }*/
+
+    /*private boolean isShopBeingEdited(UUID shopUuid) {
+        Shop shop = getShop(shopUuid);
+        if (shop.getCurrentEditor()!=null) return true;
+        else return false;
+    }*/
+
+    /*public void setCurrentShopEditor(UUID shopUuid, Player player) {
+        Shop shop = getShop(shopUuid);
+        shop.setCurrentEditor(player.getUniqueId());
+        shops.put(shopUuid, shop);
+        upsertShop(shop);
+    }*/
+
+    /* public void clearCurrentShopEditor(UUID shopUuid) {
+        Shop shop = getShop(shopUuid);
+        shop.setCurrentEditor(null);
+        shops.put(shopUuid, shop);
+        upsertShop(shop);
+    } */
 }

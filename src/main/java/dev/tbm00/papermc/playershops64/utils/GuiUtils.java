@@ -35,7 +35,7 @@ public class GuiUtils {
     }
 
     public static boolean openGuiTransaction(Player player, UUID shopUuid, Integer quantity) {
-        if (!javaPlugin.getShopHandler().canPlayerEditShop(shopUuid, player)) return false;
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
 
         if (quantity==null) new ShopTransactionGui(javaPlugin, player, shopUuid, 1);
         else new ShopTransactionGui(javaPlugin, player, shopUuid, quantity);
@@ -43,7 +43,7 @@ public class GuiUtils {
     }
 
     public static boolean openGuiManage(Player player, UUID shopUuid) {
-        if (!javaPlugin.getShopHandler().canPlayerEditShop(shopUuid, player)) return false;
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
 
         // TODO: call ShopManageGui for player+shopUuid
         return true;

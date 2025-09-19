@@ -143,7 +143,7 @@ public class ShopUtils {
 
             StaticUtils.sendMessage(player, "&fSold " + workingQuantity + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
         } finally {
-            javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid, player.getUniqueId());
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
     
     }
@@ -242,7 +242,7 @@ public class ShopUtils {
 
             StaticUtils.sendMessage(player, "&fBought " + workingQuantity + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
         } finally {
-            javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid, player.getUniqueId());
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
     }
 

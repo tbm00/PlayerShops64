@@ -37,14 +37,12 @@ public class ShopTransactionGui {
         this.quantity = Math.max(quantity, 1);
         this.gui = new Gui(6, label);
 
-        if (javaPlugin.getShopHandler().canPlayerEditShop(shopUuid, viewer)) {
-            javaPlugin.getShopHandler().setCurrentShopEditor(shopUuid, viewer);
+        if (javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
             StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened the shop's gui");
         } else return;
 
         label = "Shop Transaction";
 
-       
         setup();
 
         gui.updateTitle(label);
@@ -52,7 +50,7 @@ public class ShopTransactionGui {
         gui.open(viewer);
         gui.setCloseGuiAction(event -> {
             StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed the shop's gui");
-            javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid, viewer.getUniqueId());
+            javaPlugin.getShopHandler().unlockShop(shopUuid, viewer.getUniqueId());
         });
     }
 
