@@ -52,7 +52,7 @@ public class ShopTransactionGui {
         gui.open(viewer);
         gui.setCloseGuiAction(event -> {
             StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed the shop's gui");
-            javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid);
+            javaPlugin.getShopHandler().clearCurrentShopEditor(shopUuid, viewer.getUniqueId());
         });
     }
 
@@ -79,7 +79,7 @@ public class ShopTransactionGui {
             item.setType(Material.RED_BANNER);
             gui.setItem(2, 3, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        ShopUtils.sellToShop(viewer, shopUuid, quantity);})); // TODO: call/create ShopHandler.sellToShop(event, shop/shopUuid, quantity)
+                                                                        ShopUtils.sellToShop(viewer, shopUuid, quantity);}));
             lore.clear();
         }
 
@@ -92,7 +92,7 @@ public class ShopTransactionGui {
             item.setType(Material.GREEN_BANNER);
             gui.setItem(2, 7, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        /*ShopUtils.buyFromShop(viewer, shopUuid, quantity);*/})); // TODO: call/create ShopHandler.buyFromShop(event, shop/shopUuid, quantity)
+                                                                        ShopUtils.buyFromShop(viewer, shopUuid, quantity);}));
             lore.clear();
         }
 

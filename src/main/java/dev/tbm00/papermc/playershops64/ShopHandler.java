@@ -169,13 +169,41 @@ public class ShopHandler {
     public void setCurrentShopEditor(UUID shopUuid, Player player) {
         Shop shop = getShop(shopUuid);
         shop.setCurrentEditor(player.getUniqueId());
+        shops.put(shopUuid, shop);
         upsertShop(shop);
     }
 
-    public void clearCurrentShopEditor(UUID shopUuid) {
+    public void clearCurrentShopEditor(UUID shopUuid, UUID expectedEditor) {
+        Shop shop = getShop(shopUuid);
+        if (shop.getCurrentEditor()!=null && shop.getCurrentEditor().equals(expectedEditor)) {
+            shop.setCurrentEditor(null);
+            shops.put(shopUuid, shop);
+            upsertShop(shop);
+        } else {
+            StaticUtils.log(ChatColor.RED, "CRITICAL ERROR: A shop's currentEditor doesn't match expected value:" +
+                                            "\nShop: " + shopUuid.toString() +
+                                            "\nExpected: " + expectedEditor.toString() +
+                                            "\nActual: " + shop.getCurrentEditor().toString());
+        }
+    } /* public void clearCurrentShopEditor(UUID shopUuid) {
         Shop shop = getShop(shopUuid);
         shop.setCurrentEditor(null);
+        shops.put(shopUuid, shop);
         upsertShop(shop);
+    } */
+
+    public boolean tryLockShop(UUID shopUuid, Player player) {
+        Shop shop = getShop(shopUuid);
+
+        if (shop == null)
+            return false;
+        if (shop.getCurrentEditor() != null && !shop.getCurrentEditor().equals(player.getUniqueId())) 
+            return false;
+        
+        shop.setCurrentEditor(player.getUniqueId());
+        shops.put(shopUuid, shop);
+        upsertShop(shop);
+        return true;
     }
 
     public Shop getShopInFocus(Player player) {
