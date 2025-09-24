@@ -8,20 +8,20 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 import org.bukkit.ChatColor;
-import org.bukkit.plugin.java.JavaPlugin;
 
+import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class MySQLConnection {
     private HikariDataSource dataSource;
-    private JavaPlugin javaPlugin;
+    private PlayerShops64 javaPlugin;
     private HikariConfig config;
     private static String[] TABLES = {
             "playershops64_shops"
     };
     
 
-    public MySQLConnection(JavaPlugin javaPlugin) {
+    public MySQLConnection(PlayerShops64 javaPlugin) {
         this.javaPlugin = javaPlugin;
         
         loadSQLConfig();
@@ -90,6 +90,8 @@ public class MySQLConnection {
           + "  `inf_money` TINYINT(1) NOT NULL DEFAULT 0,"
           + "  `inf_stock` TINYINT(1) NOT NULL DEFAULT 0,"
           + "  `description` VARCHAR(256) NULL,"
+          + "  `display_height` INT NULL DEFAULT "+javaPlugin.getConfigHandler().getDisplayDefaultHeight()+","
+          + "  `base_material` VARCHAR(256) NULL,"
           + "  PRIMARY KEY (`uuid`),"
           + "  KEY `idx_owner_uuid` (`owner_uuid`),"
           + "  KEY `idx_world` (`world`),"
@@ -109,14 +111,18 @@ public class MySQLConnection {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
     
-            stmt.executeUpdate(
-                    "ALTER TABLE `"+TABLES[0]+"` " +
-                    "ADD COLUMN `description` VARCHAR(256) NULL AFTER `inf_stock`"
-                );
-            StaticUtils.log(ChatColor.YELLOW, "Updated table '"+TABLES[0]+"' with 'description' column.");
+            for (String tbl : TABLES) {
+                stmt.executeUpdate(
+                        "ALTER TABLE `"+TABLES[0]+"` " +
+                        "ADD COLUMN IF NOT EXISTS `description` VARCHAR(256) NULL AFTER `inf_stock`, " +
+                        "ADD COLUMN IF NOT EXISTS `display_height` INT NOT NULL DEFAULT "+javaPlugin.getConfigHandler().getDisplayDefaultHeight()+" AFTER `description`, " +
+                        "ADD COLUMN IF NOT EXISTS `base_material` VARCHAR(256) NULL AFTER `display_height`"
+                    );
+                StaticUtils.log(ChatColor.YELLOW, "Updated table '"+tbl+"'.");
+            }
         } catch (SQLException e) {
             if (e.getErrorCode() == 1060) return;
-            else StaticUtils.log(ChatColor.RED, "Failed to update tables'"+TABLES[0]+"' with 'description' column: " + e.getMessage());
+            else StaticUtils.log(ChatColor.RED, "Failed to update tables: " + e.getMessage());
         }
     }
 

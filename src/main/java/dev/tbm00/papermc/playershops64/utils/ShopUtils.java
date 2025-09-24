@@ -43,7 +43,9 @@ public class ShopUtils {
                             null,
                             false,
                             false,
-                            null);
+                            null,
+                            0,
+                            Material.LECTERN);
 
         javaPlugin.getShopHandler().upsertShop(shop);
         StaticUtils.log(ChatColor.GOLD, owner.getName() + " created a shop " + shop.getUuid() + " in " + world.getName()+ " @ " + (int)location.getX() + "," + (int)location.getY() + "," + (int)location.getZ());

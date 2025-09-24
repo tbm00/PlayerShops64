@@ -45,7 +45,7 @@ public class ShopDisplay {
     public ShopDisplay(PlayerShops64 javaPlugin, UUID shopId) {
         this.javaPlugin = javaPlugin;
         this.shopId = shopId;
-        this.displayHeight = (float) javaPlugin.getConfigHandler().getDisplayDisplayHeight();
+        this.displayHeight = javaPlugin.getShopHandler().getShop(shopId).getDisplayHeight() / 10f;
         this.holoColor = javaPlugin.getConfigHandler().getDisplayHoloColor();
     }
 

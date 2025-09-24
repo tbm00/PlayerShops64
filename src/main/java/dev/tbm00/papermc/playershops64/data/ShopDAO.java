@@ -7,6 +7,7 @@ import java.util.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 
@@ -75,9 +76,9 @@ public class ShopDAO {
         }
 
         final String sql = "INSERT INTO playershops64_shops " +
-            "(uuid, owner_uuid, owner_name, world, location, itemstack_b64, stack_size, " +
-            " item_stock, money_stock, buy_price, sell_price, last_tx, inf_money, inf_stock, description) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+            "(uuid, owner_uuid, owner_name, world, location, itemstack_b64, stack_size, item_stock, money_stock, " +
+            " buy_price, sell_price, last_tx, inf_money, inf_stock, description, display_height, base_material) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
             "ON DUPLICATE KEY UPDATE " +
             " owner_uuid=VALUES(owner_uuid), " +
             " owner_name=VALUES(owner_name), " +
@@ -92,7 +93,9 @@ public class ShopDAO {
             " last_tx=VALUES(last_tx), " +
             " inf_money=VALUES(inf_money), " +
             " inf_stock=VALUES(inf_stock), " +
-            " description=VALUES(description)";
+            " description=VALUES(description)," +
+            " display_height=VALUES(display_height)," +
+            " base_material=VALUES(base_material)";
 
         try (Connection conn = mySQL.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -112,6 +115,8 @@ public class ShopDAO {
             ps.setBoolean(13, shop.hasInfiniteMoney());
             ps.setBoolean(14, shop.hasInfiniteStock());
             bindStringOrNull(ps, 15, shop.getDescription());
+            ps.setInt(16, shop.getDisplayHeight());
+            ps.setString(17, materialToString(shop.getBaseMaterial()));
 
             ps.executeUpdate();
             return true;
@@ -158,8 +163,10 @@ public class ShopDAO {
         boolean infiniteMoney = rs.getBoolean("inf_money");
         boolean infiniteStock = rs.getBoolean("inf_stock");
         String description = rs.getString("description");
+        int displayHeight = rs.getInt("display_height");
+        Material baseMaterial = stringToMaterial(rs.getString("base_material"));
 
-        return new Shop(uuid, ownerUuid, ownerName, world, location, itemStack, stackSize, itemStock, moneyStock, buyPrice, sellPrice, lastTx, infiniteMoney, infiniteStock, description);
+        return new Shop(uuid, ownerUuid, ownerName, world, location, itemStack, stackSize, itemStock, moneyStock, buyPrice, sellPrice, lastTx, infiniteMoney, infiniteStock, description, displayHeight, baseMaterial);
     }
 
     // --- Helper methods ---
@@ -180,6 +187,20 @@ public class ShopDAO {
         return new Location(world, x, y, z);
     }
 
+    private Material stringToMaterial(String s) {
+        if (s == null || s.isEmpty()) return null;
+        
+        try { return Material.valueOf(s); }
+        catch (Exception ex) {
+            StaticUtils.log(ChatColor.RED, "Failed to map shop row: " + ex.getMessage());
+            return null;
+        }
+    }
+
+    private String materialToString(Material m) {
+        return (m == null) ? null : m.name();
+    }
+
     private java.util.Date toJavaDate(java.sql.Timestamp d) {
         return d != null ? new java.util.Date(d.getTime()) : null;
     }
@@ -196,12 +217,12 @@ public class ShopDAO {
     }
 
     private void bindBigDecimalOrNull(PreparedStatement ps, int idx, BigDecimal v) throws SQLException {
-        if (v == null) ps.setNull(idx, Types.VARCHAR); 
+        if (v == null) ps.setNull(idx, Types.DECIMAL); 
         else ps.setBigDecimal(idx, v);
     }
 
     private void bindStringOrNull(PreparedStatement ps, int idx, String s) throws SQLException {
-        if (s == null) ps.setNull(idx, Types.DECIMAL); 
+        if (s == null) ps.setNull(idx, Types.VARCHAR); 
         else ps.setString(idx, s);
     }
 }

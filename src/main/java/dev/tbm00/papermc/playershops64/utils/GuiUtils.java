@@ -124,7 +124,7 @@ public class GuiUtils {
         event.setCancelled(true);
         
         if (event.isShiftClick() && (isAdmin || sender.getUniqueId().equals(shop.getOwnerUuid()))) {
-            openGuiManage(sender, shop.getUuid());
+            openGuiManage(sender, isAdmin, shop.getUuid());
         } else ShopUtils.teleportPlayerToShop(sender, shop);
     }
 

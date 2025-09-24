@@ -301,7 +301,9 @@ public class ShopHandler {
             s.getLastTransactionDate() == null ? null : new Date(s.getLastTransactionDate().getTime()),
             s.hasInfiniteMoney(),
             s.hasInfiniteStock(),
-            s.getDescription()
+            s.getDescription(),
+            s.getDisplayHeight(),
+            s.getBaseMaterial()
         );
     }
 

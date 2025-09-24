@@ -82,7 +82,7 @@ public class ConfigHandler {
             displayTickCycle = display.getInt("tick-cycle", 5);
             displayViewDistance = display.getInt("view-distance", 16);
             displayFocusDistance = display.getInt("focus-distance", 5);
-            displayDisplayHeight = display.getDouble("glass-height", 0.0);
+            displayDisplayHeight = display.getDouble("display-height", 0.0);
             displayHoloColor = display.getString("holo-color", "60,0,0,0");
         }
 
@@ -194,7 +194,7 @@ public class ConfigHandler {
         return displayFocusDistance;
     }
 
-    public double getDisplayDisplayHeight() {
+    public double getDisplayDefaultHeight() {
         return displayDisplayHeight;
     }
 

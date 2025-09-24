@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 
@@ -27,6 +28,8 @@ public class Shop {
     private boolean infiniteMoney; // only enabled by admins
     private boolean infiniteStock; // only enabled by admins
     private String description; // null if not set
+    private int displayHeight; // -5 thru 5, 0 default
+    private Material baseMaterial; // default lectern (will have a predefined set to select from via gui)
 
     // NOT on SQL
     private UUID currentEditor; // null for none
@@ -48,7 +51,9 @@ public class Shop {
                 Date lastTransactionDate,
                 boolean infiniteMoney,
                 boolean infiniteStock,
-                String description
+                String description,
+                int displayHeight,
+                Material baseMaterial
                 ) {
         this.uuid = uuid;
         this.ownerUuid = ownerUuid;
@@ -65,6 +70,8 @@ public class Shop {
         this.infiniteMoney = infiniteMoney;
         this.infiniteStock = infiniteStock;
         this.description = description;
+        this.displayHeight = displayHeight;
+        this.baseMaterial = baseMaterial;
         this.currentEditor = null;
     }
 
@@ -131,6 +138,20 @@ public class Shop {
 
     public UUID getCurrentEditor() {
         return currentEditor;
+    }
+
+    public int getDisplayHeight() {
+        if (displayHeight < -5 || displayHeight > 5) {
+            displayHeight = 0;
+            return displayHeight;
+        }
+
+        return displayHeight;
+    }
+
+    public Material getBaseMaterial() {
+        if (baseMaterial == null) baseMaterial = Material.LECTERN;
+        return baseMaterial;
     }
 
     // --- Setters ---
@@ -204,6 +225,18 @@ public class Shop {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public void setDisplayHeight(int displayHeight) {
+        if (displayHeight < -5 || displayHeight > 5) {
+            displayHeight = 0;
+        }
+        this.displayHeight = displayHeight;
+    }
+
+    public void setBaseMaterial(Material baseMaterial) {
+        if (baseMaterial == null) baseMaterial = Material.LECTERN;
+        this.baseMaterial = baseMaterial;
     }
 
     public void setCurrentEditor(UUID currentEditor) {
