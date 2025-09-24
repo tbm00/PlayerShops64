@@ -131,7 +131,7 @@ public class ShopBaseBlock implements Listener {
                 } else return;
             }
         } else {
-            GuiUtils.openGuiTransaction(player, shop.getUuid(), null);
+            GuiUtils.openGuiTransaction(player, shop.getUuid(), null, true);
             return;
         }
     }

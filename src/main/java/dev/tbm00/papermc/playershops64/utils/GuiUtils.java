@@ -35,11 +35,11 @@ public class GuiUtils {
         GuiUtils.javaPlugin = javaPlugin;
     }
 
-    public static boolean openGuiTransaction(Player player, UUID shopUuid, Integer quantity) {
+    public static boolean openGuiTransaction(Player player, UUID shopUuid, Integer quantity, boolean closeGuiAfter) {
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
 
-        if (quantity==null) new ShopTransactionGui(javaPlugin, player, shopUuid, 1);
-        else new ShopTransactionGui(javaPlugin, player, shopUuid, quantity);
+        if (quantity==null) new ShopTransactionGui(javaPlugin, player, shopUuid, 1, closeGuiAfter);
+        else new ShopTransactionGui(javaPlugin, player, shopUuid, quantity, closeGuiAfter);
         return true;
     }
 
