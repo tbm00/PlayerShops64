@@ -65,8 +65,8 @@ public class ShopManageGui {
             // Null Sale Item
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to set the sale item to the");
-            lore.add("&6item currently in your hand");
+            lore.add("&6Click to set this shop's sale item");
+            lore.add("&6to the item currently in your hand");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cNo Sale Item"));
             item.setItemMeta(meta);
@@ -89,7 +89,7 @@ public class ShopManageGui {
             // Clear Sale Item
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to clear the sale item");
+            lore.add("&6Click to clear this shop's sale item");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cClear Sale Item"));
             item.setItemMeta(meta);
@@ -103,7 +103,7 @@ public class ShopManageGui {
         { // Set Sell Price
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to set sell price");
+            lore.add("&6Click to set this shop's sell price");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             if (shop.getSellPrice()!=null && !shop.getSellPrice().equals(null)) 
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&4Sell Price: &f$" + StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue())));
@@ -133,7 +133,7 @@ public class ShopManageGui {
         { // Set Buy Price
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to set buy price");
+            lore.add("&6Click to set this shop's buy price");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             if (shop.getBuyPrice()!=null && !shop.getBuyPrice().equals(null)) 
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&2Buy Price: &f$" + StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue())));
@@ -163,7 +163,7 @@ public class ShopManageGui {
         { // Set Balance
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to set shop's balance");
+            lore.add("&6Click to set this shop's balance");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             if (shop.getBuyPrice()!=null && !shop.getBuyPrice().equals(null)) 
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Balance: &f$" + StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue())));
@@ -178,7 +178,7 @@ public class ShopManageGui {
         { // Set Stock
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to set shop's stock");
+            lore.add("&6Click to set this shop's stock");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             if (shop.getBuyPrice()!=null && !shop.getBuyPrice().equals(null)) 
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Stock: &f" + StaticUtils.formatIntUS(shop.getItemStock())));
@@ -199,9 +199,9 @@ public class ShopManageGui {
                 lore.add(shop.getDescription());
             }
             lore.add("&8-----------------------");
-            lore.add("&6Click to set description");
+            lore.add("&6Click to set this shop's description");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dSet Shop Description"));
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dSet Description"));
             item.setItemMeta(meta);
             item.setType(Material.PAPER);
             gui.setItem(6, 4, ItemBuilder.from(item).asGuiItem(event -> {
@@ -212,9 +212,9 @@ public class ShopManageGui {
             // Clear Description
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to clear description");
+            lore.add("&6Click to clear this shop's description");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cClear Shop Description"));
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cClear Description"));
             item.setItemMeta(meta);
             item.setType(Material.RED_BANNER);
             gui.setItem(6, 3, ItemBuilder.from(item).asGuiItem(event -> {
@@ -226,11 +226,10 @@ public class ShopManageGui {
         {
             // Set Display Height
             lore.clear();
-            // TODO: implement shop.getDisplayHeight()
-            // lore.add("&8-----------------------");
-            // lore.add("&eCurrent height: "+shop.getDisplayHeight());
             lore.add("&8-----------------------");
-            lore.add("&6Click to set display height");
+            lore.add("&eCurrent height: "+shop.getDisplayHeight());
+            lore.add("&8-----------------------");
+            lore.add("&6Click to set this shop's display height");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dSet Display Height"));
             item.setItemMeta(meta);
@@ -244,11 +243,10 @@ public class ShopManageGui {
         {
             // Set Base Material
             lore.clear();
-            // TODO: implement shop.getBaseMaterial()
-            // lore.add("&8-----------------------");
-            // lore.add("&eCurrent height: " + StaticUtils.formatTitleCase(shop.getBaseMaterial()));
             lore.add("&8-----------------------");
-            lore.add("&6Click to shop's base block");
+            lore.add("&eCurrent material: " + StaticUtils.formatTitleCase(shop.getBaseMaterial().toString()));
+            lore.add("&8-----------------------");
+            lore.add("&6Click to set this shop's base block");
             lore.add("&6material type");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dSet Base Material"));
@@ -264,7 +262,7 @@ public class ShopManageGui {
             // Destroy Shop
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to &cdestroy this shop");
+            lore.add("&6Click to &cDESTROY this shop");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&4Destroy Shop"));
             item.setItemMeta(meta);
