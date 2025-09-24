@@ -283,7 +283,7 @@ public class ShopManageGui {
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dYour Shops"));
             item.setItemMeta(meta);
-            item.setType(Material.BARRIER);
+            item.setType(Material.STONE_BUTTON);
             gui.setItem(9, 6, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
                                                                         GuiUtils.handleClickYourShops(event, isAdmin);
