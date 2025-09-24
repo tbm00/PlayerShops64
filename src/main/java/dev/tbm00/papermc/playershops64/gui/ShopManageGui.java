@@ -184,7 +184,7 @@ public class ShopManageGui {
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Stock: &f" + StaticUtils.formatIntUS(shop.getItemStock())));
             item.setItemMeta(meta);
             item.setType(Material.BARREL);
-            gui.setItem(3, 5, ItemBuilder.from(item).asGuiItem(event -> {
+            gui.setItem(4, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
                                                                         // TODO: set stock (AdjustType.ADD, AdjustType.REMOVE, or AdjustType.SET) then ModType.STOCK
                                                                         }));
