@@ -37,11 +37,12 @@ public class ShopTransactionGui {
         this.quantity = Math.max(quantity, 1);
         this.gui = new Gui(6, label);
 
+        String shopHint = shopUuid.toString().substring(0, 6);
         if (javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
-            StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened the shop's gui");
+            StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+shopHint+"'s transaction gui");
         } else return;
 
-        label = "Shop Transaction";
+        label = "Shop Transaction (" + shopHint+ ")";
 
         setup();
 
@@ -49,7 +50,7 @@ public class ShopTransactionGui {
         gui.disableAllInteractions();
         gui.open(viewer);
         gui.setCloseGuiAction(event -> {
-            StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed the shop's gui");
+            StaticUtils.log(ChatColor.GREEN, viewer.getName() + " opened shop "+shopHint+"'s transaction gui");
             javaPlugin.getShopHandler().unlockShop(shopUuid, viewer.getUniqueId());
         });
     }

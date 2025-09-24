@@ -25,6 +25,7 @@ import dev.tbm00.papermc.playershops64.gui.ListShopsGui;
 import dev.tbm00.papermc.playershops64.gui.ListCategoriesGui;
 import dev.tbm00.papermc.playershops64.gui.ListQueriesGui;
 import dev.tbm00.papermc.playershops64.gui.SearchGui;
+import dev.tbm00.papermc.playershops64.gui.ShopManageGui;
 import dev.tbm00.papermc.playershops64.gui.ShopTransactionGui;
 
 public class GuiUtils {
@@ -42,10 +43,10 @@ public class GuiUtils {
         return true;
     }
 
-    public static boolean openGuiManage(Player player, UUID shopUuid) {
+    public static boolean openGuiManage(Player player, boolean isAdmin, UUID shopUuid) {
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
 
-        // TODO: call ShopManageGui for player+shopUuid
+        new ShopManageGui(javaPlugin, player, isAdmin, shopUuid);
         return true;
     }
 
