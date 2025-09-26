@@ -133,6 +133,8 @@ public class ShopHandler {
     }
 
     public void removeShop(UUID uuid) {
+        if (uuid == null || uuid.equals(null)) return;
+
         // run DB operations async
         javaPlugin.getServer().getScheduler().runTaskAsynchronously(javaPlugin, () -> {
             boolean ok = dao.deleteShop(uuid);
@@ -152,6 +154,12 @@ public class ShopHandler {
 
     public void unlockShop(UUID shopUuid, UUID expectedEditor) {
         Shop shop = getShop(shopUuid);
+        if (shop==null || shop.equals(null)) {
+            StaticUtils.log(ChatColor.YELLOW, "Tried to unlock a null shop!" +
+                                            "\nShop: " + shopUuid.toString());
+            return;
+        }
+
         if (shop.getCurrentEditor()==null) {
             StaticUtils.log(ChatColor.RED, "CRITICAL ERROR: A shop's currentEditor lock doesn't match expected value:" +
                                             "\nShop: " + shopUuid.toString() +
@@ -170,13 +178,14 @@ public class ShopHandler {
 
     public boolean tryLockShop(UUID shopUuid, Player player) {
         Shop shop = getShop(shopUuid);
+        if (shop==null || shop.equals(null)) {
+            StaticUtils.log(ChatColor.YELLOW, player.getName() + " tried to tryLock a null shop!" +
+                                            "\nShop: " + shopUuid.toString());
+            StaticUtils.sendMessage(player, "&cShop object not found..!");
+            return false;
+        }
 
-        boolean accessed = false;
-        if (shop == null)
-            accessed = true;
-        if (shop.getCurrentEditor() != null && !shop.getCurrentEditor().equals(player.getUniqueId())) 
-            accessed = false;
-        if (!accessed) {
+        if (shop.getCurrentEditor() != null && !shop.getCurrentEditor().equals(player.getUniqueId())) {
             StaticUtils.sendMessage(player, "&cThis shop is being used by " + javaPlugin.getServer().getOfflinePlayer(shop.getCurrentEditor()).getName());
             return false;
         }

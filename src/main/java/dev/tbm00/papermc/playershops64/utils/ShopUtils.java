@@ -10,6 +10,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -52,6 +53,232 @@ public class ShopUtils {
         return shopUuid;
     }
 
+    // Shop Edits
+    public static void deleteShop(Player player, UUID shopUuid, Block block) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to delete shop " + shopUuid + " off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> deleteShop(player, shopUuid, block));
+            return;
+        }
+
+        // guard
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            return;
+        }
+        
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                StaticUtils.sendMessage(player, "&cShop not found..!");
+                return;
+            }
+
+            if (shop.getItemStock()>0) {
+                StaticUtils.sendMessage(player, "&cShop must have an empty item stock before deleting it!");
+                return;
+            }
+
+            if (shop.getMoneyStock().compareTo(BigDecimal.ZERO) == 1) {
+                javaPlugin.getVaultHook().giveMoney(player, shop.getMoneyStock().doubleValue());
+            }
+
+            // delete shop
+            javaPlugin.getShopHandler().removeShop(shop.getUuid());
+            if (block==null || block.equals(null)) {
+                javaPlugin.getServer().getWorld(shop.getWorld().getUID()).getBlockAt(shop.getLocation()).setType(Material.AIR, false);
+            } else block.setType(Material.AIR, false);
+            StaticUtils.addToInventoryOrDrop(player, ShopUtils.prepPlayerShopItemStack(1));
+            StaticUtils.sendMessage(player, "&aDeleted shop!");
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
+    public static void setShopItem(Player player, UUID shopUuid) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to set shop " + shopUuid + "'s item off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> setShopItem(player, shopUuid));
+            return;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            return;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                StaticUtils.sendMessage(player, "&cShop not found..!");
+                return;
+            }
+
+            ItemStack hand = player.getInventory().getItemInMainHand();
+            if (hand == null || hand.getType().isAir()) {
+                StaticUtils.sendMessage(player, "&cFailed to set shop item, you weren't holding an item!");
+                return;
+            }
+
+            if (shop.getItemStock()>0) {
+                StaticUtils.sendMessage(player, "&cShop must have an empty item stock before changing shop items!");
+                return;
+            }
+
+            // edit shop
+            int handCount = hand.getAmount();
+            ItemStack one = hand.clone();
+            one.setAmount(1);
+            shop.setItemStack(one);
+            shop.setItemStock(1);
+            shop.setStackSize(1);
+
+            // apply updates
+            if (handCount>1) {
+                hand.setAmount(handCount-1);
+            } else {player.getInventory().setItemInMainHand(null);}
+            javaPlugin.getShopHandler().upsertShop(shop);
+            StaticUtils.sendMessage(player, "&aShop item set to &e" + StaticUtils.getItemName(one));
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
+    public static void clearShopItem(Player player, UUID shopUuid) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to clear shop " + shopUuid + "'s item off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> clearShopItem(player, shopUuid));
+            return;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            return;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                StaticUtils.sendMessage(player, "&cShop not found..!");
+                return;
+            }
+
+            if (shop.getItemStock()>0) {
+                StaticUtils.sendMessage(player, "&cShop must have an empty item stock before clearing shop item!");
+                return;
+            }
+
+            // edit shop
+            shop.setItemStack(null);
+            shop.setStackSize(1);
+
+            // apply updates
+            javaPlugin.getShopHandler().upsertShop(shop);
+            StaticUtils.sendMessage(player, "&aShop item set cleared!");
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
+    public static void setBuyPrice(Player player, UUID shopUuid, Double newPrice) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to set shop " + shopUuid + "'s buy price off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> setBuyPrice(player, shopUuid, newPrice));
+            return;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            return;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                StaticUtils.sendMessage(player, "&cShop not found..!");
+                return;
+            }
+
+            // edit shop
+            if (newPrice==null || newPrice.equals(null)) shop.setBuyPrice(null);
+            else shop.setBuyPrice(BigDecimal.valueOf(newPrice));
+
+            // apply updates
+            javaPlugin.getShopHandler().upsertShop(shop);
+            if (newPrice!=null && !newPrice.equals(null)) {
+                StaticUtils.sendMessage(player, "&aSet buy price to $" + StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue()) + "!");
+            } else {
+                StaticUtils.sendMessage(player, "&aDisabled buying from this shop!");
+            }
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
+    public static void setSellPrice(Player player, UUID shopUuid, Double newPrice) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to set shop " + shopUuid + "'s sell price off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> setSellPrice(player, shopUuid, newPrice));
+            return;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            return;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                StaticUtils.sendMessage(player, "&cShop not found..!");
+                return;
+            }
+
+            // edit shop
+            if (newPrice==null || newPrice.equals(null)) shop.setSellPrice(null);
+            else shop.setSellPrice(BigDecimal.valueOf(newPrice));
+
+            // apply updates
+            javaPlugin.getShopHandler().upsertShop(shop);
+            if (newPrice!=null && !newPrice.equals(null)) {
+                StaticUtils.sendMessage(player, "&aSet sell price to $" + StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue()) + "!");
+            } else {
+                StaticUtils.sendMessage(player, "&aDisabled selling to this shop!");
+            }
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
+    public static void blankEditShop(Player player, UUID shopUuid) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to ___ shop " + shopUuid + " off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> blankEditShop(player, shopUuid));
+            return;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            return;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                StaticUtils.sendMessage(player, "&cShop not found..!");
+                return;
+            }
+
+            // edit shop
+
+            // apply updates
+            javaPlugin.getShopHandler().upsertShop(shop);
+            StaticUtils.sendMessage(player, "&fEdited shop");
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
     public static void sellToShop(Player player, UUID shopUuid, int quantity) {
         if (!Bukkit.isPrimaryThread()) {
             StaticUtils.log(ChatColor.RED, player.getName() + " tried to sell to shop " + shopUuid + " off the main thread -- trying again during next tick on main thread!");
@@ -59,7 +286,6 @@ public class ShopUtils {
             return;
         }
 
-        // Re-guard
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
             StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
             return;
@@ -137,17 +363,17 @@ public class ShopUtils {
                 return;
             }
 
-            // update shop
+            // edit shop
             if (!shop.hasInfiniteStock()) shop.setItemStock(shop.getItemStock() + workingQuantity);
             if (!shop.hasInfiniteMoney()) shop.setMoneyStock((shop.getMoneyStock()==null) ? BigDecimal.ZERO: shop.getMoneyStock().subtract(totalPrice));
             shop.setLastTransactionDate(new Date());
+            
+            // apply updates
             javaPlugin.getShopHandler().upsertShop(shop);
-
             StaticUtils.sendMessage(player, "&fSold " + workingQuantity + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
-    
     }
 
     public static void buyFromShop(Player player, UUID shopUuid, int quantity) {
@@ -157,7 +383,6 @@ public class ShopUtils {
             return;
         }
 
-        // Re-guard
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
             StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
             return;
@@ -236,12 +461,13 @@ public class ShopUtils {
                 return;
             }
 
-            // update shop
+            // edit shop
             if (!shop.hasInfiniteStock()) shop.setItemStock(shop.getItemStock() - workingQuantity);
             if (!shop.hasInfiniteMoney()) shop.setMoneyStock((shop.getMoneyStock()==null) ? totalPrice : shop.getMoneyStock().add(totalPrice));
             shop.setLastTransactionDate(new Date());
+            
+            // apply updates
             javaPlugin.getShopHandler().upsertShop(shop);
-
             StaticUtils.sendMessage(player, "&fBought " + workingQuantity + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
@@ -309,11 +535,6 @@ public class ShopUtils {
         }
     }
 
-    /**
-     * Prepares an base block ItemStack for usage.
-     * 
-     * @param amount the amount to give
-     */
     public static ItemStack prepPlayerShopItemStack(Integer amount) {
         ItemStack lectern = new ItemStack(Material.LECTERN);
         ItemMeta meta = lectern.getItemMeta();

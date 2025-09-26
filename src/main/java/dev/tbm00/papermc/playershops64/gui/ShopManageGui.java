@@ -16,6 +16,7 @@ import dev.triumphteam.gui.guis.Gui;
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.Shop;
 import dev.tbm00.papermc.playershops64.utils.GuiUtils;
+import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ShopManageGui {
@@ -73,7 +74,7 @@ public class ShopManageGui {
             item.setType(Material.BARRIER);
             gui.setItem(2, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        // TODO: set shop's item to current item (make sure stock is empty prior)
+                                                                        ShopUtils.setShopItem(viewer, shopUuid);
                                                                         }));                                   
         } else { 
             // Sale Item
@@ -96,7 +97,7 @@ public class ShopManageGui {
             item.setType(Material.RED_BANNER);
             gui.setItem(1, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        // TODO: clear shop's item  (make sure stock is empty prior)
+                                                                        ShopUtils.clearShopItem(viewer, shopUuid);
                                                                         }));
         }
 
@@ -126,7 +127,7 @@ public class ShopManageGui {
             item.setType(Material.RED_BANNER);
             gui.setItem(3, 3, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        // TODO: disable selling to shop (set sell price to null)
+                                                                        ShopUtils.setSellPrice(viewer, shopUuid, null);
                                                                         }));                       
         }
 
@@ -156,7 +157,7 @@ public class ShopManageGui {
             item.setType(Material.RED_BANNER);
             gui.setItem(3, 7, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        // TODO: disable buying from shop (set buy price to null)
+                                                                        ShopUtils.setBuyPrice(viewer, shopUuid, null);
                                                                         }));                       
         }
 
@@ -269,7 +270,7 @@ public class ShopManageGui {
             item.setType(Material.BARRIER);
             gui.setItem(1, 6, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        // TODO: destroy shop (make sure stock is empty prior)
+                                                                        ShopUtils.deleteShop(viewer, shopUuid, null);
                                                                         }));
         } 
 

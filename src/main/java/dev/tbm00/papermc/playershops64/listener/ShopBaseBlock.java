@@ -92,36 +92,10 @@ public class ShopBaseBlock implements Listener {
         if (isOwner) {
             if (isSneaking) {
                 if (action==Action.LEFT_CLICK_BLOCK) { // Delete shop
-                    javaPlugin.getShopHandler().removeShop(shop.getUuid());
-                    block.setType(Material.AIR, false);
-                    StaticUtils.sendMessage(player, "&aDeleted shop!");
-                    StaticUtils.addToInventoryOrDrop(player, ShopUtils.prepPlayerShopItemStack(1));
+                    ShopUtils.deleteShop(player, shop.getUuid(), block);
                     return;
-                } else if (action==Action.RIGHT_CLICK_BLOCK) { // Set shop item
-                    ItemStack hand = player.getInventory().getItemInMainHand();
-                    if (hand == null || hand.getType().isAir()) {
-                        StaticUtils.sendMessage(player, "&cHold an item in your main hand to set the shop item while sneak-right-clicking.");
-                        return;
-                    }
-
-                    if (shop.getItemStock()>0) {
-                        StaticUtils.sendMessage(player, "&cShop must have an empty item stock before changing shop items.");
-                        return;
-                    }
-
-                    int handCount = hand.getAmount();
-                    ItemStack one = hand.clone();
-                    one.setAmount(1);
-                    shop.setItemStack(one);
-                    shop.setItemStock(1);
-                    shop.setStackSize(1);
-
-                    if (handCount>1) {
-                        hand.setAmount(handCount-1);
-                    } else {player.getInventory().setItemInMainHand(null);}
-
-                    javaPlugin.getShopHandler().upsertShop(shop);
-                    StaticUtils.sendMessage(player, "&aShop item set to &e" + StaticUtils.getItemName(one));
+                } else if (action==Action.RIGHT_CLICK_BLOCK && shop.getItemStack()==null) { // Set shop item
+                    ShopUtils.setShopItem(player, shop.getUuid());
                     return;
                 } else return;
             } else {
