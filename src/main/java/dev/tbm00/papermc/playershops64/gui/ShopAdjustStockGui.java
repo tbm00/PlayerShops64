@@ -68,9 +68,9 @@ public class ShopAdjustStockGui {
             ItemMeta shopMeta = shopItem.getItemMeta();
             List<String> shopLore = shopMeta.getLore();
 
+            shopLore = GuiUtils.getSaleItemLore(shop);
             shopLore.add("&8-----------------------");
             shopLore.add("&fStock: &e" + shop.getItemStock());
-            shopLore.add("&fWorking Quantity: &e" + quantity);
 
             shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             shopItem.setItemMeta(shopMeta);
@@ -78,7 +78,7 @@ public class ShopAdjustStockGui {
             gui.setItem(1, 5, ItemBuilder.from(shopItem).asGuiItem(event -> {event.setCancelled(true);}));
         }
 
-        { // Withdraw
+        { // Withdraw Button
             lore.clear();
             lore.add("&8-----------------------");
             lore.add("&6Click to withdraw " + quantity + " from shop's stock");
@@ -91,7 +91,7 @@ public class ShopAdjustStockGui {
                                                                         ShopUtils.adjustStock(viewer, shopUuid, AdjustType.REMOVE, quantity);}));
         }
 
-        { // Set
+        { // Set Button
             lore.clear();
             lore.add("&8-----------------------");
             lore.add("&6Click to set shop's stock to " + quantity);
@@ -104,7 +104,7 @@ public class ShopAdjustStockGui {
                                                                         ShopUtils.adjustStock(viewer, shopUuid, AdjustType.SET, quantity);}));
         }
 
-        { // Withdraw
+        { // Deposit Button
             lore.clear();
             lore.add("&8-----------------------");
             lore.add("&6Click to deposit " + quantity + " to shop's stock");
@@ -117,7 +117,7 @@ public class ShopAdjustStockGui {
                                                                         ShopUtils.adjustStock(viewer, shopUuid, AdjustType.ADD, quantity);}));
         }
 
-        { // Amount Gui
+        { // Amount Gui Button
             lore.clear();
             lore.add("&8-----------------------");
             lore.add("&6Click enter quantity with keyboard");

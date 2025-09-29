@@ -93,6 +93,15 @@ public class ShopTransactionGui {
         
         if (shop.getItemStack()!=null) { // Sale Item
             ItemStack shopItem = shop.getItemStack();
+            ItemMeta shopMeta = shopItem.getItemMeta();
+            List<String> shopLore = shopMeta.getLore();
+
+            shopLore = GuiUtils.getSaleItemLore(shop);
+            shopLore.add("&8-----------------------");
+            shopLore.add("&fWorking Quantity: &e" + quantity);
+
+            shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+            shopItem.setItemMeta(shopMeta);
             shopItem.setAmount(quantity);
             gui.setItem(2, 5, ItemBuilder.from(shopItem).asGuiItem(event -> {event.setCancelled(true);}));
         }

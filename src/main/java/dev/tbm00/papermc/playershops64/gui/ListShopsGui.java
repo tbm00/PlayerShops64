@@ -16,6 +16,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.ChatColor;
 
 import dev.triumphteam.gui.builder.item.ItemBuilder;
+import dev.triumphteam.gui.guis.Gui;
 import dev.triumphteam.gui.guis.PaginatedGui;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
@@ -343,11 +344,6 @@ public class ListShopsGui {
 
     private void addGuiItemShop(Shop shop) {
         boolean emptyShop = false;
-        Double buyPrice = (shop.getBuyPrice()==null) ? null : shop.getBuyPrice().doubleValue();
-        Double sellPrice = (shop.getSellPrice()==null) ? null : shop.getSellPrice().doubleValue();
-        Double balance = (shop.getMoneyStock()==null) ? null : shop.getMoneyStock().doubleValue();
-        int stock = shop.getItemStock();
-
         ItemStack item = null; 
         if (shop.getItemStack()==null) {
             emptyShop = true;
@@ -358,30 +354,10 @@ public class ListShopsGui {
         
         ItemMeta meta = item.getItemMeta();
         List<String> lore = new ArrayList<>();
-        String priceLine = "", firstLine=null;
+        String priceLine = "", itemName=null;
         UUID ownerUuid = shop.getOwnerUuid();
 
-        meta.setLore(null);
-        lore.add("&8-----------------------");
-        lore.add("&c" + shop.getDescription());
-
-        if (buyPrice>=0) priceLine = "&7B: &a$" + StaticUtils.formatDoubleUS(buyPrice) + " ";
-        if (sellPrice>=0) priceLine += "&7S: &c$" + StaticUtils.formatDoubleUS(sellPrice);
-        lore.add(priceLine);
-
-        if (stock<0) lore.add("&7Stock: &e∞");
-        else lore.add("&7Stock: &e" + stock);
-
-        if (shop.hasInfiniteMoney()) lore.add("&7Balance: &e$&e∞");
-        else lore.add("&7Balance: &e$" + StaticUtils.formatDoubleUS(balance));
-
-        if (ownerUuid!=null && (!shop.hasInfiniteMoney() && !shop.hasInfiniteStock()))
-            lore.add("&7Owner: &f" + shop.getOwnerName());
-
-        lore.add("&7"+shop.getWorld().getName()+": &f"
-                +(int)shop.getLocation().getX()+"&7, &f"
-                +(int)shop.getLocation().getY()+"&7, &f"
-                +(int)shop.getLocation().getZ());
+        lore = GuiUtils.getSaleItemLore(shop);
 
         lore.add("&8-----------------------");
         lore.add("&6Click to TP to this shop");
@@ -392,12 +368,12 @@ public class ListShopsGui {
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
 
         if (emptyShop) {
-            firstLine = "&c(no shop item)";
+            itemName = "&c(no shop item)";
         } else {
-            firstLine = StaticUtils.getItemName(item) + " &7x &f" + shop.getStackSize();
+            itemName = StaticUtils.getItemName(item) + " &7x &f" + shop.getStackSize();
         }
 
-        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', firstLine));
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', itemName));
 
         meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         meta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
