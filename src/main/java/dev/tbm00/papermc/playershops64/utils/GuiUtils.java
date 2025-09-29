@@ -25,6 +25,7 @@ import dev.tbm00.papermc.playershops64.gui.ListShopsGui;
 import dev.tbm00.papermc.playershops64.gui.ListCategoriesGui;
 import dev.tbm00.papermc.playershops64.gui.ListQueriesGui;
 import dev.tbm00.papermc.playershops64.gui.SearchGui;
+import dev.tbm00.papermc.playershops64.gui.ShopAdjustStockGui;
 import dev.tbm00.papermc.playershops64.gui.ShopManageGui;
 import dev.tbm00.papermc.playershops64.gui.ShopTransactionGui;
 
@@ -40,6 +41,14 @@ public class GuiUtils {
 
         if (quantity==null) new ShopTransactionGui(javaPlugin, player, shopUuid, 1, closeGuiAfter);
         else new ShopTransactionGui(javaPlugin, player, shopUuid, quantity, closeGuiAfter);
+        return true;
+    }
+
+    public static boolean openGuiAdjustStock(Player player, UUID shopUuid, Integer quantity) {
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
+
+        if (quantity==null) new ShopAdjustStockGui(javaPlugin, player, shopUuid, 1);
+        else new ShopAdjustStockGui(javaPlugin, player, shopUuid, quantity);
         return true;
     }
 

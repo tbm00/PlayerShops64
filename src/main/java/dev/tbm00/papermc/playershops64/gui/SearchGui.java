@@ -54,7 +54,6 @@ public class SearchGui {
                     GuiUtils.openGuiSearchResults(player, new String[]{query}, isAdmin);
                 });
 
-
                 Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
                     if (player.isOnline()) {
                         if (FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {

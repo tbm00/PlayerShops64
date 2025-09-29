@@ -18,6 +18,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.Shop;
+import dev.tbm00.papermc.playershops64.data.enums.AdjustType;
 
 public class ShopUtils {
     private static PlayerShops64 javaPlugin;
@@ -245,6 +246,122 @@ public class ShopUtils {
             } else {
                 StaticUtils.sendMessage(player, "&aDisabled selling to this shop!");
             }
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
+public static void adjustStock(Player player, UUID shopUuid, AdjustType adjustType, int requestedQuantity) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to adjust shop " + shopUuid + "'s stock off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> adjustStock(player, shopUuid, adjustType, requestedQuantity));
+            return;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            return;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                StaticUtils.sendMessage(player, "&cShop not found..!");
+                return;
+            }
+
+            ItemStack saleItem = shop.getItemStack();
+            if (saleItem == null || saleItem.equals(null)) {
+                StaticUtils.sendMessage(player, "&cShop has no sale item set..!");
+                return;
+            }
+
+            if (requestedQuantity <= 0) {
+                StaticUtils.sendMessage(player, "&cInvalid quantity.");
+                return;
+            } int workingQuantity = requestedQuantity;
+            int playerStock = StaticUtils.countMatchingItems(player, saleItem);
+            int shopStock = shop.getItemStock();
+
+            // edit shop
+            switch (adjustType) {
+                case ADD: {
+                    if (playerStock <= 0) {
+                        StaticUtils.sendMessage(player, "&cYou don't have any matching items to deposit!");
+                        return;
+                    }
+
+                    if (playerStock < requestedQuantity) workingQuantity = playerStock;
+                    
+                    boolean removedItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, workingQuantity);
+                    if (!removedItemsFromPlayer) {
+                        StaticUtils.sendMessage(player, "&cError removing " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
+                        return;
+                    }
+
+                    shop.setItemStock(shopStock+workingQuantity);
+                    break;
+                }
+                case REMOVE: {
+                    if (shopStock <= 0) {
+                        StaticUtils.sendMessage(player, "&cThe shop doesn't have any stock to withdraw!");
+                        return;
+                    }
+
+                    if (shopStock < requestedQuantity) workingQuantity = shopStock;
+
+                    boolean addItemsToPlayer = StaticUtils.addToInventoryOrDrop(player, saleItem, workingQuantity);
+                    if (!addItemsToPlayer) {
+                        StaticUtils.sendMessage(player, "&cError adding " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
+                        return;
+                    }
+
+                    shop.setItemStock(shopStock-workingQuantity);
+                    break;
+                }
+                case SET: {
+                    if (shopStock == requestedQuantity) return;
+                    if (shopStock > requestedQuantity) {
+                        if (shopStock <= 0) {
+                            StaticUtils.sendMessage(player, "&cThe shop doesn't have any stock to withdraw!");
+                            return;
+                        }
+
+                        workingQuantity = shopStock-requestedQuantity;
+
+                        boolean addItemsToPlayer = StaticUtils.addToInventoryOrDrop(player, saleItem, workingQuantity);
+                        if (!addItemsToPlayer) {
+                            StaticUtils.sendMessage(player, "&cError adding " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
+                            return;
+                        }
+
+                        shop.setItemStock(shopStock-workingQuantity);
+                    } else if (shopStock < requestedQuantity) {
+                        if (playerStock <= 0) {
+                            StaticUtils.sendMessage(player, "&cYou don't have any matching items to deposit!");
+                            return;
+                        }
+
+                        workingQuantity = requestedQuantity-shopStock;
+
+                        boolean removeItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, workingQuantity);
+                        if (!removeItemsFromPlayer) {
+                            StaticUtils.sendMessage(player, "&cError removing " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
+                            return;
+                        }
+
+                        shop.setItemStock(shopStock+workingQuantity);
+                    }
+                    break;
+                }
+                default:
+                    StaticUtils.sendMessage(player, "&cError: No adjust type found!");
+                    return;
+            }
+
+            // apply updates
+            javaPlugin.getShopHandler().upsertShop(shop);
+            StaticUtils.sendMessage(player, "&fEdited shop");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
