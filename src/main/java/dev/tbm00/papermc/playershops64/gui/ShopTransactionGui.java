@@ -103,7 +103,7 @@ public class ShopTransactionGui {
             shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             shopItem.setItemMeta(shopMeta);
             shopItem.setAmount(quantity);
-            gui.setItem(2, 5, ItemBuilder.from(shopItem).asGuiItem(event -> {event.setCancelled(true);}));
+            gui.setItem(2, 7, ItemBuilder.from(shopItem).asGuiItem(event -> {event.setCancelled(true);}));
         }
 
         if (shop.getSellPrice()!=null) { // Sell Button
@@ -114,7 +114,7 @@ public class ShopTransactionGui {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cConfirm Sell"));
             item.setItemMeta(meta);
             item.setType(Material.RED_BANNER);
-            gui.setItem(2, 3, ItemBuilder.from(item).asGuiItem(event -> {
+            gui.setItem(2, 2, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
                                                                         ShopUtils.sellToShop(viewer, shopUuid, quantity);
                                                                         if (closeGuiAfter) gui.close(viewer);}));
@@ -128,7 +128,7 @@ public class ShopTransactionGui {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aConfirm Buy"));
             item.setItemMeta(meta);
             item.setType(Material.GREEN_BANNER);
-            gui.setItem(2, 7, ItemBuilder.from(item).asGuiItem(event -> {
+            gui.setItem(2, 4, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
                                                                         ShopUtils.buyFromShop(viewer, shopUuid, quantity);
                                                                         if (closeGuiAfter) gui.close(viewer);}));

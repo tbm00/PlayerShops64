@@ -228,8 +228,10 @@ public class Shop {
     }
 
     public void setDisplayHeight(int displayHeight) {
-        if (displayHeight < -5 || displayHeight > 5) {
-            displayHeight = 0;
+        if (displayHeight < -5) {
+            displayHeight = -5;
+        } else if (displayHeight > 5) {
+            displayHeight = 5;
         }
         this.displayHeight = displayHeight;
     }

@@ -62,6 +62,11 @@ public class StaticUtils {
         return amount == null ? null : amount.setScale(2, RoundingMode.DOWN);
     }
 
+    public static double normalizeToDouble(BigDecimal amount) {
+        BigDecimal normalized = normalizeBigDecimal(amount);
+        return normalized == null ? 0.0 : normalized.doubleValue();
+    }
+
     /**
      * Normalizes double to avoid money drift beyond 2 decimals places
      */

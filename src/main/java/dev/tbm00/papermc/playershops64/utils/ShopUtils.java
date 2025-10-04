@@ -251,10 +251,10 @@ public class ShopUtils {
         }
     }
 
-public static void adjustStock(Player player, UUID shopUuid, AdjustType adjustType, int requestedQuantity) {
+    public static void setDisplayHeight(Player player, UUID shopUuid, int newHeight) {
         if (!Bukkit.isPrimaryThread()) {
-            StaticUtils.log(ChatColor.RED, player.getName() + " tried to adjust shop " + shopUuid + "'s stock off the main thread -- trying again during next tick on main thread!");
-            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> adjustStock(player, shopUuid, adjustType, requestedQuantity));
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to set shop " + shopUuid + "'s display height off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> setDisplayHeight(player, shopUuid, newHeight));
             return;
         }
 
@@ -270,98 +270,12 @@ public static void adjustStock(Player player, UUID shopUuid, AdjustType adjustTy
                 return;
             }
 
-            ItemStack saleItem = shop.getItemStack();
-            if (saleItem == null || saleItem.equals(null)) {
-                StaticUtils.sendMessage(player, "&cShop has no sale item set..!");
-                return;
-            }
-
-            if (requestedQuantity <= 0) {
-                StaticUtils.sendMessage(player, "&cInvalid quantity.");
-                return;
-            } int workingQuantity = requestedQuantity;
-            int playerStock = StaticUtils.countMatchingItems(player, saleItem);
-            int shopStock = shop.getItemStock();
-
             // edit shop
-            switch (adjustType) {
-                case ADD: {
-                    if (playerStock <= 0) {
-                        StaticUtils.sendMessage(player, "&cYou don't have any matching items to deposit!");
-                        return;
-                    }
-
-                    if (playerStock < requestedQuantity) workingQuantity = playerStock;
-                    
-                    boolean removedItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, workingQuantity);
-                    if (!removedItemsFromPlayer) {
-                        StaticUtils.sendMessage(player, "&cError removing " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
-                        return;
-                    }
-
-                    shop.setItemStock(shopStock+workingQuantity);
-                    break;
-                }
-                case REMOVE: {
-                    if (shopStock <= 0) {
-                        StaticUtils.sendMessage(player, "&cThe shop doesn't have any stock to withdraw!");
-                        return;
-                    }
-
-                    if (shopStock < requestedQuantity) workingQuantity = shopStock;
-
-                    boolean addItemsToPlayer = StaticUtils.addToInventoryOrDrop(player, saleItem, workingQuantity);
-                    if (!addItemsToPlayer) {
-                        StaticUtils.sendMessage(player, "&cError adding " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
-                        return;
-                    }
-
-                    shop.setItemStock(shopStock-workingQuantity);
-                    break;
-                }
-                case SET: {
-                    if (shopStock == requestedQuantity) return;
-                    if (shopStock > requestedQuantity) {
-                        if (shopStock <= 0) {
-                            StaticUtils.sendMessage(player, "&cThe shop doesn't have any stock to withdraw!");
-                            return;
-                        }
-
-                        workingQuantity = shopStock-requestedQuantity;
-
-                        boolean addItemsToPlayer = StaticUtils.addToInventoryOrDrop(player, saleItem, workingQuantity);
-                        if (!addItemsToPlayer) {
-                            StaticUtils.sendMessage(player, "&cError adding " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
-                            return;
-                        }
-
-                        shop.setItemStock(shopStock-workingQuantity);
-                    } else if (shopStock < requestedQuantity) {
-                        if (playerStock <= 0) {
-                            StaticUtils.sendMessage(player, "&cYou don't have any matching items to deposit!");
-                            return;
-                        }
-
-                        workingQuantity = requestedQuantity-shopStock;
-
-                        boolean removeItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, workingQuantity);
-                        if (!removeItemsFromPlayer) {
-                            StaticUtils.sendMessage(player, "&cError removing " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
-                            return;
-                        }
-
-                        shop.setItemStock(shopStock+workingQuantity);
-                    }
-                    break;
-                }
-                default:
-                    StaticUtils.sendMessage(player, "&cError: No adjust type found!");
-                    return;
-            }
+            shop.setDisplayHeight(newHeight);
 
             // apply updates
             javaPlugin.getShopHandler().upsertShop(shop);
-            StaticUtils.sendMessage(player, "&fEdited shop");
+            StaticUtils.sendMessage(player, "&aSet display height to " + shop.getDisplayHeight() + "!");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -390,11 +304,251 @@ public static void adjustStock(Player player, UUID shopUuid, AdjustType adjustTy
 
             // apply updates
             javaPlugin.getShopHandler().upsertShop(shop);
-            StaticUtils.sendMessage(player, "&fEdited shop");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
     }
+
+    public static void adjustBalance(Player player, UUID shopUuid, AdjustType adjustType, double requestedAmount) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to adjust shop " + shopUuid + "'s balance off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> adjustBalance(player, shopUuid, adjustType, requestedAmount));
+            return;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            return;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                StaticUtils.sendMessage(player, "&cShop not found..!");
+                return;
+            }
+
+            ItemStack saleItem = shop.getItemStack();
+            if (saleItem == null || saleItem.equals(null)) {
+                StaticUtils.sendMessage(player, "&cShop has no sale item set..!");
+                return;
+            }
+
+            if (requestedAmount <= 0) {
+                StaticUtils.sendMessage(player, "&cInvalid quantity.");
+                return;
+            } double workingAmount = requestedAmount;
+
+            double playerBalance = javaPlugin.getVaultHook().getBalance(player);
+            double shopBalance = StaticUtils.normalizeToDouble(shop.getMoneyStock());
+
+            // edit shop
+            switch (adjustType) {
+                case ADD: {
+                    if (playerBalance <= 0) {
+                        StaticUtils.sendMessage(player, "&cYou don't have any money to deposit!");
+                        return;
+                    }
+
+                    if (playerBalance < requestedAmount) workingAmount = playerBalance;
+                    
+                    boolean removedMoneyFromPlayer = javaPlugin.getVaultHook().removeMoney(player, workingAmount);
+                    if (!removedMoneyFromPlayer) {
+                        StaticUtils.sendMessage(player, "&cError removing $" +StaticUtils.formatDoubleUS(workingAmount)+ "&r&c from your balance..!");
+                        return;
+                    }
+
+                    shop.setMoneyStock(BigDecimal.valueOf(shopBalance+workingAmount));
+                    StaticUtils.sendMessage(player, "&aAdded $"+StaticUtils.formatDoubleUS(workingAmount)+" to the shop's balance! Updated balance: $" +StaticUtils.formatDoubleUS((shopBalance+workingAmount)));
+                    break;
+                }
+                case REMOVE: {
+                    if (shopBalance <= 0) {
+                        StaticUtils.sendMessage(player, "&cThe shop doesn't have any money to withdraw!");
+                        return;
+                    }
+
+                    if (shopBalance < requestedAmount) workingAmount = shopBalance;
+
+                    boolean addMoneyToPlayer = javaPlugin.getVaultHook().giveMoney(player, workingAmount);
+                    if (!addMoneyToPlayer) {
+                        StaticUtils.sendMessage(player, "&cError adding $" +StaticUtils.formatDoubleUS(workingAmount)+ "&r&c to your balance..!");
+                        return;
+                    }
+
+                    shop.setMoneyStock(BigDecimal.valueOf(shopBalance-workingAmount));
+                    StaticUtils.sendMessage(player, "&aRemoved $"+StaticUtils.formatDoubleUS(workingAmount)+" from the shop's balance! Updated balance: $" +StaticUtils.formatDoubleUS((shopBalance-workingAmount)));
+                    break;
+                }
+                case SET: {
+                    if (shopBalance == requestedAmount) return;
+                    if (shopBalance > requestedAmount) {
+                        if (shopBalance <= 0) {
+                            StaticUtils.sendMessage(player, "&cThe shop doesn't have any money to withdraw!");
+                            return;
+                        }
+
+                        workingAmount = shopBalance-requestedAmount;
+
+                        boolean addMoneyToPlayer = javaPlugin.getVaultHook().giveMoney(player, workingAmount);
+                        if (!addMoneyToPlayer) {
+                            StaticUtils.sendMessage(player, "&cError adding $" +StaticUtils.formatDoubleUS(workingAmount)+ "&r&c to your balance..!");
+                            return;
+                        }
+
+                        shop.setMoneyStock(BigDecimal.valueOf(shopBalance-workingAmount));
+                        StaticUtils.sendMessage(player, "&aRemoved $"+StaticUtils.formatDoubleUS(workingAmount)+" from the shop's balance! Updated balance: $" +StaticUtils.formatDoubleUS((shopBalance-workingAmount)));
+                        break;
+                    } else if (shopBalance < requestedAmount) {
+                        if (playerBalance <= 0) {
+                            StaticUtils.sendMessage(player, "&cYou don't have any money to deposit!");
+                            return;
+                        }
+
+                        workingAmount = requestedAmount-shopBalance;
+
+                        boolean removedMoneyFromPlayer = javaPlugin.getVaultHook().removeMoney(player, workingAmount);
+                        if (!removedMoneyFromPlayer) {
+                            StaticUtils.sendMessage(player, "&cError removing $" +StaticUtils.formatDoubleUS(workingAmount)+ "&r&c from your balance..!");
+                            return;
+                        }
+
+                        shop.setMoneyStock(BigDecimal.valueOf(shopBalance+workingAmount));
+                        StaticUtils.sendMessage(player, "&aAdded $"+StaticUtils.formatDoubleUS(workingAmount)+" to the shop's balance! Updated balance: $" +StaticUtils.formatDoubleUS((shopBalance+workingAmount)));
+                        break;
+                    }
+                    break;
+                }
+                default:
+                    StaticUtils.sendMessage(player, "&cError: No adjust type found!");
+                    return;
+            }
+
+            // apply updates
+            javaPlugin.getShopHandler().upsertShop(shop);
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
+    public static void adjustStock(Player player, UUID shopUuid, AdjustType adjustType, int requestedQuantity) {
+            if (!Bukkit.isPrimaryThread()) {
+                StaticUtils.log(ChatColor.RED, player.getName() + " tried to adjust shop " + shopUuid + "'s stock off the main thread -- trying again during next tick on main thread!");
+                javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> adjustStock(player, shopUuid, adjustType, requestedQuantity));
+                return;
+            }
+
+            if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+                StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+                return;
+            }
+
+            try {
+                Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+                if (shop == null) {
+                    StaticUtils.sendMessage(player, "&cShop not found..!");
+                    return;
+                }
+
+                ItemStack saleItem = shop.getItemStack();
+                if (saleItem == null || saleItem.equals(null)) {
+                    StaticUtils.sendMessage(player, "&cShop has no sale item set..!");
+                    return;
+                }
+
+                if (requestedQuantity <= 0) {
+                    StaticUtils.sendMessage(player, "&cInvalid quantity.");
+                    return;
+                } int workingQuantity = requestedQuantity;
+                int playerStock = StaticUtils.countMatchingItems(player, saleItem);
+                int shopStock = shop.getItemStock();
+
+                // edit shop
+                switch (adjustType) {
+                    case ADD: {
+                        if (playerStock <= 0) {
+                            StaticUtils.sendMessage(player, "&cYou don't have any matching items to deposit!");
+                            return;
+                        }
+
+                        if (playerStock < requestedQuantity) workingQuantity = playerStock;
+                        
+                        boolean removedItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, workingQuantity);
+                        if (!removedItemsFromPlayer) {
+                            StaticUtils.sendMessage(player, "&cError removing " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
+                            return;
+                        }
+
+                        shop.setItemStock(shopStock+workingQuantity);
+                        StaticUtils.sendMessage(player, "&aAdded "+workingQuantity+" to the shop's stock! Updated stock: " +(shopStock+workingQuantity));
+                        break;
+                    }
+                    case REMOVE: {
+                        if (shopStock <= 0) {
+                            StaticUtils.sendMessage(player, "&cThe shop doesn't have any stock to withdraw!");
+                            return;
+                        }
+
+                        if (shopStock < requestedQuantity) workingQuantity = shopStock;
+
+                        boolean addItemsToPlayer = StaticUtils.addToInventoryOrDrop(player, saleItem, workingQuantity);
+                        if (!addItemsToPlayer) {
+                            StaticUtils.sendMessage(player, "&cError adding " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
+                            return;
+                        }
+
+                        shop.setItemStock(shopStock-workingQuantity);
+                        StaticUtils.sendMessage(player, "&aRemoved "+workingQuantity+" from the shop's stock! Updated stock: " +(shopStock-workingQuantity));
+                        break;
+                    }
+                    case SET: {
+                        if (shopStock == requestedQuantity) return;
+                        if (shopStock > requestedQuantity) {
+                            if (shopStock <= 0) {
+                                StaticUtils.sendMessage(player, "&cThe shop doesn't have any stock to withdraw!");
+                                return;
+                            }
+
+                            workingQuantity = shopStock-requestedQuantity;
+
+                            boolean addItemsToPlayer = StaticUtils.addToInventoryOrDrop(player, saleItem, workingQuantity);
+                            if (!addItemsToPlayer) {
+                                StaticUtils.sendMessage(player, "&cError adding " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
+                                return;
+                            }
+
+                            shop.setItemStock(shopStock-workingQuantity);
+                            StaticUtils.sendMessage(player, "&aRemoved "+workingQuantity+" from the shop's stock! Updated stock: " +(shopStock-workingQuantity));
+                        } else if (shopStock < requestedQuantity) {
+                            if (playerStock <= 0) {
+                                StaticUtils.sendMessage(player, "&cYou don't have any matching items to deposit!");
+                                return;
+                            }
+
+                            workingQuantity = requestedQuantity-shopStock;
+
+                            boolean removeItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, workingQuantity);
+                            if (!removeItemsFromPlayer) {
+                                StaticUtils.sendMessage(player, "&cError removing " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
+                                return;
+                            }
+
+                            shop.setItemStock(shopStock+workingQuantity);
+                            StaticUtils.sendMessage(player, "&aAdded "+workingQuantity+" to the shop's stock! Updated stock: " +(shopStock+workingQuantity));
+                        }
+                        break;
+                    }
+                    default:
+                        StaticUtils.sendMessage(player, "&cError: No adjust type found!");
+                        return;
+                }
+
+                // apply updates
+                javaPlugin.getShopHandler().upsertShop(shop);
+            } finally {
+                javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+            }
+        }
 
     public static void sellToShop(Player player, UUID shopUuid, int quantity) {
         if (!Bukkit.isPrimaryThread()) {
