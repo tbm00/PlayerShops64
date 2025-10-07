@@ -259,7 +259,7 @@ public class ShopAdjustInvGui {
             item.setType(Material.WRITABLE_BOOK);
             gui.setItem(6, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        // TODO: amount gui to recall this ShopAdjustTextGui()
+                                                                        GuiUtils.openGuiAdjustText(viewer, shopUuid, attribute, closeGuiAfter);
                                                                         }));
         }
 
@@ -333,7 +333,7 @@ public class ShopAdjustInvGui {
         item.setType(material);
         if (amount<0) item.setAmount((-1*amount));
         else item.setAmount(amount);
-        gui.setItem(row, col, ItemBuilder.from(item).asGuiItem(event -> {GuiUtils.openGuiAdjustStock(viewer, shopUuid, quantity+amount, attribute);}));
+        gui.setItem(row, col, ItemBuilder.from(item).asGuiItem(event -> {GuiUtils.openGuiAdjustInv(viewer, shopUuid, quantity+amount, attribute, closeGuiAfter);}));
     }
 
     private void addQuantityButton(ItemStack item, ItemMeta meta, List<String> lore, Material material, String name, int amount, int row, int col, int size) {
@@ -344,6 +344,6 @@ public class ShopAdjustInvGui {
         item.setItemMeta(meta);
         item.setType(material);
         item.setAmount(size);
-        gui.setItem(row, col, ItemBuilder.from(item).asGuiItem(event -> {GuiUtils.openGuiAdjustStock(viewer, shopUuid, quantity+amount, attribute);}));
+        gui.setItem(row, col, ItemBuilder.from(item).asGuiItem(event -> {GuiUtils.openGuiAdjustInv(viewer, shopUuid, quantity+amount, attribute, closeGuiAfter);}));
     }
 }

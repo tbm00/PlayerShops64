@@ -33,21 +33,21 @@ public class SearchGui {
         if (javaPlugin.getConfigHandler().isFloodgateEnabled() && FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
             try {
                 CustomForm form = CustomForm.builder()
-                    .title("Search All Shops")
-                    .label("Search for specific items or players")
-                    .input("", "item/material or player", "")
+                    .title(title)
+                    .label("Search for specific shops")
+                    .input("", "item, material, or player name", "")
                     .build();
 
                 form.setResponseHandler(responseData -> {
                     CustomFormResponse response = form.parseResponse(responseData);
                     if (!response.isCorrect()) {
-                        player.sendMessage("Search cancelled.");
+                        StaticUtils.sendMessage(player, "Search cancelled!");
                         return;
                     }
 
                     String query = response.next();
                     if (query == null || query.isBlank()) {
-                        player.sendMessage("Please enter something to search.");
+                        StaticUtils.sendMessage(player, "Please enter something to search!");
                         return;
                     }
 
@@ -76,11 +76,11 @@ public class SearchGui {
 
             ItemStack rightItem = new ItemStack(Material.WRITABLE_BOOK);
             ItemMeta rightMeta = rightItem.getItemMeta();
-            rightMeta.setDisplayName("item or player");
-            rightMeta.setItemName("item or player");
+            rightMeta.setDisplayName("type an item or player name");
+            rightMeta.setItemName("type item or player name");
             rightItem.setItemMeta(rightMeta);
 
-            ItemStack outputItem = new ItemStack(Material.HOPPER);
+            ItemStack outputItem = new ItemStack(Material.GREEN_BANNER);
             ItemMeta outputMeta = outputItem.getItemMeta();
             outputMeta.setDisplayName("click to search");
             outputMeta.setItemName("click to search");

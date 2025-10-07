@@ -15,12 +15,13 @@ import dev.triumphteam.gui.guis.Gui;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.Shop;
+import dev.tbm00.papermc.playershops64.data.enums.AdjustAttribute;
 import dev.tbm00.papermc.playershops64.utils.GuiUtils;
 import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ShopManageGui {
-    private final PlayerShops64 javaPlugin;
+    //private final PlayerShops64 javaPlugin;
     private final Gui gui;
     private final Player viewer;
     private final boolean isAdmin;
@@ -29,7 +30,7 @@ public class ShopManageGui {
     private String label;
     
     public ShopManageGui(PlayerShops64 javaPlugin, Player viewer, boolean isAdmin, UUID shopUuid) {
-        this.javaPlugin = javaPlugin;
+        //this.javaPlugin = javaPlugin;
         this.viewer = viewer;
         this.isAdmin = isAdmin;
         this.shopUuid = shopUuid;
@@ -113,7 +114,7 @@ public class ShopManageGui {
             item.setType(Material.GOLD_INGOT);
             gui.setItem(3, 4, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        // TODO: set sell price (AdjustType.ADD, AdjustType.REMOVE, or AdjustType.SET) then ModType.SELL_PRICE
+                                                                        GuiUtils.openGuiAdjustInv(viewer, shopUuid, null, AdjustAttribute.SELL_PRICE, true);
                                                                         }));
         } if (shop.getSellPrice()!=null && !shop.getSellPrice().equals(null)) {
             // Disable Selling
@@ -143,10 +144,10 @@ public class ShopManageGui {
             item.setType(Material.GOLD_INGOT);
             gui.setItem(3, 6, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        // TODO: set buy price (AdjustType.ADD, AdjustType.REMOVE, or AdjustType.SET) then ModType.BUY_PRICE
+                                                                        GuiUtils.openGuiAdjustInv(viewer, shopUuid, null, AdjustAttribute.BUY_PRICE, true);
                                                                         }));
         } if (shop.getBuyPrice()!=null && !shop.getBuyPrice().equals(null)) {
-            // Disable Selling
+            // Disable Buying
             lore.clear();
             lore.add("&8-----------------------");
             lore.add("&6Click to prevent players");
@@ -164,7 +165,7 @@ public class ShopManageGui {
         { // Set Balance
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to set this shop's balance");
+            lore.add("&6Click to manage this shop's balance");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             if (shop.getBuyPrice()!=null && !shop.getBuyPrice().equals(null)) 
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Balance: &f$" + StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue())));
@@ -172,14 +173,14 @@ public class ShopManageGui {
             item.setType(Material.HOPPER_MINECART);
             gui.setItem(3, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        // TODO: set balance (AdjustType.ADD, AdjustType.REMOVE, or AdjustType.SET) then ModType.BALANCE
+                                                                        GuiUtils.openGuiAdjustInv(viewer, shopUuid, null, AdjustAttribute.BALANCE, true);
                                                                         }));
         }
 
         { // Set Stock
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to set this shop's stock");
+            lore.add("&6Click to manage this shop's stock");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             if (shop.getBuyPrice()!=null && !shop.getBuyPrice().equals(null)) 
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Stock: &f" + StaticUtils.formatIntUS(shop.getItemStock())));
@@ -187,7 +188,7 @@ public class ShopManageGui {
             item.setType(Material.BARREL);
             gui.setItem(4, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        // TODO: set stock (AdjustType.ADD, AdjustType.REMOVE, or AdjustType.SET) then ModType.STOCK
+                                                                        GuiUtils.openGuiAdjustInv(viewer, shopUuid, null, AdjustAttribute.STOCK, true);
                                                                         }));
         }
 
@@ -207,7 +208,7 @@ public class ShopManageGui {
             item.setType(Material.PAPER);
             gui.setItem(6, 4, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        // TODO: set shop description
+                                                                        GuiUtils.openGuiAdjustText(viewer, shopUuid, AdjustAttribute.DESCRIPTION, false);
                                                                         }));
         } if (shop.getDescription()!=null && !shop.getDescription().equals(null)) {
             // Clear Description
@@ -220,7 +221,7 @@ public class ShopManageGui {
             item.setType(Material.RED_BANNER);
             gui.setItem(6, 3, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        // TODO: clear shop description (set desc to null)
+                                                                        ShopUtils.setDescription(viewer, shopUuid, null);
                                                                         }));                       
         }
 
@@ -237,7 +238,7 @@ public class ShopManageGui {
             item.setType(Material.GLASS);
             gui.setItem(6, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
-                                                                        // TODO: set shop display height
+                                                                        GuiUtils.openGuiAdjustInv(viewer, shopUuid, null, AdjustAttribute.DISPLAY_HEIGHT, true);
                                                                         }));
         }
 

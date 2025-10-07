@@ -16,7 +16,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.ChatColor;
 
 import dev.triumphteam.gui.builder.item.ItemBuilder;
-import dev.triumphteam.gui.guis.Gui;
 import dev.triumphteam.gui.guis.PaginatedGui;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
@@ -354,7 +353,7 @@ public class ListShopsGui {
         
         ItemMeta meta = item.getItemMeta();
         List<String> lore = new ArrayList<>();
-        String priceLine = "", itemName=null;
+        String itemName = null;
         UUID ownerUuid = shop.getOwnerUuid();
 
         lore = GuiUtils.getSaleItemLore(shop);

@@ -281,10 +281,10 @@ public class ShopUtils {
         }
     }
 
-    public static void blankEditShop(Player player, UUID shopUuid) {
+    public static void setDescription(Player player, UUID shopUuid, String newDescription) {
         if (!Bukkit.isPrimaryThread()) {
-            StaticUtils.log(ChatColor.RED, player.getName() + " tried to ___ shop " + shopUuid + " off the main thread -- trying again during next tick on main thread!");
-            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> blankEditShop(player, shopUuid));
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to set shop " + shopUuid + "'s description off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> setDescription(player, shopUuid, newDescription));
             return;
         }
 
@@ -300,10 +300,17 @@ public class ShopUtils {
                 return;
             }
 
+            if (newDescription!=null && newDescription.length()>28) {
+                StaticUtils.sendMessage(player, "&cDescription too long..!");
+                return;
+            }
+
             // edit shop
+            shop.setDescription(newDescription);
 
             // apply updates
             javaPlugin.getShopHandler().upsertShop(shop);
+            if (newDescription!=null) StaticUtils.sendMessage(player, "&aSet description to '" + newDescription + "'!");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }

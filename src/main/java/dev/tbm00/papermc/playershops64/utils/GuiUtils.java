@@ -28,6 +28,7 @@ import dev.tbm00.papermc.playershops64.gui.ListCategoriesGui;
 import dev.tbm00.papermc.playershops64.gui.ListQueriesGui;
 import dev.tbm00.papermc.playershops64.gui.SearchGui;
 import dev.tbm00.papermc.playershops64.gui.ShopAdjustInvGui;
+import dev.tbm00.papermc.playershops64.gui.ShopAdjustTextGui;
 import dev.tbm00.papermc.playershops64.gui.ShopManageGui;
 import dev.tbm00.papermc.playershops64.gui.ShopTransactionGui;
 
@@ -46,11 +47,18 @@ public class GuiUtils {
         return true;
     }
 
-    public static boolean openGuiAdjustStock(Player player, UUID shopUuid, Integer quantity, AdjustAttribute attribute) {
+    public static boolean openGuiAdjustInv(Player player, UUID shopUuid, Integer quantity, AdjustAttribute attribute, boolean closeGuiAfter) {
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
 
-        if (quantity==null) new ShopAdjustInvGui(javaPlugin, player, shopUuid, 1, attribute, false);
-        else new ShopAdjustInvGui(javaPlugin, player, shopUuid, quantity, attribute, false);
+        if (quantity==null) new ShopAdjustInvGui(javaPlugin, player, shopUuid, 1, attribute, closeGuiAfter);
+        else new ShopAdjustInvGui(javaPlugin, player, shopUuid, quantity, attribute, closeGuiAfter);
+        return true;
+    }
+
+    public static boolean openGuiAdjustText(Player player, UUID shopUuid, AdjustAttribute attribute, boolean closeGuiAfter) {
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
+
+        new ShopAdjustTextGui(javaPlugin, player, shopUuid, attribute, closeGuiAfter);
         return true;
     }
 
