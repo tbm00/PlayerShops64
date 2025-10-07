@@ -90,7 +90,7 @@ public class ShopAdjustInvGui {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dDisable Close After Sale"));
             item.setItemMeta(meta);
             item.setType(Material.LIGHT_GRAY_BANNER);
-            gui.setItem(1, 9, ItemBuilder.from(item).asGuiItem(event -> {
+            gui.setItem(2, 8, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
                                                                         new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, quantity, attribute, false);}));
         } else {
@@ -102,7 +102,7 @@ public class ShopAdjustInvGui {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dEnable Close After Sale"));
             item.setItemMeta(meta);
             item.setType(Material.GRAY_BANNER);
-            gui.setItem(1, 9, ItemBuilder.from(item).asGuiItem(event -> {
+            gui.setItem(2, 8, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
                                                                         new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, quantity, attribute, true);}));
         }
@@ -113,19 +113,19 @@ public class ShopAdjustInvGui {
                 case STOCK: 
                     lore.add("&8-----------------------");
                     lore.add("&fShop Stock: &e" + shop.getItemStock());
-                    lore.add("&fCurrent Amount: &e" + quantity);
+                    lore.add("&fSelected Amount: &e" + quantity);
                     item.setAmount(quantity);
                     break;
                 case BALANCE: 
                     lore.add("&8-----------------------");
                     lore.add("&fShop Balance: &e$" + StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue()));
-                    lore.add("&fCurrent Amount: &e$" + StaticUtils.formatIntUS(quantity));
+                    lore.add("&fSelected Amount: &e$" + StaticUtils.formatIntUS(quantity));
                     item.setAmount(1);
                     break;
                 case DISPLAY_HEIGHT: 
                     lore.add("&8-----------------------");
                     lore.add("&fShop Display Height: &e" + shop.getDisplayHeight());
-                    lore.add("&fCurrent Amount: &e" + quantity);
+                    lore.add("&fSelected Amount: &e" + quantity);
                     item.setAmount(Math.max(quantity, -1*quantity));
                     break;
                 default:
@@ -136,7 +136,7 @@ public class ShopAdjustInvGui {
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             item.setItemMeta(meta);
             item.setType(Material.GLASS);
-            gui.setItem(2, 6, ItemBuilder.from(item).asGuiItem(event -> {event.setCancelled(true);}));
+            gui.setItem(3, 5, ItemBuilder.from(item).asGuiItem(event -> {event.setCancelled(true);}));
             item.setAmount(1);
         }
 
@@ -150,7 +150,7 @@ public class ShopAdjustInvGui {
 
             shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             shopItem.setItemMeta(shopMeta);
-            gui.setItem(2, 7, ItemBuilder.from(shopItem).asGuiItem(event -> {event.setCancelled(true);}));
+            gui.setItem(2, 2, ItemBuilder.from(shopItem).asGuiItem(event -> {event.setCancelled(true);}));
         }
 
         { // Withdraw Button
@@ -162,7 +162,7 @@ public class ShopAdjustInvGui {
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cWithdraw from Shop Stock"));
                 item.setItemMeta(meta);
                 item.setType(Material.RED_BANNER);
-                gui.setItem(2, 2, ItemBuilder.from(item).asGuiItem(event -> {
+                gui.setItem(2, 4, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             ShopUtils.adjustStock(viewer, shopUuid, AdjustType.REMOVE, quantity);
                                                                             if (closeGuiAfter) gui.close(viewer);}));
@@ -174,7 +174,7 @@ public class ShopAdjustInvGui {
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cWithdraw from Shop Balance"));
                 item.setItemMeta(meta);
                 item.setType(Material.RED_BANNER);
-                gui.setItem(2, 2, ItemBuilder.from(item).asGuiItem(event -> {
+                gui.setItem(2, 4, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.REMOVE, quantity);
                                                                             if (closeGuiAfter) gui.close(viewer);}));
@@ -190,10 +190,10 @@ public class ShopAdjustInvGui {
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eSet Shop Stock"));
                 item.setItemMeta(meta);
                 item.setType(Material.YELLOW_BANNER);
-                gui.setItem(2, 3, ItemBuilder.from(item).asGuiItem(event -> {
+                gui.setItem(2, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             ShopUtils.adjustStock(viewer, shopUuid, AdjustType.SET, quantity);
-                                                                            if (closeGuiAfter) gui.close(viewer);;}));
+                                                                            if (closeGuiAfter) gui.close(viewer);}));
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
                 lore.clear();
                 lore.add("&8-----------------------");
@@ -202,7 +202,7 @@ public class ShopAdjustInvGui {
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eSet Shop Balance"));
                 item.setItemMeta(meta);
                 item.setType(Material.YELLOW_BANNER);
-                gui.setItem(2, 3, ItemBuilder.from(item).asGuiItem(event -> {
+                gui.setItem(2, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.SET, quantity);
                                                                             if (closeGuiAfter) gui.close(viewer);}));
@@ -214,7 +214,7 @@ public class ShopAdjustInvGui {
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aSet Display Height"));
                 item.setItemMeta(meta);
                 item.setType(Material.GREEN_BANNER);
-                gui.setItem(2, 3, ItemBuilder.from(item).asGuiItem(event -> {
+                gui.setItem(2, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             ShopUtils.setDisplayHeight(viewer, shopUuid, quantity);
                                                                             if (closeGuiAfter) gui.close(viewer);}));
@@ -230,7 +230,7 @@ public class ShopAdjustInvGui {
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aDeposit to Shop Stock"));
                 item.setItemMeta(meta);
                 item.setType(Material.GREEN_BANNER);
-                gui.setItem(2, 4, ItemBuilder.from(item).asGuiItem(event -> {
+                gui.setItem(2, 6, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             ShopUtils.adjustStock(viewer, shopUuid, AdjustType.ADD, quantity);
                                                                             if (closeGuiAfter) gui.close(viewer);}));
@@ -242,7 +242,7 @@ public class ShopAdjustInvGui {
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aDeposit to Shop Balance"));
                 item.setItemMeta(meta);
                 item.setType(Material.GREEN_BANNER);
-                gui.setItem(2, 4, ItemBuilder.from(item).asGuiItem(event -> {
+                gui.setItem(2, 6, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.ADD, quantity);
                                                                             if (closeGuiAfter) gui.close(viewer);}));
@@ -257,7 +257,7 @@ public class ShopAdjustInvGui {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dEnter Amount"));
             item.setItemMeta(meta);
             item.setType(Material.WRITABLE_BOOK);
-            gui.setItem(3, 5, ItemBuilder.from(item).asGuiItem(event -> {
+            gui.setItem(6, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                         event.setCancelled(true);
                                                                         // TODO: amount gui to recall this ShopAdjustTextGui()
                                                                         }));
@@ -267,7 +267,7 @@ public class ShopAdjustInvGui {
         { // Deposit Buttons
             if (attribute.equals(AdjustAttribute.STOCK)) {
                 if (quantity>64) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -64, 4, 1);
-                if (quantity>1) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 4, 4);
+                if (quantity>1) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 4, 2);
 
                 if (quantity>32) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -32, 5, 1);
                 if (quantity>16) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -16, 5, 2);
@@ -279,7 +279,7 @@ public class ShopAdjustInvGui {
                 if (quantity>10) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -10, 6, 3);
                 if (quantity>5) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -5, 6, 4);
 
-                addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 1, 4, 6);
+                addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 1, 4, 8);
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 64, 4, 9);
 
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 4, 5, 6);
@@ -292,11 +292,11 @@ public class ShopAdjustInvGui {
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 25, 6, 8);
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 50, 6, 9);
             } else if (attribute.equals(AdjustAttribute.STOCK)) {
-                if (quantity>-5) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 4, 4);
-                if (quantity<5) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 1, 4, 6);
+                if (quantity>-5) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 4, 2);
+                if (quantity<5) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 1, 4, 8);
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
                 if (quantity>10000) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -100000, 4, 1, 10);
-                if (quantity>1) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 4, 4, 1);
+                if (quantity>1) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 4, 2, 1);
 
                 if (quantity>32) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -500, 5, 1, 5);
                 if (quantity>16) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -100, 5, 2, 4);
@@ -308,7 +308,7 @@ public class ShopAdjustInvGui {
                 if (quantity>10) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -5000, 6, 3, 7);
                 if (quantity>5) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1000, 6, 4, 6);
 
-                addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 1, 4, 6, 1);
+                addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 1, 4, 8, 1);
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 100000, 4, 9, 10);
 
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 10, 5, 6, 2);
