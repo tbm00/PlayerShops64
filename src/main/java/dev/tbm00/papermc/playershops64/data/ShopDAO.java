@@ -22,7 +22,7 @@ public class ShopDAO {
         StaticUtils.log(ChatColor.GREEN, "ShopDAO initialized.");
     }
 
-    public List<Shop> getAllShops() {
+    public List<Shop> getAllShopsFromSql() {
         final String sql = "SELECT * FROM playershops64_shops";
         List<Shop> out = new ArrayList<>();
         try (Connection conn = mySQL.getConnection();
@@ -46,7 +46,7 @@ public class ShopDAO {
     /**
      * Retrieves a shop by UUID.
      */
-    public Shop getShop(UUID uuid) {
+    public Shop getShopFromSql(UUID uuid) {
         final String sql = "SELECT * FROM playershops64_shops WHERE uuid = ?";
         try (Connection conn = mySQL.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -66,7 +66,7 @@ public class ShopDAO {
     /**
      * Adds or updates a shop.
      */
-    public boolean upsertShop(Shop shop) {
+    public boolean upsertShopToSql(Shop shop) {
         if (shop.getWorld()==null) {
             StaticUtils.log(ChatColor.RED, shop.getOwnerName() + "'s shop's ("+shop.getUuid()+") world is unloaded/null, so the shop was not upserted in SQL!");
             return false;
@@ -129,7 +129,7 @@ public class ShopDAO {
     /**
      * Deletes a shop by UUID.
      */
-    public boolean deleteShop(UUID uuid) {
+    public boolean deleteShopFromSql(UUID uuid) {
         final String sql = "DELETE FROM playershops64_shops WHERE uuid=?";
         try (Connection conn = mySQL.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -166,7 +166,7 @@ public class ShopDAO {
         int displayHeight = rs.getInt("display_height");
         Material baseMaterial = stringToMaterial(rs.getString("base_material"));
 
-        return new Shop(uuid, ownerUuid, ownerName, world, location, itemStack, stackSize, itemStock, moneyStock, buyPrice, sellPrice, lastTx, infiniteMoney, infiniteStock, description, displayHeight, baseMaterial);
+        return new Shop(uuid, ownerUuid, ownerName, world, location, itemStack, stackSize, itemStock, moneyStock, buyPrice, sellPrice, lastTx, infiniteMoney, infiniteStock, description, displayHeight, baseMaterial, null);
     }
 
     // --- Helper methods ---

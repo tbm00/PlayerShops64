@@ -22,7 +22,8 @@ import org.bukkit.persistence.PersistentDataType;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.Shop;
-import dev.tbm00.papermc.playershops64.utils.GuiUtils;
+import dev.tbm00.papermc.playershops64.gui.ShopManageGui;
+import dev.tbm00.papermc.playershops64.gui.ShopTransactionGui;
 import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
@@ -100,12 +101,12 @@ public class ShopBaseBlock implements Listener {
                 } else return;
             } else {
                 if (action==Action.LEFT_CLICK_BLOCK || action==Action.RIGHT_CLICK_BLOCK) {
-                    GuiUtils.openGuiManage(player, false, shop.getUuid());
+                    new ShopManageGui(javaPlugin, player, false, shop.getUuid());
                     return;
                 } else return;
             }
         } else {
-            GuiUtils.openGuiTransaction(player, shop.getUuid(), null, true);
+            new ShopTransactionGui(javaPlugin, player, shop.getUuid(), 1, true);
             return;
         }
     }

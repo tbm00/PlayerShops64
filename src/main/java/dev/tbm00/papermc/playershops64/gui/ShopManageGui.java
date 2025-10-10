@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -21,38 +22,42 @@ import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ShopManageGui {
-    //private final PlayerShops64 javaPlugin;
+    private final PlayerShops64 javaPlugin;
     private final Gui gui;
     private final Player viewer;
     private final boolean isAdmin;
     private final UUID shopUuid;
     private final Shop shop;
-    private String label;
+    private String label = "Shop Management";
+    private String shopHint;
     
     public ShopManageGui(PlayerShops64 javaPlugin, Player viewer, boolean isAdmin, UUID shopUuid) {
-        //this.javaPlugin = javaPlugin;
+        this.javaPlugin = javaPlugin;
         this.viewer = viewer;
         this.isAdmin = isAdmin;
         this.shopUuid = shopUuid;
         this.shop = javaPlugin.getShopHandler().getShop(shopUuid);
         this.gui = new Gui(6, label);
+        this.shopHint = shopUuid.toString().substring(0, 6);
 
-        String shopHint = shopUuid.toString().substring(0, 6);
-        if (javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
-            StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+shopHint+"'s manage gui");
-        } else return;
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
+            return;
+        } StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+shopHint+"'s manage gui");
 
         label = "Shop Management (" + shopHint+ ")";
-
-        setup();
-
         gui.updateTitle(label);
+        setup();
         gui.disableAllInteractions();
-        gui.open(viewer);
         gui.setCloseGuiAction(event -> {
-            StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+shopHint+"'s manage gui");
-            javaPlugin.getShopHandler().unlockShop(shopUuid, viewer.getUniqueId());
+            closeAction();
         });
+
+        gui.open(viewer);
+    }
+
+    private void closeAction() {
+        StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+shopHint+"'s manage gui");
+        javaPlugin.getShopHandler().unlockShop(shopUuid, viewer.getUniqueId());
     }
 
     /**
@@ -74,19 +79,25 @@ public class ShopManageGui {
             item.setItemMeta(meta);
             item.setType(Material.BARRIER);
             gui.setItem(2, 5, ItemBuilder.from(item).asGuiItem(event -> {
-                                                                        event.setCancelled(true);
-                                                                        ShopUtils.setShopItem(viewer, shopUuid);
-                                                                        }));                                   
+                                                                            event.setCancelled(true);
+                                                                            gui.close(viewer);
+                                                                            ShopUtils.setShopItem(viewer, shopUuid);
+                                                                        }));
         } else { 
             // Sale Item
             ItemStack shopItem = shop.getItemStack();
-            if (shop.getStackSize()!=1) {
-                ItemMeta shopMeta = shopItem.getItemMeta();
-                shopMeta.setDisplayName(StaticUtils.getItemName(shopItem) + " &7x " + shop.getStackSize());
-                shopItem.setItemMeta(shopMeta);
-            } 
+            ItemMeta shopMeta = shopItem.getItemMeta();
+            List<String> shopLore = shopMeta.getLore();
+
+            shopLore = GuiUtils.getSaleItemLore(shop);
+
+            shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+            shopMeta.setDisplayName(StaticUtils.getItemName(shopItem) + " &7x " + shop.getStackSize());
+            shopItem.setItemMeta(shopMeta);
             shopItem.setAmount(shop.getStackSize());
-            gui.setItem(2, 5, ItemBuilder.from(shopItem).asGuiItem(event -> {event.setCancelled(true);}));
+            gui.setItem(2, 5, ItemBuilder.from(shopItem).asGuiItem(event -> {
+                                                                                event.setCancelled(true);
+                                                                            }));
             
             // Clear Sale Item
             lore.clear();
@@ -97,8 +108,9 @@ public class ShopManageGui {
             item.setItemMeta(meta);
             item.setType(Material.RED_BANNER);
             gui.setItem(1, 5, ItemBuilder.from(item).asGuiItem(event -> {
-                                                                        event.setCancelled(true);
-                                                                        ShopUtils.clearShopItem(viewer, shopUuid);
+                                                                            event.setCancelled(true);
+                                                                            gui.close(viewer);
+                                                                            ShopUtils.clearShopItem(viewer, shopUuid);
                                                                         }));
         }
 
@@ -113,8 +125,9 @@ public class ShopManageGui {
             item.setItemMeta(meta);
             item.setType(Material.GOLD_INGOT);
             gui.setItem(3, 4, ItemBuilder.from(item).asGuiItem(event -> {
-                                                                        event.setCancelled(true);
-                                                                        GuiUtils.openGuiAdjustInv(viewer, shopUuid, null, AdjustAttribute.SELL_PRICE, true);
+                                                                            event.setCancelled(true);
+                                                                            gui.setCloseGuiAction(null);
+                                                                            new ShopAdjustTextGui(javaPlugin, viewer, shopUuid, AdjustAttribute.SELL_PRICE, true);
                                                                         }));
         } if (shop.getSellPrice()!=null && !shop.getSellPrice().equals(null)) {
             // Disable Selling
@@ -127,9 +140,13 @@ public class ShopManageGui {
             item.setItemMeta(meta);
             item.setType(Material.RED_BANNER);
             gui.setItem(3, 3, ItemBuilder.from(item).asGuiItem(event -> {
-                                                                        event.setCancelled(true);
-                                                                        ShopUtils.setSellPrice(viewer, shopUuid, null);
-                                                                        }));                       
+                                                                            event.setCancelled(true);
+                                                                            ShopUtils.setSellPrice(viewer, shopUuid, null);
+                                                                            Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
+                                                                                gui.setCloseGuiAction(null);
+                                                                                new ShopManageGui(javaPlugin, viewer, isAdmin, shopUuid);
+                                                                            }, 2L);
+                                                                        }));
         }
 
         { // Set Buy Price
@@ -143,8 +160,9 @@ public class ShopManageGui {
             item.setItemMeta(meta);
             item.setType(Material.GOLD_INGOT);
             gui.setItem(3, 6, ItemBuilder.from(item).asGuiItem(event -> {
-                                                                        event.setCancelled(true);
-                                                                        GuiUtils.openGuiAdjustInv(viewer, shopUuid, null, AdjustAttribute.BUY_PRICE, true);
+                                                                            event.setCancelled(true);
+                                                                            gui.setCloseGuiAction(null);
+                                                                            new ShopAdjustTextGui(javaPlugin, viewer, shopUuid, AdjustAttribute.BUY_PRICE, false);
                                                                         }));
         } if (shop.getBuyPrice()!=null && !shop.getBuyPrice().equals(null)) {
             // Disable Buying
@@ -157,9 +175,13 @@ public class ShopManageGui {
             item.setItemMeta(meta);
             item.setType(Material.RED_BANNER);
             gui.setItem(3, 7, ItemBuilder.from(item).asGuiItem(event -> {
-                                                                        event.setCancelled(true);
-                                                                        ShopUtils.setBuyPrice(viewer, shopUuid, null);
-                                                                        }));                       
+                                                                            event.setCancelled(true);
+                                                                            ShopUtils.setBuyPrice(viewer, shopUuid, null);
+                                                                            Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
+                                                                                gui.setCloseGuiAction(null);
+                                                                                new ShopManageGui(javaPlugin, viewer, isAdmin, shopUuid);
+                                                                            }, 2L);
+                                                                        }));
         }
 
         { // Set Balance
@@ -172,8 +194,9 @@ public class ShopManageGui {
             item.setItemMeta(meta);
             item.setType(Material.HOPPER_MINECART);
             gui.setItem(3, 5, ItemBuilder.from(item).asGuiItem(event -> {
-                                                                        event.setCancelled(true);
-                                                                        GuiUtils.openGuiAdjustInv(viewer, shopUuid, null, AdjustAttribute.BALANCE, true);
+                                                                            event.setCancelled(true);
+                                                                            gui.setCloseGuiAction(null);
+                                                                            new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, 0, AdjustAttribute.BALANCE, false);
                                                                         }));
         }
 
@@ -187,8 +210,9 @@ public class ShopManageGui {
             item.setItemMeta(meta);
             item.setType(Material.BARREL);
             gui.setItem(4, 5, ItemBuilder.from(item).asGuiItem(event -> {
-                                                                        event.setCancelled(true);
-                                                                        GuiUtils.openGuiAdjustInv(viewer, shopUuid, null, AdjustAttribute.STOCK, true);
+                                                                            event.setCancelled(true);
+                                                                            gui.setCloseGuiAction(null);
+                                                                            new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, 0, AdjustAttribute.STOCK, false);
                                                                         }));
         }
 
@@ -207,8 +231,9 @@ public class ShopManageGui {
             item.setItemMeta(meta);
             item.setType(Material.PAPER);
             gui.setItem(6, 4, ItemBuilder.from(item).asGuiItem(event -> {
-                                                                        event.setCancelled(true);
-                                                                        GuiUtils.openGuiAdjustText(viewer, shopUuid, AdjustAttribute.DESCRIPTION, false);
+                                                                            event.setCancelled(true);
+                                                                            gui.setCloseGuiAction(null);
+                                                                            new ShopAdjustTextGui(javaPlugin, viewer, shopUuid, AdjustAttribute.DESCRIPTION, false);
                                                                         }));
         } if (shop.getDescription()!=null && !shop.getDescription().equals(null)) {
             // Clear Description
@@ -220,8 +245,12 @@ public class ShopManageGui {
             item.setItemMeta(meta);
             item.setType(Material.RED_BANNER);
             gui.setItem(6, 3, ItemBuilder.from(item).asGuiItem(event -> {
-                                                                        event.setCancelled(true);
-                                                                        ShopUtils.setDescription(viewer, shopUuid, null);
+                                                                            event.setCancelled(true);
+                                                                            ShopUtils.setDescription(viewer, shopUuid, null);
+                                                                            Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
+                                                                                gui.setCloseGuiAction(null);
+                                                                                new ShopManageGui(javaPlugin, viewer, isAdmin, shopUuid);
+                                                                            }, 2L);
                                                                         }));                       
         }
 
@@ -237,8 +266,9 @@ public class ShopManageGui {
             item.setItemMeta(meta);
             item.setType(Material.GLASS);
             gui.setItem(6, 5, ItemBuilder.from(item).asGuiItem(event -> {
-                                                                        event.setCancelled(true);
-                                                                        GuiUtils.openGuiAdjustInv(viewer, shopUuid, null, AdjustAttribute.DISPLAY_HEIGHT, true);
+                                                                            event.setCancelled(true);
+                                                                            gui.setCloseGuiAction(null);
+                                                                            new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, 0, AdjustAttribute.DISPLAY_HEIGHT, false);
                                                                         }));
         }
 
@@ -255,8 +285,8 @@ public class ShopManageGui {
             item.setItemMeta(meta);
             item.setType(Material.LECTERN);
             gui.setItem(6, 6, ItemBuilder.from(item).asGuiItem(event -> {
-                                                                        event.setCancelled(true);
-                                                                        // TODO: set shop base material
+                                                                            event.setCancelled(true);
+                                                                            // TODO: set shop base material
                                                                         }));
         }
 
@@ -269,9 +299,10 @@ public class ShopManageGui {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&4Destroy Shop"));
             item.setItemMeta(meta);
             item.setType(Material.BARRIER);
-            gui.setItem(1, 6, ItemBuilder.from(item).asGuiItem(event -> {
-                                                                        event.setCancelled(true);
-                                                                        ShopUtils.deleteShop(viewer, shopUuid, null);
+            gui.setItem(1, 9, ItemBuilder.from(item).asGuiItem(event -> {
+                                                                            event.setCancelled(true);
+                                                                            gui.close(viewer);
+                                                                            ShopUtils.deleteShop(viewer, shopUuid, null);
                                                                         }));
         } 
 
@@ -284,9 +315,11 @@ public class ShopManageGui {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dYour Shops"));
             item.setItemMeta(meta);
             item.setType(Material.STONE_BUTTON);
-            gui.setItem(9, 6, ItemBuilder.from(item).asGuiItem(event -> {
-                                                                        event.setCancelled(true);
-                                                                        GuiUtils.handleClickYourShops(event, isAdmin);
+            gui.setItem(6, 9, ItemBuilder.from(item).asGuiItem(event -> {
+                                                                            event.setCancelled(true);
+                                                                            gui.setCloseGuiAction(null);
+                                                                            closeAction();
+                                                                            GuiUtils.handleClickYourShops(event, isAdmin);
                                                                         }));
         } 
     }

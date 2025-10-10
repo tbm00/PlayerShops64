@@ -47,9 +47,10 @@ public class ShopUtils {
                             false,
                             null,
                             0,
-                            Material.LECTERN);
+                            Material.LECTERN,
+                            null);
 
-        javaPlugin.getShopHandler().upsertShop(shop);
+        javaPlugin.getShopHandler().upsertShopObject(shop);
         StaticUtils.log(ChatColor.GOLD, owner.getName() + " created a shop " + shop.getUuid() + " in " + world.getName()+ " @ " + (int)location.getX() + "," + (int)location.getY() + "," + (int)location.getZ());
         return shopUuid;
     }
@@ -85,7 +86,7 @@ public class ShopUtils {
             }
 
             // delete shop
-            javaPlugin.getShopHandler().removeShop(shop.getUuid());
+            javaPlugin.getShopHandler().deleteShopObject(shop.getUuid());
             if (block==null || block.equals(null)) {
                 javaPlugin.getServer().getWorld(shop.getWorld().getUID()).getBlockAt(shop.getLocation()).setType(Material.AIR, false);
             } else block.setType(Material.AIR, false);
@@ -138,7 +139,7 @@ public class ShopUtils {
             if (handCount>1) {
                 hand.setAmount(handCount-1);
             } else {player.getInventory().setItemInMainHand(null);}
-            javaPlugin.getShopHandler().upsertShop(shop);
+            javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aShop item set to &e" + StaticUtils.getItemName(one));
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
@@ -174,7 +175,7 @@ public class ShopUtils {
             shop.setStackSize(1);
 
             // apply updates
-            javaPlugin.getShopHandler().upsertShop(shop);
+            javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aShop item set cleared!");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
@@ -205,7 +206,7 @@ public class ShopUtils {
             else shop.setBuyPrice(BigDecimal.valueOf(newPrice));
 
             // apply updates
-            javaPlugin.getShopHandler().upsertShop(shop);
+            javaPlugin.getShopHandler().upsertShopObject(shop);
             if (newPrice!=null && !newPrice.equals(null)) {
                 StaticUtils.sendMessage(player, "&aSet buy price to $" + StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue()) + "!");
             } else {
@@ -240,7 +241,7 @@ public class ShopUtils {
             else shop.setSellPrice(BigDecimal.valueOf(newPrice));
 
             // apply updates
-            javaPlugin.getShopHandler().upsertShop(shop);
+            javaPlugin.getShopHandler().upsertShopObject(shop);
             if (newPrice!=null && !newPrice.equals(null)) {
                 StaticUtils.sendMessage(player, "&aSet sell price to $" + StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue()) + "!");
             } else {
@@ -274,7 +275,7 @@ public class ShopUtils {
             shop.setDisplayHeight(newHeight);
 
             // apply updates
-            javaPlugin.getShopHandler().upsertShop(shop);
+            javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aSet display height to " + shop.getDisplayHeight() + "!");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
@@ -309,7 +310,7 @@ public class ShopUtils {
             shop.setDescription(newDescription);
 
             // apply updates
-            javaPlugin.getShopHandler().upsertShop(shop);
+            javaPlugin.getShopHandler().upsertShopObject(shop);
             if (newDescription!=null) StaticUtils.sendMessage(player, "&aSet description to '" + newDescription + "'!");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
@@ -341,7 +342,7 @@ public class ShopUtils {
                 return;
             }
 
-            if (requestedAmount <= 0) {
+            if (requestedAmount < 0) {
                 StaticUtils.sendMessage(player, "&cInvalid quantity.");
                 return;
             } double workingAmount = requestedAmount;
@@ -352,6 +353,11 @@ public class ShopUtils {
             // edit shop
             switch (adjustType) {
                 case ADD: {
+                    if (requestedAmount == 0) {
+                        StaticUtils.sendMessage(player, "&cCannot depsoit 0!");
+                        return;
+                    }
+
                     if (playerBalance <= 0) {
                         StaticUtils.sendMessage(player, "&cYou don't have any money to deposit!");
                         return;
@@ -370,6 +376,11 @@ public class ShopUtils {
                     break;
                 }
                 case REMOVE: {
+                    if (requestedAmount == 0) {
+                        StaticUtils.sendMessage(player, "&cCannot withdraw 0!");
+                        return;
+                    }
+
                     if (shopBalance <= 0) {
                         StaticUtils.sendMessage(player, "&cThe shop doesn't have any money to withdraw!");
                         return;
@@ -432,7 +443,7 @@ public class ShopUtils {
             }
 
             // apply updates
-            javaPlugin.getShopHandler().upsertShop(shop);
+            javaPlugin.getShopHandler().upsertShopObject(shop);
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -463,7 +474,7 @@ public class ShopUtils {
                     return;
                 }
 
-                if (requestedQuantity <= 0) {
+                if (requestedQuantity < 0) {
                     StaticUtils.sendMessage(player, "&cInvalid quantity.");
                     return;
                 } int workingQuantity = requestedQuantity;
@@ -473,6 +484,11 @@ public class ShopUtils {
                 // edit shop
                 switch (adjustType) {
                     case ADD: {
+                        if (requestedQuantity == 0) {
+                            StaticUtils.sendMessage(player, "&cCannot depsoit 0!");
+                            return;
+                        }
+
                         if (playerStock <= 0) {
                             StaticUtils.sendMessage(player, "&cYou don't have any matching items to deposit!");
                             return;
@@ -491,6 +507,11 @@ public class ShopUtils {
                         break;
                     }
                     case REMOVE: {
+                        if (requestedQuantity == 0) {
+                            StaticUtils.sendMessage(player, "&cCannot withdraw 0!");
+                            return;
+                        }
+
                         if (shopStock <= 0) {
                             StaticUtils.sendMessage(player, "&cThe shop doesn't have any stock to withdraw!");
                             return;
@@ -551,7 +572,7 @@ public class ShopUtils {
                 }
 
                 // apply updates
-                javaPlugin.getShopHandler().upsertShop(shop);
+                javaPlugin.getShopHandler().upsertShopObject(shop);
             } finally {
                 javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
             }
@@ -647,7 +668,7 @@ public class ShopUtils {
             shop.setLastTransactionDate(new Date());
             
             // apply updates
-            javaPlugin.getShopHandler().upsertShop(shop);
+            javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&fSold " + workingQuantity + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
@@ -745,7 +766,7 @@ public class ShopUtils {
             shop.setLastTransactionDate(new Date());
             
             // apply updates
-            javaPlugin.getShopHandler().upsertShop(shop);
+            javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&fBought " + workingQuantity + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
@@ -786,31 +807,17 @@ public class ShopUtils {
         String stock = (shop.hasInfiniteStock()) ? "∞" : shop.getItemStock() + "";
         String balance = (shop.hasInfiniteMoney()) ? "∞" : (shop.getMoneyStock()==null) ? "null" : StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue());
         String owner = (shop.getOwnerName()==null) ? "null" : shop.getOwnerName();
-        String lore0 = "";
-        try {
-            if (item!=null) {
-                ItemMeta meta = item.getItemMeta();
-                if (meta!=null) {
-                    if (meta.hasLore() && meta.getLore()!=null && !meta.getLore().isEmpty()) {
-                        lore0 = String.valueOf(meta.getLore().get(0));
-                    }
-                }
-            }
-        } catch (Exception e) {e.printStackTrace();}
-        if (lore0.isBlank()) {
-            return name + " &7x &f" + stackSize
-                        + "\n&7Buy for &a$" + buy
-                        + "\n&7Sell for &c$" + sell
-                        + "\n&7Stock: &e" + stock + "&7, Balance: &e$" + balance
-                        + "\n&7Owner: &e" + owner;
-        } else {
-            return name + " &7x &f" + stackSize
-                        + "\n" + lore0
-                        + "\n&7Buy for &a$" + buy
-                        + "\n&7Sell for &c$" + sell
-                        + "\n&7Stock: &e" + stock + "&7, Balance: &e$" + balance
-                        + "\n&7Owner: &e" + owner;
-        }
+        //String desc = shop.getDescription();
+
+        String returnText = name + " &7x &f" + stackSize;
+
+        //if (desc!=null && !desc.isBlank()) returnText += "\n" + desc;
+        if (shop.getBuyPrice()!=null) returnText += "\n&7Buy for &a$" + buy;
+        if (shop.getSellPrice()!=null) returnText += "\n&7Sell for &c$" + sell;
+        returnText += "\n&7Stock: &e" + stock + "&7, Balance: &e$" + balance;
+        returnText += "\n&7Owner: &e" + owner;
+
+        return returnText;
     }
 
     public static ItemStack prepPlayerShopItemStack(Integer amount) {

@@ -25,22 +25,22 @@ public class ListQueriesGui {
     private final Player viewer;
     private final boolean isAdmin;
     private final GuiSearchCategory category;
-    private String label;
+    private String label = StaticUtils.CATEGORY_GUI_TITLE;
     
     public ListQueriesGui(PlayerShops64 javaPlugin, Player viewer, boolean isAdmin, GuiSearchCategory category) {
         //this.javaPlugin = javaPlugin;
         this.viewer = viewer;
         this.isAdmin = isAdmin;
         this.category = category;
+        this.gui = new Gui(6, label);
+
         label = StaticUtils.CATEGORY_GUI_TITLE + " > " + category.getName();
-        gui = new Gui(6, label);
-
-        setupFooter();
-        fillQueries();
-
         if (isAdmin) gui.updateTitle(label + " (ADMIN)");
         else gui.updateTitle(label);
+        setupFooter();
+        fillQueries();
         gui.disableAllInteractions();
+
         gui.open(viewer);
     }
 

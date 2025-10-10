@@ -33,7 +33,7 @@ public class ListShopsGui {
     private final SortType sortType;
     private final QueryType queryType;
     private final String query;
-    private String label;
+    private String label = "List Shops";
 
     private List<Map.Entry<UUID, Shop>> shops;
     
@@ -45,6 +45,8 @@ public class ListShopsGui {
         this.sortType = sortType;
         this.queryType = queryType;
         this.query = query;
+        this.gui = new PaginatedGui(6, 45, label);
+
         switch (queryType) {
             case NO_QUERY:
                 label = "All Shops";
@@ -58,16 +60,14 @@ public class ListShopsGui {
             default:
                 label = "Shops";
                 break;
-        } gui = new PaginatedGui(6, 45, label);
-
+        } if (isAdmin) gui.updateTitle(label + " (ADMIN) - " + gui.getCurrentPageNum() + "/" + gui.getPagesNum());
+        else gui.updateTitle(label + " - " + gui.getCurrentPageNum() + "/" + gui.getPagesNum());
         setupFooter();
         preProcessShops();
         sortShops(this.shops, sortType);
         fillShops();
-
-        if (isAdmin) gui.updateTitle(label + " (ADMIN) - " + gui.getCurrentPageNum() + "/" + gui.getPagesNum());
-        else gui.updateTitle(label + " - " + gui.getCurrentPageNum() + "/" + gui.getPagesNum());
         gui.disableAllInteractions();
+
         gui.open(viewer);
     }
 
@@ -196,7 +196,13 @@ public class ListShopsGui {
                     if (shop1.hasInfiniteMoney()) return -1;  // shop2 goes after shop1
                     if (shop2.hasInfiniteMoney()) return 1;   // shop1 goes after shop2
 
-                    return Double.compare(bal2, bal1);
+                    if (bal1==null && bal2==null) {
+                        return 0;
+                    } else if (bal1==null) {
+                        return 1;
+                    } else if (bal2==null) {
+                        return -1;
+                    } else return Double.compare(bal2, bal1);
                 });
                 break;
 
@@ -255,16 +261,19 @@ public class ListShopsGui {
         return false;
     }
 
+    @SuppressWarnings("null")
     private boolean passValidActiveChecks(Shop shop) {
         Double buyPrice = (shop.getBuyPrice()==null) ? null : shop.getBuyPrice().doubleValue();
         Double sellPrice = (shop.getSellPrice()==null) ? null : shop.getSellPrice().doubleValue();
         Double balance = (shop.getMoneyStock()==null) ? null : shop.getMoneyStock().doubleValue();
         int stock = shop.getItemStock(), stackSize = shop.getStackSize();
 
-        if (buyPrice<0 && sellPrice<0) return false; // if buy-from & sell-to are both disabled
-        else if (sellPrice<0 && stock<stackSize && !shop.hasInfiniteStock()) return false; // if sell-to disabled & no stock to buy-from
-        else if (buyPrice<0 && balance<sellPrice && !shop.hasInfiniteMoney()) return false; // if buy-from disabled & no money to sell-to
-        else if (stock==0 && balance<sellPrice && !shop.hasInfiniteMoney()) return false; // if no stock & no money to sell-to
+        if (balance==null) return false;
+
+        if (buyPrice==null && sellPrice==null) return false; // if buy-from & sell-to are both disabled
+        else if (sellPrice==null && stock<stackSize && !shop.hasInfiniteStock()) return false; // if sell-to disabled & no stock to buy-from
+        else if (buyPrice==null && balance<sellPrice && !shop.hasInfiniteMoney()) return false; // if buy-from disabled & no money to sell-to
+        else if (stock==0 && ( (sellPrice==null) || (balance<sellPrice && !shop.hasInfiniteMoney()))) return false; // if no stock & no money to sell-to (or sell-to disabled)
 
         return true;
     }
@@ -388,6 +397,9 @@ public class ListShopsGui {
         item.setItemMeta(meta);
         item.setAmount(shop.getStackSize());
 
-        gui.addItem(ItemBuilder.from(item).asGuiItem(event -> GuiUtils.handleClickShop(event, viewer, shop, isAdmin)));
+        gui.addItem(ItemBuilder.from(item).asGuiItem(event -> {
+                                                            event.setCancelled(true);
+                                                            GuiUtils.handleClickShop(event, viewer, shop, isAdmin);
+                                                        }));
     }
 }

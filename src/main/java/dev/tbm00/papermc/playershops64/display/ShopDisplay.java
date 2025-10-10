@@ -72,6 +72,7 @@ public class ShopDisplay {
         if (world == null || shop == null || shop.getLocation() == null) return;
 
         Location base = shop.getLocation().clone();
+        displayHeight = shop.getDisplayHeight();
         updateText(world, base, text);
         updateGlass(world, base);
         updateItem(world, base, shop);

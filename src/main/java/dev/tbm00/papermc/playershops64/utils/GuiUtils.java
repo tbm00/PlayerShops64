@@ -18,7 +18,6 @@ import dev.triumphteam.gui.guis.PaginatedGui;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.Shop;
-import dev.tbm00.papermc.playershops64.data.enums.AdjustAttribute;
 import dev.tbm00.papermc.playershops64.data.enums.QueryType;
 import dev.tbm00.papermc.playershops64.data.enums.SortType;
 import dev.tbm00.papermc.playershops64.data.structure.GuiSearchCategory;
@@ -27,46 +26,13 @@ import dev.tbm00.papermc.playershops64.gui.ListShopsGui;
 import dev.tbm00.papermc.playershops64.gui.ListCategoriesGui;
 import dev.tbm00.papermc.playershops64.gui.ListQueriesGui;
 import dev.tbm00.papermc.playershops64.gui.SearchGui;
-import dev.tbm00.papermc.playershops64.gui.ShopAdjustInvGui;
-import dev.tbm00.papermc.playershops64.gui.ShopAdjustTextGui;
 import dev.tbm00.papermc.playershops64.gui.ShopManageGui;
-import dev.tbm00.papermc.playershops64.gui.ShopTransactionGui;
 
 public class GuiUtils {
     private static PlayerShops64 javaPlugin;
 
     public static void init(PlayerShops64 javaPlugin) {
         GuiUtils.javaPlugin = javaPlugin;
-    }
-
-    public static boolean openGuiTransaction(Player player, UUID shopUuid, Integer quantity, boolean closeGuiAfter) {
-        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
-
-        if (quantity==null) new ShopTransactionGui(javaPlugin, player, shopUuid, 1, closeGuiAfter);
-        else new ShopTransactionGui(javaPlugin, player, shopUuid, quantity, closeGuiAfter);
-        return true;
-    }
-
-    public static boolean openGuiAdjustInv(Player player, UUID shopUuid, Integer quantity, AdjustAttribute attribute, boolean closeGuiAfter) {
-        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
-
-        if (quantity==null) new ShopAdjustInvGui(javaPlugin, player, shopUuid, 1, attribute, closeGuiAfter);
-        else new ShopAdjustInvGui(javaPlugin, player, shopUuid, quantity, attribute, closeGuiAfter);
-        return true;
-    }
-
-    public static boolean openGuiAdjustText(Player player, UUID shopUuid, AdjustAttribute attribute, boolean closeGuiAfter) {
-        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
-
-        new ShopAdjustTextGui(javaPlugin, player, shopUuid, attribute, closeGuiAfter);
-        return true;
-    }
-
-    public static boolean openGuiManage(Player player, boolean isAdmin, UUID shopUuid) {
-        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
-
-        new ShopManageGui(javaPlugin, player, isAdmin, shopUuid);
-        return true;
     }
 
     public static boolean openGuiSearchResults(Player sender, String[] args, boolean isAdmin) {
@@ -143,7 +109,7 @@ public class GuiUtils {
         event.setCancelled(true);
         
         if (event.isShiftClick() && (isAdmin || sender.getUniqueId().equals(shop.getOwnerUuid()))) {
-            openGuiManage(sender, isAdmin, shop.getUuid());
+            new ShopManageGui(javaPlugin, sender, isAdmin, shop.getUuid());
         } else ShopUtils.teleportPlayerToShop(sender, shop);
     }
 
@@ -333,17 +299,27 @@ public class GuiUtils {
         UUID ownerUuid = shop.getOwnerUuid();
 
         meta.setLore(null);
+        if (meta.hasLore() && !meta.getLore().isEmpty()) {
+            for (String line : meta.getLore()) {
+                lore.add(line);
+            }
+        }
+
         lore.add("&8-----------------------");
         lore.add("&c" + shop.getDescription());
 
-        if (buyPrice>=0) priceLine = "&7B: &a$" + StaticUtils.formatDoubleUS(buyPrice) + " ";
-        if (sellPrice>=0) priceLine += "&7S: &c$" + StaticUtils.formatDoubleUS(sellPrice);
+        if (buyPrice==null) priceLine = "&7B: &4(disabled) ";
+        else priceLine = "&7B: &a$" + StaticUtils.formatDoubleUS(buyPrice) + " ";
+
+        if (sellPrice==null) priceLine += "&7S: &4(disabled) ";
+        else priceLine += "&7S: &c$" + StaticUtils.formatDoubleUS(sellPrice);
         lore.add(priceLine);
 
         if (stock<0) lore.add("&7Stock: &e∞");
         else lore.add("&7Stock: &e" + stock);
 
         if (shop.hasInfiniteMoney()) lore.add("&7Balance: &e$&e∞");
+        else if (balance==null) lore.add("&7Balance: &e(null)");
         else lore.add("&7Balance: &e$" + StaticUtils.formatDoubleUS(balance));
 
         if (ownerUuid!=null && (!shop.hasInfiniteMoney() && !shop.hasInfiniteStock()))
@@ -356,5 +332,35 @@ public class GuiUtils {
 
         return lore;
     }
+
+    /*public static boolean openGuiTransaction(Player player, UUID shopUuid, Integer quantity, boolean closeGuiAfter) {
+        //if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
+
+        if (quantity==null) new ShopTransactionGui(javaPlugin, player, shopUuid, 1, closeGuiAfter);
+        else new ShopTransactionGui(javaPlugin, player, shopUuid, quantity, closeGuiAfter);
+        return true;
+    }*/
+
+    /*public static boolean openGuiAdjustInv(Player player, UUID shopUuid, Integer quantity, AdjustAttribute attribute, boolean closeGuiAfter) {
+        //if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
+
+        if (quantity==null) new ShopAdjustInvGui(javaPlugin, player, shopUuid, 1, attribute, closeGuiAfter);
+        else new ShopAdjustInvGui(javaPlugin, player, shopUuid, quantity, attribute, closeGuiAfter);
+        return true;
+    }*/
+
+    /*public static boolean openGuiAdjustText(Player player, UUID shopUuid, AdjustAttribute attribute, boolean closeGuiAfter) {
+        //if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
+
+        new ShopAdjustTextGui(javaPlugin, player, shopUuid, attribute, closeGuiAfter);
+        return true;
+    }*/
+
+    /*public static boolean openGuiManage(Player player, boolean isAdmin, UUID shopUuid) {
+        //if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
+
+        new ShopManageGui(javaPlugin, player, isAdmin, shopUuid);
+        return true;
+    }*/
 }
 

@@ -20,7 +20,6 @@ import net.wesjd.anvilgui.AnvilGUI;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.enums.AdjustAttribute;
-import dev.tbm00.papermc.playershops64.utils.GuiUtils;
 import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
@@ -40,9 +39,9 @@ public class ShopAdjustTextGui {
             }
         } else {
             if (javaPlugin.getConfigHandler().isFloodgateEnabled() && FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
-                adjustBedrockString(javaPlugin, player, shopUuid, attribute, closeGuiAfter);
+                adjustBedrockString(javaPlugin, player, shopUuid, attribute);
             } else {
-                adjustJavaString(javaPlugin, player, shopUuid, attribute, closeGuiAfter);
+                adjustJavaString(javaPlugin, player, shopUuid, attribute);
             }
         }
     }
@@ -57,25 +56,25 @@ public class ShopAdjustTextGui {
 
             form.setResponseHandler(responseData -> {
                 CustomFormResponse response = form.parseResponse(responseData);
-                if (!response.isCorrect()) {
-                    StaticUtils.sendMessage(player, "&cInput cancelled!");
-                    return;
-                }
-
-                String query = response.next();
-                if (query == null || query.isBlank()) {
-                    StaticUtils.sendMessage(player, "&cPlease enter an integer!");
-                    return;
-                } while (query.startsWith(" ")) {
-                    query = query.substring(1);
-                }
 
                 try {
-                    Double amount = Double.parseDouble(query);
-                    GuiUtils.openGuiAdjustInv(player, shopUuid, amount.intValue(), attribute, closeGuiAfter);
-                } catch (Exception e) {
-                    StaticUtils.log(ChatColor.RED, "Caught exception opening new adjust inv from bedrock form: " + e.getMessage());
-                    StaticUtils.sendMessage(player, "&cError setting a number from your input!");
+                    if (!response.isCorrect()) {
+                        StaticUtils.sendMessage(player, "&cInput cancelled!");
+                        return;
+                    }
+
+                    String query = response.next();
+                    if (query == null || query.isBlank()) {
+                        StaticUtils.sendMessage(player, "&cPlease enter an integer!");
+                        return;
+                    } while (query.startsWith(" ")) {
+                        query = query.substring(1);
+                    }
+
+                    handleIntAdjust(javaPlugin, player, shopUuid, closeGuiAfter, attribute, query);
+
+                } finally {
+                    unlock(javaPlugin, shopUuid, player, attribute);
                 }
             });
 
@@ -94,7 +93,7 @@ public class ShopAdjustTextGui {
         }
     }
 
-    private void adjustBedrockString(PlayerShops64 javaPlugin, Player player, UUID shopUuid, AdjustAttribute attribute, boolean closeGuiAfter) {
+    private void adjustBedrockString(PlayerShops64 javaPlugin, Player player, UUID shopUuid, AdjustAttribute attribute) {
         try {
             CustomForm form = CustomForm.builder()
                 .title(title)
@@ -104,25 +103,29 @@ public class ShopAdjustTextGui {
 
             form.setResponseHandler(responseData -> {
                 CustomFormResponse response = form.parseResponse(responseData);
-                if (!response.isCorrect()) {
-                    StaticUtils.sendMessage(player, "&cInput cancelled!");
-                    return;
-                }
-
-                String query = response.next();
-                if (query == null || query.isBlank()) {
-                    StaticUtils.sendMessage(player, "&cPlease enter a description!");
-                    return;
-                } while (query.startsWith(" ")) {
-                    query = query.substring(1);
-                }
-
                 try {
-                    ShopUtils.setDescription(player, shopUuid, query);
-                    GuiUtils.openGuiManage(player, closeGuiAfter, shopUuid);
-                } catch (Exception e) {
-                    StaticUtils.log(ChatColor.RED, "Caught exception setting description and/or opening new manage inv from bedrock form: " + e.getMessage());
-                    StaticUtils.sendMessage(player, "&cError setting a number from your input!");
+                    if (!response.isCorrect()) {
+                        StaticUtils.sendMessage(player, "&cInput cancelled!");
+                        return;
+                    }
+
+                    String query = response.next();
+                    if (query == null || query.isBlank()) {
+                        StaticUtils.sendMessage(player, "&cPlease enter a description!");
+                        return;
+                    } while (query.startsWith(" ")) {
+                        query = query.substring(1);
+                    }
+
+                    try {
+                        ShopUtils.setDescription(player, shopUuid, query);
+                        new ShopManageGui(javaPlugin, player, false, shopUuid);
+                    } catch (Exception e) {
+                        StaticUtils.log(ChatColor.RED, "Caught exception setting description and/or opening new manage inv from bedrock form: " + e.getMessage());
+                        StaticUtils.sendMessage(player, "&cError setting a number from your input!");
+                    }
+                } finally {
+                    unlock(javaPlugin, shopUuid, player, attribute);
                 }
             });
 
@@ -141,7 +144,7 @@ public class ShopAdjustTextGui {
         }
     }
 
-    private void adjustJavaString(PlayerShops64 javaPlugin, Player player, UUID shopUuid, AdjustAttribute attribute, boolean closeGuiAfter) {
+    private void adjustJavaString(PlayerShops64 javaPlugin, Player player, UUID shopUuid, AdjustAttribute attribute) {
             ItemStack leftItem = new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE);
             ItemMeta leftMeta = leftItem.getItemMeta();
             leftMeta.setDisplayName(" ");
@@ -160,7 +163,12 @@ public class ShopAdjustTextGui {
             outputMeta.setItemName("click to set description");
             outputItem.setItemMeta(outputMeta);
 
+            if (!tryLock(javaPlugin, shopUuid, player, attribute)) return;
+
             new AnvilGUI.Builder()
+                .onClose((stateSnapshot) -> {
+                    unlock(javaPlugin, shopUuid, player, attribute);
+                })
                 .onClick((slot, stateSnapshot) -> {
                     if(slot != AnvilGUI.Slot.OUTPUT || stateSnapshot.getText().isBlank()) {
                         return Collections.emptyList();
@@ -176,7 +184,7 @@ public class ShopAdjustTextGui {
                         AnvilGUI.ResponseAction.run(() -> {
                             try {
                                 ShopUtils.setDescription(player, shopUuid, finalQuery);
-                                GuiUtils.openGuiManage(player, closeGuiAfter, shopUuid);
+                                new ShopManageGui(javaPlugin, player, false, shopUuid);
                             } catch (Exception e) {
                                 StaticUtils.log(ChatColor.RED, "Caught exception setting description and/or opening new manage inv from anvil gui: " + e.getMessage());
                                 StaticUtils.sendMessage(player, "&cError setting a description from your input!");
@@ -211,7 +219,12 @@ public class ShopAdjustTextGui {
             outputMeta.setItemName("click to set amount");
             outputItem.setItemMeta(outputMeta);
 
+            if (!tryLock(javaPlugin, shopUuid, player, attribute)) return;
+
             new AnvilGUI.Builder()
+                .onClose(stateSnapshot -> {
+                    unlock(javaPlugin, shopUuid, player, attribute);
+                })
                 .onClick((slot, stateSnapshot) -> {
                     if(slot != AnvilGUI.Slot.OUTPUT || stateSnapshot.getText().isBlank()) {
                         return Collections.emptyList();
@@ -225,13 +238,8 @@ public class ShopAdjustTextGui {
                     return Arrays.asList(
                         AnvilGUI.ResponseAction.close(),
                         AnvilGUI.ResponseAction.run(() -> {
-                            try {
-                                Double amount = Double.parseDouble(finalQuery);
-                                GuiUtils.openGuiAdjustInv(player, shopUuid, amount.intValue(), attribute, closeGuiAfter);
-                            } catch (Exception e) {
-                                StaticUtils.log(ChatColor.RED, "Caught exception opening new adjust inv from anvil gui: " + e.getMessage());
-                                StaticUtils.sendMessage(player, "&cError setting a number from your input!");
-                            }})
+                            handleIntAdjust(javaPlugin, player, shopUuid, closeGuiAfter, attribute, finalQuery);
+                        })
                     );
                 })
                 .text(" ")
@@ -241,5 +249,53 @@ public class ShopAdjustTextGui {
                 .title(title)
                 .plugin(javaPlugin)
                 .open(player);
+    }
+
+    private boolean tryLock(PlayerShops64 javaPlugin, UUID shopUuid, Player player, AdjustAttribute attribute) {
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
+    
+        String shopHint = shopUuid.toString().substring(0, 6);
+        StaticUtils.log(ChatColor.YELLOW, player.getName() + " opened shop "+shopHint+"'s adjust text gui: "+AdjustAttribute.toString(attribute));
+        return true;
+    }
+
+    private void unlock(PlayerShops64 javaPlugin, UUID shopUuid, Player player, AdjustAttribute attribute) {
+        javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+
+        String shopHint = shopUuid.toString().substring(0, 6);
+        StaticUtils.log(ChatColor.GREEN, player.getName() + " closed shop "+shopHint+"'s adjust text gui: "+AdjustAttribute.toString(attribute));
+    }
+
+    private void handleIntAdjust(PlayerShops64 javaPlugin, Player player, UUID shopUuid, boolean closeGuiAfter, AdjustAttribute attribute, String query) {
+        try {
+            switch (attribute) {
+                case TRANSACTION: {
+                    Double amount = Double.parseDouble(query);
+                    new ShopTransactionGui(javaPlugin, player, shopUuid, amount.intValue(), closeGuiAfter);
+                    break;
+                }
+                case BUY_PRICE: {
+                    Double amount = Double.parseDouble(query);
+                    ShopUtils.setBuyPrice(player, shopUuid, amount);
+                    break;
+                }
+                case SELL_PRICE: {
+                    Double amount = Double.parseDouble(query);
+                    ShopUtils.setSellPrice(player, shopUuid, amount);
+                    break;
+                }
+                case STOCK: 
+                case BALANCE: 
+                case DISPLAY_HEIGHT: 
+                default: {
+                    Double amount = Double.parseDouble(query);
+                    new ShopAdjustInvGui(javaPlugin, player, shopUuid, amount.intValue(), attribute, closeGuiAfter);
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            StaticUtils.log(ChatColor.RED, "Caught exception opening new inv from anvil gui: " + e.getMessage());
+            StaticUtils.sendMessage(player, "&cError getting a number from your input!");
+        }
     }
 }

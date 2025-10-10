@@ -6,7 +6,8 @@ public enum AdjustAttribute {
     STOCK,
     BALANCE,
     DESCRIPTION,
-    DISPLAY_HEIGHT;
+    DISPLAY_HEIGHT,
+    TRANSACTION;
 
     public static String toString(AdjustAttribute adjustAttribute) {
         switch (adjustAttribute) {
@@ -22,6 +23,8 @@ public enum AdjustAttribute {
                 return "Description";
             case DISPLAY_HEIGHT:
                 return "Display Height";
+            case TRANSACTION:
+                return "Transaction";
             default:
                 return null;
         }

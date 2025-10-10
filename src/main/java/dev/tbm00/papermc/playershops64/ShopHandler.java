@@ -52,7 +52,7 @@ public class ShopHandler {
         int loaded = 0, skippedNullShop = 0, skippedNullWorld = 0, skippedNullLoc = 0;
 
         shopIndex.clear();
-        for (Shop shop : dao.getAllShops()) {
+        for (Shop shop : dao.getAllShopsFromSql()) {
             if (shop == null) {
                 skippedNullShop++;
                 StaticUtils.log(ChatColor.RED, "Skipping null shop");
@@ -104,14 +104,14 @@ public class ShopHandler {
         return copyOf(shops.get(uuid));
     }
 
-    public void upsertShop(Shop shop) {
+    public void upsertShopObject(Shop shop) {
         if (shop == null || shop.getUuid() == null) {
             return;
         }
 
         // run DB operations async
         javaPlugin.getServer().getScheduler().runTaskAsynchronously(javaPlugin, () -> {
-            boolean ok = dao.upsertShop(shop);
+            boolean ok = dao.upsertShopToSql(shop);
             if (!ok) {
                 StaticUtils.log(ChatColor.RED, "DB upsert failed for shop " + shop.getUuid());
                 return;
@@ -132,12 +132,12 @@ public class ShopHandler {
         });
     }
 
-    public void removeShop(UUID uuid) {
+    public void deleteShopObject(UUID uuid) {
         if (uuid == null || uuid.equals(null)) return;
 
         // run DB operations async
         javaPlugin.getServer().getScheduler().runTaskAsynchronously(javaPlugin, () -> {
-            boolean ok = dao.deleteShop(uuid);
+            boolean ok = dao.deleteShopFromSql(uuid);
             if (!ok) {
                 StaticUtils.log(ChatColor.RED, "DB delete failed for shop " + uuid);
                 return;
@@ -153,6 +153,7 @@ public class ShopHandler {
     }
 
     public void unlockShop(UUID shopUuid, UUID expectedEditor) {
+        StaticUtils.log(ChatColor.WHITE, "Unlocking shop: " + shopUuid.toString());
         Shop shop = getShop(shopUuid);
         if (shop==null || shop.equals(null)) {
             StaticUtils.log(ChatColor.YELLOW, "Tried to unlock a null shop!" +
@@ -177,6 +178,7 @@ public class ShopHandler {
     } 
 
     public boolean tryLockShop(UUID shopUuid, Player player) {
+        StaticUtils.log(ChatColor.WHITE, player.getName() + " trying to lock shop: " + shopUuid.toString());
         Shop shop = getShop(shopUuid);
         if (shop==null || shop.equals(null)) {
             StaticUtils.log(ChatColor.YELLOW, player.getName() + " tried to tryLock a null shop!" +
@@ -312,7 +314,8 @@ public class ShopHandler {
             s.hasInfiniteStock(),
             s.getDescription(),
             s.getDisplayHeight(),
-            s.getBaseMaterial()
+            s.getBaseMaterial(),
+            s.getCurrentEditor()
         );
     }
 
@@ -336,13 +339,13 @@ public class ShopHandler {
         Shop shop = getShop(shopUuid);
         shop.setCurrentEditor(player.getUniqueId());
         shops.put(shopUuid, shop);
-        upsertShop(shop);
+        upsertShopObject(shop);
     }*/
 
     /* public void clearCurrentShopEditor(UUID shopUuid) {
         Shop shop = getShop(shopUuid);
         shop.setCurrentEditor(null);
         shops.put(shopUuid, shop);
-        upsertShop(shop);
+        upsertShopObject(shop);
     } */
 }

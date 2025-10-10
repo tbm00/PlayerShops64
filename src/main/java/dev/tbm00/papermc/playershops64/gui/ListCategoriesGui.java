@@ -23,21 +23,19 @@ public class ListCategoriesGui {
     private final Gui gui;
     private final Player viewer;
     private final boolean isAdmin;
-    private String label;
+    private String label = StaticUtils.CATEGORY_GUI_TITLE;
     
     public ListCategoriesGui(PlayerShops64 javaPlugin, Player viewer, boolean isAdmin) {
         this.javaPlugin = javaPlugin;
         this.viewer = viewer;
         this.isAdmin = isAdmin;
-        label = StaticUtils.CATEGORY_GUI_TITLE;
-        gui = new Gui(6, label);
-
-        setupFooter();
-        fillCategories();
+        this.gui = new Gui(6, label);
 
         if (isAdmin) gui.updateTitle(label + " (ADMIN)");
-        else gui.updateTitle(label);
+        setupFooter();
+        fillCategories();
         gui.disableAllInteractions();
+        
         gui.open(viewer);
     }
 

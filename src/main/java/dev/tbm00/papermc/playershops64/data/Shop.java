@@ -53,7 +53,8 @@ public class Shop {
                 boolean infiniteStock,
                 String description,
                 int displayHeight,
-                Material baseMaterial
+                Material baseMaterial,
+                UUID currentEditor
                 ) {
         this.uuid = uuid;
         this.ownerUuid = ownerUuid;
@@ -72,7 +73,7 @@ public class Shop {
         this.description = description;
         this.displayHeight = displayHeight;
         this.baseMaterial = baseMaterial;
-        this.currentEditor = null;
+        this.currentEditor = currentEditor;
     }
 
     // --- Getters ---
