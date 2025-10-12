@@ -133,7 +133,7 @@ public class ShopTransactionGui {
             ItemMeta shopMeta = shopItem.getItemMeta();
             List<String> shopLore = shopMeta.getLore();
 
-            shopLore = ShopUtils.formatSaleItemLoreText(shop);
+            shopLore = ShopUtils.formatSaleItemLoreText(shop, true);
             shopItem.setAmount(shop.getStackSize());
 
             shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());

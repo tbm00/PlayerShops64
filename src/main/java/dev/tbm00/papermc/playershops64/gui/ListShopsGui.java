@@ -10,7 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.ChatColor;
@@ -371,7 +370,7 @@ public class ListShopsGui {
         List<String> shopLore = shopMeta.getLore();
         UUID ownerUuid = shop.getOwnerUuid();
 
-        shopLore = ShopUtils.formatSaleItemLoreText(shop);
+        shopLore = ShopUtils.formatSaleItemLoreText(shop, true);
         shopLore.add("&8-----------------------");
         shopLore.add("&6Click to TP to this shop");
         if (isAdmin || (ownerUuid!=null && viewer.getUniqueId().equals(ownerUuid)))
@@ -389,7 +388,7 @@ public class ListShopsGui {
         shopMeta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);*/
         //for (Enchantment enchant : new HashSet<>(shopMeta.getEnchants().keySet()))
         //    shopMeta.removeEnchant(enchant);
-        
+
         shopItem.setItemMeta(shopMeta);
         shopItem.setAmount(shop.getStackSize());
 

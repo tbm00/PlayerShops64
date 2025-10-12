@@ -833,7 +833,7 @@ public class ShopUtils {
         return returnText;
     }
 
-    public static List<String> formatSaleItemLoreText(Shop shop) {
+    public static List<String> formatSaleItemLoreText(Shop shop, boolean includeStackSize) {
         if (shop==null) return null;
 
         Double buyPrice = (shop.getBuyPrice()==null) ? null : shop.getBuyPrice().doubleValue();
@@ -870,8 +870,12 @@ public class ShopUtils {
         else priceLine += "&7S: &c$" + StaticUtils.formatDoubleUS(sellPrice);
         lore.add(priceLine);
 
-        if (stock<0) lore.add("&7Stock: &e∞");
-        else lore.add("&7Stock: &e" + stock);
+
+        String sizeLine = "";
+        if (includeStackSize) sizeLine += "&7Stack Size: &e" + shop.getStackSize() + " ";
+        if (stock<0) sizeLine += "&7Stock: &e∞";
+        else sizeLine += "&7Stock: &e" + stock;
+        lore.add(sizeLine);
 
         if (shop.hasInfiniteMoney()) lore.add("&7Balance: &e$&e∞");
         else if (balance==null) lore.add("&7Balance: &e(null)");
