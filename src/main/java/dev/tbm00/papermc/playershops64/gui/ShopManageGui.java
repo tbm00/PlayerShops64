@@ -89,10 +89,10 @@ public class ShopManageGui {
             ItemMeta shopMeta = shopItem.getItemMeta();
             List<String> shopLore = shopMeta.getLore();
 
-            shopLore = GuiUtils.getSaleItemLore(shop);
+            shopLore = ShopUtils.formatSaleItemLoreText(shop);
 
             shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            shopMeta.setDisplayName(StaticUtils.getItemName(shopItem) + " &7x " + shop.getStackSize());
+            shopMeta.setDisplayName(StaticUtils.getFormattedSaleItemName(shop));
             shopItem.setItemMeta(shopMeta);
             shopItem.setAmount(shop.getStackSize());
             gui.setItem(2, 5, ItemBuilder.from(shopItem).asGuiItem(event -> {
@@ -127,7 +127,7 @@ public class ShopManageGui {
             gui.setItem(3, 4, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             gui.setCloseGuiAction(null);
-                                                                            new ShopAdjustTextGui(javaPlugin, viewer, shopUuid, AdjustAttribute.SELL_PRICE, true);
+                                                                            new ShopAdjustTextGui(javaPlugin, viewer, isAdmin, shopUuid, AdjustAttribute.SELL_PRICE, true);
                                                                         }));
         } if (shop.getSellPrice()!=null && !shop.getSellPrice().equals(null)) {
             // Disable Selling
@@ -162,7 +162,7 @@ public class ShopManageGui {
             gui.setItem(3, 6, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             gui.setCloseGuiAction(null);
-                                                                            new ShopAdjustTextGui(javaPlugin, viewer, shopUuid, AdjustAttribute.BUY_PRICE, false);
+                                                                            new ShopAdjustTextGui(javaPlugin, viewer, isAdmin, shopUuid, AdjustAttribute.BUY_PRICE, false);
                                                                         }));
         } if (shop.getBuyPrice()!=null && !shop.getBuyPrice().equals(null)) {
             // Disable Buying
@@ -196,7 +196,7 @@ public class ShopManageGui {
             gui.setItem(3, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             gui.setCloseGuiAction(null);
-                                                                            new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, 0, AdjustAttribute.BALANCE, false);
+                                                                            new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, 0, AdjustAttribute.BALANCE, false);
                                                                         }));
         }
 
@@ -212,17 +212,17 @@ public class ShopManageGui {
             gui.setItem(4, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             gui.setCloseGuiAction(null);
-                                                                            new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, 0, AdjustAttribute.STOCK, false);
+                                                                            new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, 0, AdjustAttribute.STOCK, false);
                                                                         }));
         }
 
         {
             // Set Description
             lore.clear();
-            if (shop.getDescription()!=null && !shop.getDescription().isBlank()) {
+            if (shop.getDescription()!=null) {
                 lore.add("&8-----------------------");
                 lore.add("&eCurrent description:");
-                lore.add(shop.getDescription());
+                lore.add("&7'"+shop.getDescription()+"'");
             }
             lore.add("&8-----------------------");
             lore.add("&6Click to set this shop's description");
@@ -233,7 +233,7 @@ public class ShopManageGui {
             gui.setItem(6, 4, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             gui.setCloseGuiAction(null);
-                                                                            new ShopAdjustTextGui(javaPlugin, viewer, shopUuid, AdjustAttribute.DESCRIPTION, false);
+                                                                            new ShopAdjustTextGui(javaPlugin, viewer, isAdmin, shopUuid, AdjustAttribute.DESCRIPTION, false);
                                                                         }));
         } if (shop.getDescription()!=null && !shop.getDescription().equals(null)) {
             // Clear Description
@@ -268,7 +268,7 @@ public class ShopManageGui {
             gui.setItem(6, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             gui.setCloseGuiAction(null);
-                                                                            new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, 0, AdjustAttribute.DISPLAY_HEIGHT, false);
+                                                                            new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, 0, AdjustAttribute.DISPLAY_HEIGHT, false);
                                                                         }));
         }
 

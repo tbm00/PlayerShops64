@@ -23,6 +23,7 @@ import dev.tbm00.papermc.playershops64.data.Shop;
 import dev.tbm00.papermc.playershops64.data.enums.QueryType;
 import dev.tbm00.papermc.playershops64.data.enums.SortType;
 import dev.tbm00.papermc.playershops64.utils.GuiUtils;
+import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ListShopsGui {
@@ -242,22 +243,30 @@ public class ListShopsGui {
     }
 
     private boolean passStringChecks(Shop shop, ItemStack shopItem) {
-        String query_ = query.replace(" ", "_");
-
         String materialName = shopItem.getType().toString();
         ItemMeta meta = shopItem.getItemMeta();
         String displayName = (meta.hasDisplayName()) ? meta.getDisplayName() : "";
         String itemName = (meta.hasItemName()) ? meta.getItemName() : "";
         String desc = shop.getDescription();
+
+        String query_ = query.replace(" ", "_");
+        String queryS = query.replace("_", " ");
+
+        if (checkString(query, shop, materialName, meta, displayName, itemName, desc)) return true;
+        if (checkString(query_, shop, materialName, meta, displayName, itemName, desc)) return true;
+        if (checkString(queryS, shop, materialName, meta, displayName, itemName, desc)) return true;
+
+        return false;
+    }
+
+    private boolean checkString(String testQuery, Shop shop, String materialName, ItemMeta meta, String displayName, String itemName, String desc) {
         if (materialName!=null && StringUtils.containsIgnoreCase(materialName, query)) return true; // if material contains query
-        if (materialName!=null && StringUtils.containsIgnoreCase(materialName, query_)) return true; // if material contains query_
         if (displayName!=null && StringUtils.containsIgnoreCase(displayName, query)) return true; // if displayName contains query
         if (itemName!=null && StringUtils.containsIgnoreCase(itemName, query)) return true; // if itemName contains query
         if (desc!=null && StringUtils.containsIgnoreCase(desc, query)) return true; // if description contains query
         if (shop.getOwnerUuid()!=null && shop.getOwnerName()!=null && StringUtils.containsIgnoreCase(shop.getOwnerName(), query)) {
             return true; // if ownerName contains query
         }
-
         return false;
     }
 
@@ -294,7 +303,6 @@ public class ListShopsGui {
         ItemMeta meta = item.getItemMeta();
         List<String> lore = new ArrayList<>();
         boolean viewersShops = queryType.equals(QueryType.PLAYER_UUID) && UUID.fromString(query).equals(viewer.getUniqueId());
-
         
         if (viewersShops) {
             // Your Shops
@@ -314,16 +322,20 @@ public class ListShopsGui {
             // Your Shops
             GuiUtils.setGuiItemYourShops(gui, item, meta, lore, viewer, isAdmin);
 
-            // All Shops
-            lore.add("&8-----------------------");
-            lore.add("&eCurrently viewing all shops");
-            lore.add("&e(sorted by " + SortType.toString(sortType) + ")");
-            meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dAll Shops"));
-            item.setItemMeta(meta);
-            item.setType(Material.CHEST);
-            gui.setItem(6, 2, ItemBuilder.from(item).asGuiItem(event -> {event.setCancelled(true);}));
-            lore.clear();
+            if (queryType.equals(QueryType.NO_QUERY)) {
+                // All Shops
+                lore.add("&8-----------------------");
+                lore.add("&eCurrently viewing all shops");
+                lore.add("&e(sorted by " + SortType.toString(sortType) + ")");
+                meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dAll Shops"));
+                item.setItemMeta(meta);
+                item.setType(Material.CHEST);
+                gui.setItem(6, 2, ItemBuilder.from(item).asGuiItem(event -> {event.setCancelled(true);}));
+                lore.clear();
+            } else {
+                GuiUtils.setGuiItemAllShops(gui, item, meta, lore, isAdmin);
+            }
         }
 
         // Category
@@ -351,53 +363,37 @@ public class ListShopsGui {
     }
 
     private void addGuiItemShop(Shop shop) {
-        boolean emptyShop = false;
-        ItemStack item = null; 
-        if (shop.getItemStack()==null) {
-            emptyShop = true;
-            item = new ItemStack(Material.BARRIER);
-        } else {
-            item = shop.getItemStack().clone();
-        }
-        
-        ItemMeta meta = item.getItemMeta();
-        List<String> lore = new ArrayList<>();
-        String itemName = null;
+        ItemStack shopItem;
+        if (shop.getItemStack()==null) shopItem = new ItemStack(Material.BARRIER);
+        else shopItem = shop.getItemStack().clone();
+
+        ItemMeta shopMeta = shopItem.getItemMeta();
+        List<String> shopLore = shopMeta.getLore();
         UUID ownerUuid = shop.getOwnerUuid();
 
-        lore = GuiUtils.getSaleItemLore(shop);
-
-        lore.add("&8-----------------------");
-        lore.add("&6Click to TP to this shop");
-
+        shopLore = ShopUtils.formatSaleItemLoreText(shop);
+        shopLore.add("&8-----------------------");
+        shopLore.add("&6Click to TP to this shop");
         if (isAdmin || (ownerUuid!=null && viewer.getUniqueId().equals(ownerUuid)))
-            lore.add("&eShift-click to edit this shop");
+            shopLore.add("&eShift-click to edit this shop");
 
-        meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+        shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+        shopMeta.setDisplayName(StaticUtils.getFormattedSaleItemName(shop));
+        /*shopMeta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+        shopMeta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
+        shopMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        shopMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
+        shopMeta.addItemFlags(ItemFlag.HIDE_DYE);
+        shopMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        shopMeta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
+        shopMeta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);*/
+        //for (Enchantment enchant : new HashSet<>(shopMeta.getEnchants().keySet()))
+        //    shopMeta.removeEnchant(enchant);
+        
+        shopItem.setItemMeta(shopMeta);
+        shopItem.setAmount(shop.getStackSize());
 
-        if (emptyShop) {
-            itemName = "&c(no shop item)";
-        } else {
-            itemName = StaticUtils.getItemName(item) + " &7x &f" + shop.getStackSize();
-        }
-
-        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', itemName));
-
-        meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
-        meta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
-        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-        meta.addItemFlags(ItemFlag.HIDE_DESTROYS);
-        meta.addItemFlags(ItemFlag.HIDE_DYE);
-        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-        meta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
-        meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
-        //for (Enchantment enchant : new HashSet<>(meta.getEnchants().keySet()))
-        //    meta.removeEnchant(enchant);
-
-        item.setItemMeta(meta);
-        item.setAmount(shop.getStackSize());
-
-        gui.addItem(ItemBuilder.from(item).asGuiItem(event -> {
+        gui.addItem(ItemBuilder.from(shopItem).asGuiItem(event -> {
                                                             event.setCancelled(true);
                                                             GuiUtils.handleClickShop(event, viewer, shop, isAdmin);
                                                         }));

@@ -17,7 +17,8 @@ import dev.triumphteam.gui.guis.Gui;
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.Shop;
 import dev.tbm00.papermc.playershops64.data.enums.AdjustAttribute;
-import dev.tbm00.papermc.playershops64.utils.GuiUtils;
+import dev.tbm00.papermc.playershops64.data.enums.QueryType;
+import dev.tbm00.papermc.playershops64.data.enums.SortType;
 import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
@@ -25,33 +26,34 @@ public class ShopTransactionGui {
     private final PlayerShops64 javaPlugin;
     private final Gui gui;
     private final Player viewer;
+    private final boolean isAdmin;
     private final UUID shopUuid;
     private final Shop shop;
     private final int quantity;
     private final boolean closeGuiAfter;
     private String label = "Shop Transaction";
     
-    public ShopTransactionGui(PlayerShops64 javaPlugin, Player viewer, UUID shopUuid, Integer quantity, boolean closeGuiAfter) {
+    public ShopTransactionGui(PlayerShops64 javaPlugin, Player viewer, boolean isAdmin, UUID shopUuid, Integer quantity, boolean closeGuiAfter) {
         this.javaPlugin = javaPlugin;
         this.viewer = viewer;
+        this.isAdmin = isAdmin;
         this.shopUuid = shopUuid;
         this.shop = javaPlugin.getShopHandler().getShop(shopUuid);
-        if (quantity == null) this.quantity = 1;
-        else this.quantity = Math.max(quantity, 1);
+        this.quantity = (quantity==null) ? 0 : Math.max(quantity, 0);
         this.gui = new Gui(6, label);
         this.closeGuiAfter = closeGuiAfter;
 
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
             return;
         } String shopHint = shopUuid.toString().substring(0, 6);
-        StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+shopHint+"'s transcation gui: " + quantity);
+        StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+shopHint+"'s transcation gui: " + this.quantity);
 
-        label = "Shop Transaction (" + shopHint+ ")";
+        label = "Shop Transaction: " + StaticUtils.formatIntUS(this.quantity);
         gui.updateTitle(label);
         setup();
         gui.disableAllInteractions();
         gui.setCloseGuiAction(event -> {
-            StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+shopHint+"'s transaction gui: " + quantity);
+            StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+shopHint+"'s transaction gui: " + this.quantity);
             javaPlugin.getShopHandler().unlockShop(shopUuid, viewer.getUniqueId());
         });
 
@@ -75,10 +77,10 @@ public class ShopTransactionGui {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dDisable Close After Sale"));
             item.setItemMeta(meta);
             item.setType(Material.LIGHT_GRAY_BANNER);
-            gui.setItem(2, 8, ItemBuilder.from(item).asGuiItem(event -> {
+            gui.setItem(2, 7, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             gui.setCloseGuiAction(null);
-                                                                            new ShopTransactionGui(javaPlugin, viewer, shopUuid, quantity, false);
+                                                                            new ShopTransactionGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, false);
                                                                         }));
         } else {
             lore.clear();
@@ -89,10 +91,24 @@ public class ShopTransactionGui {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dEnable Close After Sale"));
             item.setItemMeta(meta);
             item.setType(Material.GRAY_BANNER);
-            gui.setItem(2, 8, ItemBuilder.from(item).asGuiItem(event -> {
+            gui.setItem(2, 7, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             gui.setCloseGuiAction(null);
-                                                                            new ShopTransactionGui(javaPlugin, viewer, shopUuid, quantity, true);
+                                                                            new ShopTransactionGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, true);
+                                                                        }));
+        }
+
+        if (shop.getItemStack()!=null && !shop.getItemStack().equals(null)) { //  Similar Search Button
+            lore.clear();
+            lore.add("&8-----------------------");
+            lore.add("&6Click to find similar shops");
+            meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dSimilar Shops"));
+            item.setItemMeta(meta);
+            item.setType(Material.STONE_BUTTON);
+            gui.setItem(2, 8, ItemBuilder.from(item).asGuiItem(event -> {
+                                                                            event.setCancelled(true);
+                                                                            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), viewer, isAdmin, SortType.MATERIAL, QueryType.STRING, shop.getItemStack().getType().toString());
                                                                         }));
         }
 
@@ -117,12 +133,12 @@ public class ShopTransactionGui {
             ItemMeta shopMeta = shopItem.getItemMeta();
             List<String> shopLore = shopMeta.getLore();
 
-            shopLore = GuiUtils.getSaleItemLore(shop);
+            shopLore = ShopUtils.formatSaleItemLoreText(shop);
             shopItem.setAmount(shop.getStackSize());
 
             shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             shopItem.setItemMeta(shopMeta);
-            gui.setItem(2, 2, ItemBuilder.from(shopItem).asGuiItem(event -> {
+            gui.setItem(3, 5, ItemBuilder.from(shopItem).asGuiItem(event -> {
                                                                                 event.setCancelled(true);
                                                                             }));
         }
@@ -135,12 +151,12 @@ public class ShopTransactionGui {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cConfirm Sell"));
             item.setItemMeta(meta);
             item.setType(Material.RED_BANNER);
-            gui.setItem(2, 4, ItemBuilder.from(item).asGuiItem(event -> {
+            gui.setItem(2, 2, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             ShopUtils.sellToShop(viewer, shopUuid, quantity);
                                                                             if (!closeGuiAfter) {
                                                                                 gui.setCloseGuiAction(null);
-                                                                                new ShopTransactionGui(javaPlugin, viewer, shopUuid, quantity, closeGuiAfter);
+                                                                                new ShopTransactionGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, closeGuiAfter);
                                                                             } else {
                                                                                 gui.close(viewer);
                                                                             }
@@ -155,12 +171,12 @@ public class ShopTransactionGui {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aConfirm Buy"));
             item.setItemMeta(meta);
             item.setType(Material.GREEN_BANNER);
-            gui.setItem(2, 6, ItemBuilder.from(item).asGuiItem(event -> {
+            gui.setItem(2, 3, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             ShopUtils.buyFromShop(viewer, shopUuid, quantity);
                                                                             if (!closeGuiAfter) {
                                                                                 gui.setCloseGuiAction(null);
-                                                                                new ShopTransactionGui(javaPlugin, viewer, shopUuid, quantity, closeGuiAfter);
+                                                                                new ShopTransactionGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, closeGuiAfter);
                                                                             } else {
                                                                                 gui.close(viewer);
                                                                             }
@@ -178,22 +194,20 @@ public class ShopTransactionGui {
             gui.setItem(6, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             gui.setCloseGuiAction(null);
-                                                                            new ShopAdjustTextGui(javaPlugin, viewer, shopUuid, AdjustAttribute.TRANSACTION, closeGuiAfter);
+                                                                            new ShopAdjustTextGui(javaPlugin, viewer, isAdmin, shopUuid, AdjustAttribute.TRANSACTION, closeGuiAfter);
                                                                         }));
         }
 
         { // Amount Buttons
-            if (quantity>10) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -10, 5, 1);
-            if (quantity>5) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -5, 5, 2);
-            if (quantity>1) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 5, 3);
-
-            if (quantity>64) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -64, 6, 1);
-            if (quantity>32) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -32, 6, 2);
+            addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -10, 5, 1);
+            addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -5, 5, 2);
+            addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 5, 3);
+            addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -64, 6, 1);
+            addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -32, 6, 2);
 
             addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 1, 5, 7);
             addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 5, 5, 8);
             addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 10, 5, 9);
-
             addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 32, 6, 8);
             addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 64, 6, 9);
         }
@@ -211,7 +225,7 @@ public class ShopTransactionGui {
         gui.setItem(row, col, ItemBuilder.from(item).asGuiItem(event -> {
                                                                     event.setCancelled(true);
                                                                     gui.setCloseGuiAction(null);
-                                                                    new ShopTransactionGui(javaPlugin, viewer, shopUuid, quantity+amount, closeGuiAfter);
+                                                                    new ShopTransactionGui(javaPlugin, viewer, isAdmin, shopUuid, quantity+amount, closeGuiAfter);
                                                                 }));
     }
 }

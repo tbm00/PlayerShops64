@@ -25,6 +25,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import net.md_5.bungee.api.chat.TextComponent;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
+import dev.tbm00.papermc.playershops64.data.Shop;
 
 public class StaticUtils {
     private static PlayerShops64 javaPlugin;
@@ -130,7 +131,7 @@ public class StaticUtils {
     }
 
     public static String getItemName(ItemStack item) {
-        if (item == null) return "(null item)";
+        if (item == null) return "&4(null item)";
         String name = null;
         ItemMeta meta = item.getItemMeta();
         if (meta!=null) {
@@ -140,6 +141,14 @@ public class StaticUtils {
         if (name == null || name.isBlank()) name = formatTitleCase(item.getType().toString());
         
         return name;
+    }
+
+    public static String getFormattedSaleItemName(Shop shop) {
+        if (shop.getItemStack()==null || shop.getItemStack().getType()==Material.AIR) {
+            return ChatColor.translateAlternateColorCodes('&', "&c(null item)");
+        } else {
+            return ChatColor.translateAlternateColorCodes('&', (getItemName(shop.getItemStack()) + " &7x &f" + shop.getStackSize()));
+        }
     }
 
     /**
