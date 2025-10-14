@@ -639,6 +639,11 @@ public class ShopUtils {
                 return;
             }
 
+            if (shop.getOwnerUuid().equals(player.getUniqueId())) {
+                StaticUtils.sendMessage(player, "&cYou cannot sell to your own shop!");
+                return;
+            }
+
             if (quantity <= 0) {
                 StaticUtils.sendMessage(player, "&cInvalid quantity.");
                 return;
@@ -738,6 +743,11 @@ public class ShopUtils {
                 return;
             }
 
+            if (shop.getOwnerUuid().equals(player.getUniqueId())) {
+                StaticUtils.sendMessage(player, "&cYou cannot buy from your own shop!");
+                return;
+            }
+
             if (quantity <= 0) {
                 StaticUtils.sendMessage(player, "&cInvalid quantity.");
                 return;
@@ -817,6 +827,84 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&fBought " + workingAmount + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
+    public static int[] quickSellToShop(Player player, UUID shopUuid, int quantity) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to quick sell to shop " + shopUuid + " off the main thread -- canceling..!");
+            return new int[] {0, 0};
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            return new int[] {0, 0};
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                return new int[] {0, 0};
+            }
+
+            if (shop.getOwnerUuid().equals(player.getUniqueId())) {
+                return new int[] {0, 0};
+            }
+
+            if (shop.getSellPrice()==null || shop.getSellPrice().compareTo(BigDecimal.ZERO)<0 || shop.getMoneyStock()==null) {
+                return new int[] {0, 0};
+            }
+
+            ItemStack saleItem = shop.getItemStack();
+            if (saleItem == null || saleItem.getType().isAir()) {
+                return new int[] {0, 0};
+            }
+
+            if (quantity <= 0) {
+                return new int[] {0, 0};
+            } int workingAmount = quantity;
+            if (workingAmount+shop.getItemStock()>javaPlugin.getConfigHandler().getMaxStock()) {
+                workingAmount = javaPlugin.getConfigHandler().getMaxStock()-shop.getItemStock();
+            }
+
+            BigDecimal perItem = getShopSellPriceForOne(shop);
+            if (perItem == null || perItem.compareTo(BigDecimal.ZERO) <= 0) {
+                return new int[] {0, 0};
+            }
+
+            BigDecimal totalPrice = StaticUtils.normalizeBigDecimal( perItem.multiply(BigDecimal.valueOf(workingAmount)) );
+            if (!shop.hasInfiniteMoney()) {
+                BigDecimal moneyStock = shop.getMoneyStock() == null ? BigDecimal.ZERO : shop.getMoneyStock();
+                if (moneyStock.compareTo(totalPrice) < 0) {
+                    // get max afforded
+                    int shopCanAfford = moneyStock.divide(perItem, 0, RoundingMode.DOWN).intValue();
+                    if (shopCanAfford<=0) {
+                        return new int[] {0, 0};
+                    }
+
+                    workingAmount = Math.min(shopCanAfford, workingAmount);
+                    totalPrice = StaticUtils.normalizeBigDecimal( perItem.multiply(BigDecimal.valueOf(workingAmount)) );
+                }
+            }
+
+            if (workingAmount <= 0) {
+                return new int[] {0, 0};
+            } totalPrice = totalPrice.max(BigDecimal.ZERO);
+
+            boolean gaveMoneyToPlayer = javaPlugin.getVaultHook().giveMoney( player, totalPrice.doubleValue());
+            if (!gaveMoneyToPlayer) {
+                return new int[] {0, 0};
+            }
+
+            // edit shop
+            if (!shop.hasInfiniteStock()) shop.setItemStock(shop.getItemStock() + workingAmount);
+            if (!shop.hasInfiniteMoney()) shop.setMoneyStock((shop.getMoneyStock()==null) ? BigDecimal.ZERO : shop.getMoneyStock().subtract(totalPrice));
+            shop.setLastTransactionDate(new Date());
+            
+            // apply updates
+            javaPlugin.getShopHandler().upsertShopObject(shop);
+            return new int[] {workingAmount, totalPrice.intValue()};
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }

@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.bukkit.ChatColor;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -18,6 +19,7 @@ import org.bukkit.util.Vector;
 
 import dev.tbm00.papermc.playershops64.data.MySQLConnection;
 import dev.tbm00.papermc.playershops64.data.ShopDAO;
+import dev.tbm00.papermc.playershops64.data.structure.PriceQueue;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.display.DisplayManager;
 import dev.tbm00.papermc.playershops64.display.ShopDisplay;
@@ -30,8 +32,9 @@ public class ShopHandler {
     private final ShopDAO dao;
     private final DisplayManager displayManager;
     private final Map<UUID, Shop> shops = new LinkedHashMap<>();
-    private final Map<UUID, Map<Long, UUID>> shopWorldIndex = new HashMap<>(); 
+    private final Map<UUID, Map<Long, UUID>> shopLocationMap = new HashMap<>(); 
                // Map<WorldUID, Map<PackedBlockPos, ShopUUID>>
+    private final Map<Material, PriceQueue> shopPriceMap = new HashMap<>();
 
     private VisualTask visualTask;
 
@@ -51,7 +54,8 @@ public class ShopHandler {
         StaticUtils.log(ChatColor.YELLOW, "ShopHandler loading shops from DB...");
         int loaded = 0, skippedNullShop = 0, skippedNullWorld = 0, skippedNullLoc = 0;
 
-        shopWorldIndex.clear();
+        shopLocationMap.clear();
+        shopPriceMap.clear();
         for (Shop shop : dao.getAllShopsFromSql()) {
             if (shop == null) {
                 skippedNullShop++;
@@ -102,6 +106,14 @@ public class ShopHandler {
 
     public Shop getShop(UUID uuid) {
         return copyOf(shops.get(uuid));
+    }
+
+    public Map<Material, PriceQueue> getSellPriceMap() {
+        return shopPriceMap;
+    }
+
+    public PriceQueue getSellPriceQueue(Material material) {
+        return shopPriceMap.containsKey(material) ? shopPriceMap.get(material) : null;
     }
 
     public void upsertShopObject(Shop shop) {
@@ -245,34 +257,74 @@ public class ShopHandler {
         }
         Shop shop = getIndexedShop(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
         if (shop == null) {
-            StaticUtils.log(ChatColor.RED, "location not found in shopWorldIndex");
+            StaticUtils.log(ChatColor.RED, "location not found in shopLocationMap");
         }
         return shop;
     }
 
     private void indexShop(Shop shop) {
-        if (shop == null || shop.getWorld() == null || shop.getLocation() == null) return;
-        UUID worldId = shop.getWorld().getUID();
-        Map<Long, UUID> byPos = shopWorldIndex.computeIfAbsent(worldId, k -> new HashMap<>());
-        long key = packBlockPos(shop.getLocation().getBlockX(), shop.getLocation().getBlockY(), shop.getLocation().getBlockZ());
+        if (shop==null) return;
 
-        UUID old = byPos.put(key, shop.getUuid());
-        if (old != null && !old.equals(shop.getUuid())) {
-            StaticUtils.log(ChatColor.RED, "Seems there are two shops at same location: " + shop.getWorld().getName() +" @ " + shop.getLocation().getX() + ", " +shop.getLocation().getY()+ ", " + shop.getLocation().getZ() + "\n" +
-                            "Old shop: " + old + "\n",
-                            "New shop: " + shop.getUuid());
+        if (shop.getWorld()!=null && shop.getLocation()!=null) {
+            UUID worldId = shop.getWorld().getUID();
+            Map<Long, UUID> byPos = shopLocationMap.computeIfAbsent(worldId, k -> new HashMap<>());
+            long key = packBlockPos(shop.getLocation().getBlockX(), shop.getLocation().getBlockY(), shop.getLocation().getBlockZ());
+
+            UUID old = byPos.put(key, shop.getUuid());
+            if (old != null && !old.equals(shop.getUuid())) {
+                StaticUtils.log(ChatColor.RED, "Seems there are two shops at same location: " + shop.getWorld().getName() +" @ " + shop.getLocation().getX() + ", " +shop.getLocation().getY()+ ", " + shop.getLocation().getZ() + "\n" +
+                                "Old shop: " + old + "\n",
+                                "New shop: " + shop.getUuid());
+            }
+        }
+
+        if (shop.getItemStack()!=null) {
+            if (shop.getSellPrice()==null || shop.getSellPrice().equals(null)) return;
+
+            Material material = shop.getItemStack().getType();
+            if (material==null) return;
+
+            if (!shopPriceMap.containsKey(material) || shopPriceMap.get(material)==null) {
+                shopPriceMap.put(material, new PriceQueue());
+            }
+
+            PriceQueue queue = shopPriceMap.get(material);
+            if (queue.contains(shop.getUuid())) queue.update(shop.getUuid(), shop.getSellPrice());
+            else queue.insert(shop.getUuid(), shop.getSellPrice());
+
+            shopPriceMap.put(material, queue);
         }
     }
 
     private void deindexShop(Shop shop) {
-        if (shop == null || shop.getWorld() == null || shop.getLocation() == null) return;
-        UUID worldId = shop.getWorld().getUID();
-        Map<Long, UUID> byPos = shopWorldIndex.get(worldId);
-        if (byPos == null) return;
+        if (shop==null) return;
 
-        long key = packBlockPos(shop.getLocation().getBlockX(), shop.getLocation().getBlockY(), shop.getLocation().getBlockZ());
-        byPos.remove(key);
-        if (byPos.isEmpty()) shopWorldIndex.remove(worldId);
+        if (shop.getWorld()!=null && shop.getLocation()!=null) {
+            UUID worldId = shop.getWorld().getUID();
+            Map<Long, UUID> byPos = shopLocationMap.get(worldId);
+            if (byPos != null) {
+                long key = packBlockPos(shop.getLocation().getBlockX(), shop.getLocation().getBlockY(), shop.getLocation().getBlockZ());
+                byPos.remove(key);
+                if (byPos.isEmpty()) shopLocationMap.remove(worldId);
+            }
+        }
+
+        if (shop.getItemStack()!=null) {
+            if (shop.getSellPrice()==null || shop.getSellPrice().equals(null)) return;
+
+            Material material = shop.getItemStack().getType();
+            if (material==null) return;
+
+            if (!shopPriceMap.containsKey(material) || shopPriceMap.get(material)==null) {
+                return;
+            }
+
+            PriceQueue queue = shopPriceMap.get(material);
+            if (queue.contains(shop.getUuid())) {
+                queue.delete(shop.getUuid());
+                shopPriceMap.put(material, queue);
+            }
+        }
     }
 
     private Shop getIndexedShop(World world, int bx, int by, int bz) {
@@ -283,7 +335,7 @@ public class ShopHandler {
 
     private UUID getIndexedShopId(World world, int bx, int by, int bz) {
         if (world == null) return null;
-        Map<Long, UUID> byPos = shopWorldIndex.get(world.getUID());
+        Map<Long, UUID> byPos = shopLocationMap.get(world.getUID());
         if (byPos == null) return null;
         return byPos.get(packBlockPos(bx, by, bz));
     }
