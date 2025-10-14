@@ -25,7 +25,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import net.md_5.bungee.api.chat.TextComponent;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
-import dev.tbm00.papermc.playershops64.data.Shop;
+import dev.tbm00.papermc.playershops64.data.structure.Shop;
 
 public class StaticUtils {
     private static PlayerShops64 javaPlugin;
