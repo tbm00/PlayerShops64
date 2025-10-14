@@ -1,8 +1,6 @@
 package dev.tbm00.papermc.playershops64.utils;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -276,61 +274,6 @@ public class GuiUtils {
         item.setType(Material.STONE_BUTTON);
         gui.setItem(6, 9, ItemBuilder.from(item).asGuiItem(event -> handleClickMainMenu(event)));
         lore.clear();
-    }
-
-    public static List<String> getSaleItemLore(Shop shop) {
-        if (shop==null) return null;
-
-        Double buyPrice = (shop.getBuyPrice()==null) ? null : shop.getBuyPrice().doubleValue();
-        Double sellPrice = (shop.getSellPrice()==null) ? null : shop.getSellPrice().doubleValue();
-        Double balance = (shop.getMoneyStock()==null) ? null : shop.getMoneyStock().doubleValue();
-        int stock = shop.getItemStock();
-
-        ItemStack item = null;
-        if (shop.getItemStack()==null) {
-            item = new ItemStack(Material.BARRIER);
-        } else {
-            item = shop.getItemStack().clone();
-        }
-        
-        ItemMeta meta = item.getItemMeta();
-        List<String> lore = new ArrayList<>();
-        String priceLine = "";
-        UUID ownerUuid = shop.getOwnerUuid();
-
-        meta.setLore(null);
-        if (meta.hasLore() && !meta.getLore().isEmpty()) {
-            for (String line : meta.getLore()) {
-                lore.add(line);
-            }
-        }
-
-        lore.add("&8-----------------------");
-        lore.add("&c" + shop.getDescription());
-
-        if (buyPrice==null) priceLine = "&7B: &4(disabled) ";
-        else priceLine = "&7B: &a$" + StaticUtils.formatDoubleUS(buyPrice) + " ";
-
-        if (sellPrice==null) priceLine += "&7S: &4(disabled) ";
-        else priceLine += "&7S: &c$" + StaticUtils.formatDoubleUS(sellPrice);
-        lore.add(priceLine);
-
-        if (stock<0) lore.add("&7Stock: &e∞");
-        else lore.add("&7Stock: &e" + stock);
-
-        if (shop.hasInfiniteMoney()) lore.add("&7Balance: &e$&e∞");
-        else if (balance==null) lore.add("&7Balance: &e(null)");
-        else lore.add("&7Balance: &e$" + StaticUtils.formatDoubleUS(balance));
-
-        if (ownerUuid!=null && (!shop.hasInfiniteMoney() && !shop.hasInfiniteStock()))
-            lore.add("&7Owner: &f" + shop.getOwnerName());
-
-        lore.add("&7"+shop.getWorld().getName()+": &f"
-                +(int)shop.getLocation().getX()+"&7, &f"
-                +(int)shop.getLocation().getY()+"&7, &f"
-                +(int)shop.getLocation().getZ());
-
-        return lore;
     }
 
     /*public static boolean openGuiTransaction(Player player, UUID shopUuid, Integer quantity, boolean closeGuiAfter) {

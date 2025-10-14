@@ -30,23 +30,23 @@ public class ShopAdjustTextGui {
     /**
      * Creates an anvil gui for player to enter text and search shops with.
      */
-    public ShopAdjustTextGui(PlayerShops64 javaPlugin, Player player, UUID shopUuid, AdjustAttribute attribute, boolean closeGuiAfter) {
+    public ShopAdjustTextGui(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute, boolean closeGuiAfter) {
         if (!attribute.equals(AdjustAttribute.DESCRIPTION)) {
             if (javaPlugin.getConfigHandler().isFloodgateEnabled() && FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
-                adjustBedrockInt(javaPlugin, player, shopUuid, attribute, closeGuiAfter);
+                adjustBedrockInt(javaPlugin, player, isAdmin, shopUuid, attribute, closeGuiAfter);
             } else {
-                adjustJavaInt(javaPlugin, player, shopUuid, attribute, closeGuiAfter);
+                adjustJavaInt(javaPlugin, player, isAdmin, shopUuid, attribute, closeGuiAfter);
             }
         } else {
             if (javaPlugin.getConfigHandler().isFloodgateEnabled() && FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
-                adjustBedrockString(javaPlugin, player, shopUuid, attribute);
+                adjustBedrockString(javaPlugin, player, isAdmin, shopUuid, attribute);
             } else {
-                adjustJavaString(javaPlugin, player, shopUuid, attribute);
+                adjustJavaString(javaPlugin, player, isAdmin, shopUuid, attribute);
             }
         }
     }
 
-    private void adjustBedrockInt(PlayerShops64 javaPlugin, Player player, UUID shopUuid, AdjustAttribute attribute, boolean closeGuiAfter) {
+    private void adjustBedrockInt(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute, boolean closeGuiAfter) {
         try {
             CustomForm form = CustomForm.builder()
                 .title(title)
@@ -71,7 +71,7 @@ public class ShopAdjustTextGui {
                         query = query.substring(1);
                     }
 
-                    handleIntAdjust(javaPlugin, player, shopUuid, closeGuiAfter, attribute, query);
+                    handleIntAdjust(javaPlugin, player, isAdmin, shopUuid, closeGuiAfter, attribute, query);
 
                 } finally {
                     unlock(javaPlugin, shopUuid, player, attribute);
@@ -93,7 +93,7 @@ public class ShopAdjustTextGui {
         }
     }
 
-    private void adjustBedrockString(PlayerShops64 javaPlugin, Player player, UUID shopUuid, AdjustAttribute attribute) {
+    private void adjustBedrockString(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute) {
         try {
             CustomForm form = CustomForm.builder()
                 .title(title)
@@ -110,16 +110,16 @@ public class ShopAdjustTextGui {
                     }
 
                     String query = response.next();
-                    if (query == null || query.isBlank()) {
+                    if (query == null) {
                         StaticUtils.sendMessage(player, "&cPlease enter a description!");
                         return;
-                    } while (query.startsWith(" ")) {
-                        query = query.substring(1);
+                    } if (query.isEmpty()) {
+                        query = " ";
                     }
 
                     try {
                         ShopUtils.setDescription(player, shopUuid, query);
-                        new ShopManageGui(javaPlugin, player, false, shopUuid);
+                        new ShopManageGui(javaPlugin, player, isAdmin, shopUuid);
                     } catch (Exception e) {
                         StaticUtils.log(ChatColor.RED, "Caught exception setting description and/or opening new manage inv from bedrock form: " + e.getMessage());
                         StaticUtils.sendMessage(player, "&cError setting a number from your input!");
@@ -144,7 +144,7 @@ public class ShopAdjustTextGui {
         }
     }
 
-    private void adjustJavaString(PlayerShops64 javaPlugin, Player player, UUID shopUuid, AdjustAttribute attribute) {
+    private void adjustJavaString(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute) {
             ItemStack leftItem = new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE);
             ItemMeta leftMeta = leftItem.getItemMeta();
             leftMeta.setDisplayName(" ");
@@ -170,21 +170,19 @@ public class ShopAdjustTextGui {
                     unlock(javaPlugin, shopUuid, player, attribute);
                 })
                 .onClick((slot, stateSnapshot) -> {
-                    if(slot != AnvilGUI.Slot.OUTPUT || stateSnapshot.getText().isBlank()) {
+                    if(slot != AnvilGUI.Slot.OUTPUT) {
                         return Collections.emptyList();
                     }
 
                     String query = stateSnapshot.getText();
-                    while (query.startsWith(" ")) {
-                        query = query.substring(1);
-                    } String finalQuery = query;
+                    String finalQuery = (query.isEmpty()) ? " " : query;
 
                     return Arrays.asList(
                         AnvilGUI.ResponseAction.close(),
                         AnvilGUI.ResponseAction.run(() -> {
                             try {
                                 ShopUtils.setDescription(player, shopUuid, finalQuery);
-                                new ShopManageGui(javaPlugin, player, false, shopUuid);
+                                new ShopManageGui(javaPlugin, player, isAdmin, shopUuid); 
                             } catch (Exception e) {
                                 StaticUtils.log(ChatColor.RED, "Caught exception setting description and/or opening new manage inv from anvil gui: " + e.getMessage());
                                 StaticUtils.sendMessage(player, "&cError setting a description from your input!");
@@ -200,7 +198,7 @@ public class ShopAdjustTextGui {
                 .open(player);
     }
 
-    private void adjustJavaInt(PlayerShops64 javaPlugin, Player player, UUID shopUuid, AdjustAttribute attribute, boolean closeGuiAfter) {
+    private void adjustJavaInt(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute, boolean closeGuiAfter) {
             ItemStack leftItem = new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE);
             ItemMeta leftMeta = leftItem.getItemMeta();
             leftMeta.setDisplayName(" ");
@@ -238,7 +236,7 @@ public class ShopAdjustTextGui {
                     return Arrays.asList(
                         AnvilGUI.ResponseAction.close(),
                         AnvilGUI.ResponseAction.run(() -> {
-                            handleIntAdjust(javaPlugin, player, shopUuid, closeGuiAfter, attribute, finalQuery);
+                            handleIntAdjust(javaPlugin, player, isAdmin, shopUuid, closeGuiAfter, attribute, finalQuery);
                         })
                     );
                 })
@@ -266,12 +264,12 @@ public class ShopAdjustTextGui {
         StaticUtils.log(ChatColor.GREEN, player.getName() + " closed shop "+shopHint+"'s adjust text gui: "+AdjustAttribute.toString(attribute));
     }
 
-    private void handleIntAdjust(PlayerShops64 javaPlugin, Player player, UUID shopUuid, boolean closeGuiAfter, AdjustAttribute attribute, String query) {
+    private void handleIntAdjust(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, boolean closeGuiAfter, AdjustAttribute attribute, String query) {
         try {
             switch (attribute) {
                 case TRANSACTION: {
                     Double amount = Double.parseDouble(query);
-                    new ShopTransactionGui(javaPlugin, player, shopUuid, amount.intValue(), closeGuiAfter);
+                    new ShopTransactionGui(javaPlugin, player, isAdmin, shopUuid, amount.intValue(), closeGuiAfter);
                     break;
                 }
                 case BUY_PRICE: {
@@ -289,7 +287,7 @@ public class ShopAdjustTextGui {
                 case DISPLAY_HEIGHT: 
                 default: {
                     Double amount = Double.parseDouble(query);
-                    new ShopAdjustInvGui(javaPlugin, player, shopUuid, amount.intValue(), attribute, closeGuiAfter);
+                    new ShopAdjustInvGui(javaPlugin, player, isAdmin, shopUuid, amount.intValue(), attribute, closeGuiAfter);
                     break;
                 }
             }

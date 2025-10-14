@@ -22,6 +22,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
+import dev.tbm00.papermc.playershops64.data.enums.AdjustType;
 import dev.tbm00.papermc.playershops64.gui.ShopManageGui;
 import dev.tbm00.papermc.playershops64.gui.ShopTransactionGui;
 import dev.tbm00.papermc.playershops64.utils.ShopUtils;
@@ -92,12 +93,22 @@ public class ShopBaseBlock implements Listener {
 
         if (isOwner) {
             if (isSneaking) {
-                if (action==Action.LEFT_CLICK_BLOCK) { // Delete shop
-                    ShopUtils.deleteShop(player, shop.getUuid(), block);
-                    return;
-                } else if (action==Action.RIGHT_CLICK_BLOCK && shop.getItemStack()==null) { // Set shop item
-                    ShopUtils.setShopItem(player, shop.getUuid());
-                    return;
+                if (action==Action.LEFT_CLICK_BLOCK) {
+                    /*if (shop.getItemStack()==null || shop.getItemStock()<1) {
+                        ShopUtils.deleteShop(player, shop.getUuid(), block);
+                        return;
+                    } else {*/
+                        ShopUtils.adjustStock(player, shop.getUuid(), AdjustType.ADD, 1);
+                        return;
+                    //}
+                } else if (action==Action.RIGHT_CLICK_BLOCK) {
+                    if (shop.getItemStack()==null) {
+                        ShopUtils.setShopItem(player, shop.getUuid());
+                        return;
+                    } else {
+                        ShopUtils.adjustStock(player, shop.getUuid(), AdjustType.REMOVE, 1);
+                        return;
+                    }
                 } else return;
             } else {
                 if (action==Action.LEFT_CLICK_BLOCK || action==Action.RIGHT_CLICK_BLOCK) {
@@ -106,7 +117,15 @@ public class ShopBaseBlock implements Listener {
                 } else return;
             }
         } else {
-            new ShopTransactionGui(javaPlugin, player, shop.getUuid(), 1, true);
+            if (shop.getItemStack()==null) {
+                StaticUtils.sendMessage(player, "&cThis shop does not have a sale item set up!");
+                return;
+            }
+            if (shop.getBuyPrice()==null && shop.getSellPrice()==null) {
+                StaticUtils.sendMessage(player, "&cThis shop has buying and selling both disabled!");
+                return;
+            }
+            new ShopTransactionGui(javaPlugin, player, false, shop.getUuid(), 1, true);
             return;
         }
     }

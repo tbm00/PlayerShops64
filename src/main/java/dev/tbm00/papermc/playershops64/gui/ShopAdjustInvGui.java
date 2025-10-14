@@ -25,6 +25,7 @@ public class ShopAdjustInvGui {
     private final PlayerShops64 javaPlugin;
     private final Gui gui;
     private final Player viewer;
+    private final boolean isAdmin;
     private final UUID shopUuid;
     private final Shop shop;
     private final int quantity;
@@ -32,9 +33,10 @@ public class ShopAdjustInvGui {
     private final boolean closeGuiAfter;
     private String label = "Adjust Shop";
     
-    public ShopAdjustInvGui(PlayerShops64 javaPlugin, Player viewer, UUID shopUuid, int quantity, AdjustAttribute attribute, boolean closeGuiAfter) {
+    public ShopAdjustInvGui(PlayerShops64 javaPlugin, Player viewer, boolean isAdmin, UUID shopUuid, int quantity, AdjustAttribute attribute, boolean closeGuiAfter) {
         this.javaPlugin = javaPlugin;
         this.viewer = viewer;
+        this.isAdmin = isAdmin;
         this.shopUuid = shopUuid;
         this.shop = javaPlugin.getShopHandler().getShop(shopUuid);
         this.quantity = attribute.equals(AdjustAttribute.DISPLAY_HEIGHT) ? quantity : Math.max(quantity, 0);
@@ -48,6 +50,19 @@ public class ShopAdjustInvGui {
         StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+shopHint+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
 
         label = "Adjust "+AdjustAttribute.toString(attribute);
+        switch (attribute) {
+            case BALANCE:
+                label += ": $" + StaticUtils.formatIntUS(quantity);
+                break;
+            case STOCK:
+                label += ": " + StaticUtils.formatIntUS(quantity);
+                break;
+            case DISPLAY_HEIGHT:
+                label += ": " + quantity;
+                break;
+            default:
+                break;
+        }
         gui.updateTitle(label);
         setup();
         gui.disableAllInteractions();
@@ -71,29 +86,44 @@ public class ShopAdjustInvGui {
             lore.clear();
             lore.add("&8-----------------------");
             lore.add("&6Click to stop the GUI from closing");
-            lore.add("&6after each sale");
+            lore.add("&6after each adjustment");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dDisable Close After Sale"));
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dDisable Close After Adjust"));
             item.setItemMeta(meta);
             item.setType(Material.LIGHT_GRAY_BANNER);
             gui.setItem(2, 8, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             gui.setCloseGuiAction(null);
-                                                                            new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, quantity, attribute, false);
+                                                                            new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, false);
                                                                         }));
         } else {
             lore.clear();
             lore.add("&8-----------------------");
             lore.add("&6Click to tell the GUI to close");
-            lore.add("&6after each sale");
+            lore.add("&6after each adjustment");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dEnable Close After Sale"));
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dEnable Close After Adjust"));
             item.setItemMeta(meta);
             item.setType(Material.GRAY_BANNER);
             gui.setItem(2, 8, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             gui.setCloseGuiAction(null);
-                                                                            new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, quantity, attribute, true);
+                                                                            new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, true);
+                                                                        }));
+        }
+
+        { // Back Button
+            lore.clear();
+            lore.add("&8-----------------------");
+            lore.add("&6Click to go back to the manage GUI");
+            meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dExit to Manage GUI"));
+            item.setItemMeta(meta);
+            item.setType(Material.STONE_BUTTON);
+            gui.setItem(2, 9, ItemBuilder.from(item).asGuiItem(event -> {
+                                                                            event.setCancelled(true);
+                                                                            gui.setCloseGuiAction(null);
+                                                                            new ShopManageGui(javaPlugin, viewer, false, shopUuid);
                                                                         }));
         }
 
@@ -136,10 +166,10 @@ public class ShopAdjustInvGui {
             ItemMeta shopMeta = shopItem.getItemMeta();
             List<String> shopLore = shopMeta.getLore();
 
-            shopLore = GuiUtils.getSaleItemLore(shop);
+            shopLore = ShopUtils.formatSaleItemLoreText(shop, true);
 
             shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            shopMeta.setDisplayName(StaticUtils.getItemName(shopItem) + " &7x " + shop.getStackSize());
+            shopMeta.setDisplayName(StaticUtils.getFormattedSaleItemName(shop));
             shopItem.setItemMeta(shopMeta);
             shopItem.setAmount(shop.getStackSize());
             gui.setItem(2, 2, ItemBuilder.from(shopItem).asGuiItem(event -> {
@@ -161,7 +191,7 @@ public class ShopAdjustInvGui {
                                                                                 ShopUtils.adjustStock(viewer, shopUuid, AdjustType.REMOVE, quantity);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
-                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
                                                                                 } else {
                                                                                     gui.close(viewer);
                                                                                 }
@@ -179,7 +209,7 @@ public class ShopAdjustInvGui {
                                                                                 ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.REMOVE, quantity);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
-                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
                                                                                 } else {
                                                                                     gui.close(viewer);
                                                                                 }
@@ -201,7 +231,7 @@ public class ShopAdjustInvGui {
                                                                                 ShopUtils.adjustStock(viewer, shopUuid, AdjustType.SET, quantity);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
-                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
                                                                                 } else {
                                                                                     gui.close(viewer);
                                                                                 }
@@ -219,7 +249,7 @@ public class ShopAdjustInvGui {
                                                                                 ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.SET, quantity);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
-                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
                                                                                 } else {
                                                                                     gui.close(viewer);
                                                                                 }
@@ -237,7 +267,7 @@ public class ShopAdjustInvGui {
                                                                                 ShopUtils.setDisplayHeight(viewer, shopUuid, quantity);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
-                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
                                                                                 } else {
                                                                                     gui.close(viewer);
                                                                                 }
@@ -259,7 +289,7 @@ public class ShopAdjustInvGui {
                                                                                 ShopUtils.adjustStock(viewer, shopUuid, AdjustType.ADD, quantity);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
-                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
                                                                                 } else {
                                                                                     gui.close(viewer);
                                                                                 }
@@ -277,7 +307,7 @@ public class ShopAdjustInvGui {
                                                                                 ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.ADD, quantity);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
-                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
                                                                                 } else {
                                                                                     gui.close(viewer);
                                                                                 }
@@ -296,38 +326,36 @@ public class ShopAdjustInvGui {
             gui.setItem(6, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             gui.setCloseGuiAction(null);
-                                                                            new ShopAdjustTextGui(javaPlugin, viewer, shopUuid, attribute, closeGuiAfter);
+                                                                            new ShopAdjustTextGui(javaPlugin, viewer, isAdmin, shopUuid, attribute, closeGuiAfter);
                                                                         }));
         }
 
 
         { // Amount Buttons
             if (attribute.equals(AdjustAttribute.STOCK)) {
-                if (quantity>10) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -10, 5, 1);
-                if (quantity>5) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -5, 5, 2);
-                if (quantity>1) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 5, 3);
-                
-                if (quantity>64) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -64, 6, 1);
-                if (quantity>32) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -32, 6, 2);
+                addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -10, 5, 1);
+                addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -5, 5, 2);
+                addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 5, 3);
+                addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -64, 6, 1);
+                addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -32, 6, 2);
 
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 1, 5, 7);
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 5, 5, 8);
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 10, 5, 9);
-
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 32, 6, 8);
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 64, 6, 9);
             } else if (attribute.equals(AdjustAttribute.DISPLAY_HEIGHT)) {
                 if (quantity>-5) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 5, 3);
                 if (quantity<5) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 1, 5, 7);
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
-                if (quantity>1) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 4, 3, 1);
-                if (quantity>10) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -10, 4, 2, 2);
-                if (quantity>100) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -100, 4, 1, 3);
-                if (quantity>1000) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1000, 5, 3, 4);
-                if (quantity>10000) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -10000, 5, 2, 6);
-                if (quantity>100000) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -100000, 5, 1, 7);
-                if (quantity>1000000) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1000000, 6, 2, 8);
-                if (quantity>10000000) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -10000000, 6, 1, 8);
+                addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 4, 3, 1);
+                addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -10, 4, 2, 2);
+                addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -100, 4, 1, 3);
+                addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1000, 5, 3, 4);
+                addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -10000, 5, 2, 5);
+                addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -100000, 5, 1, 6);
+                addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1000000, 6, 2, 7);
+                addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -10000000, 6, 1, 8);
 
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 1, 4, 7, 1);
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 10, 4, 8, 2);
@@ -353,7 +381,7 @@ public class ShopAdjustInvGui {
         gui.setItem(row, col, ItemBuilder.from(item).asGuiItem(event -> {
                                                                     event.setCancelled(true);
                                                                     gui.setCloseGuiAction(null);
-                                                                    new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, quantity+amount, attribute, closeGuiAfter);
+                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity+amount, attribute, closeGuiAfter);
                                                                 }));
     }
 
@@ -368,7 +396,7 @@ public class ShopAdjustInvGui {
         gui.setItem(row, col, ItemBuilder.from(item).asGuiItem(event -> {
                                                                     event.setCancelled(true);
                                                                     gui.setCloseGuiAction(null);
-                                                                    new ShopAdjustInvGui(javaPlugin, viewer, shopUuid, quantity+amount, attribute, closeGuiAfter);
+                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity+amount, attribute, closeGuiAfter);
                                                                 }));
     }
 }
