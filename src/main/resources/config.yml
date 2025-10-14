@@ -26,12 +26,18 @@ mysql:
 lang:
   prefix: "&8[&fShop&8] &7"
 
+shop:
+  maxStock: 10000
+  maxBalance: 100000000
+  maxBuyPrice: 10000000
+  maxSellPrice: 10000000
+
 display:
-  tick-cycle: 5 # ticks
-  view-distance: 16 # blocks
-  focus-distance: 5 # blocks
-  display-height: 0.2
-  holo-color: "60,0,0,0" # ARGB(%,R,G,B)
+  tickCycle: 5 # ticks
+  viewDistance: 16 # blocks
+  focusDistance: 5 # blocks
+  displayHeight: 0.2
+  holoColor: "60,0,0,0" # ARGB(%,R,G,B)
 
 gui:
   categories:

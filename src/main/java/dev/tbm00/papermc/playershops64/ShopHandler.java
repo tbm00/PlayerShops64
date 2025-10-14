@@ -17,8 +17,8 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import dev.tbm00.papermc.playershops64.data.MySQLConnection;
-import dev.tbm00.papermc.playershops64.data.Shop;
 import dev.tbm00.papermc.playershops64.data.ShopDAO;
+import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.display.DisplayManager;
 import dev.tbm00.papermc.playershops64.display.ShopDisplay;
 import dev.tbm00.papermc.playershops64.display.VisualTask;
@@ -30,7 +30,7 @@ public class ShopHandler {
     private final ShopDAO dao;
     private final DisplayManager displayManager;
     private final Map<UUID, Shop> shops = new LinkedHashMap<>();
-    private final Map<UUID, Map<Long, UUID>> shopIndex = new HashMap<>(); 
+    private final Map<UUID, Map<Long, UUID>> shopWorldIndex = new HashMap<>(); 
                // Map<WorldUID, Map<PackedBlockPos, ShopUUID>>
 
     private VisualTask visualTask;
@@ -51,7 +51,7 @@ public class ShopHandler {
         StaticUtils.log(ChatColor.YELLOW, "ShopHandler loading shops from DB...");
         int loaded = 0, skippedNullShop = 0, skippedNullWorld = 0, skippedNullLoc = 0;
 
-        shopIndex.clear();
+        shopWorldIndex.clear();
         for (Shop shop : dao.getAllShopsFromSql()) {
             if (shop == null) {
                 skippedNullShop++;
@@ -245,7 +245,7 @@ public class ShopHandler {
         }
         Shop shop = getIndexedShop(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
         if (shop == null) {
-            StaticUtils.log(ChatColor.RED, "location not found in shopIndex");
+            StaticUtils.log(ChatColor.RED, "location not found in shopWorldIndex");
         }
         return shop;
     }
@@ -253,7 +253,7 @@ public class ShopHandler {
     private void indexShop(Shop shop) {
         if (shop == null || shop.getWorld() == null || shop.getLocation() == null) return;
         UUID worldId = shop.getWorld().getUID();
-        Map<Long, UUID> byPos = shopIndex.computeIfAbsent(worldId, k -> new HashMap<>());
+        Map<Long, UUID> byPos = shopWorldIndex.computeIfAbsent(worldId, k -> new HashMap<>());
         long key = packBlockPos(shop.getLocation().getBlockX(), shop.getLocation().getBlockY(), shop.getLocation().getBlockZ());
 
         UUID old = byPos.put(key, shop.getUuid());
@@ -267,12 +267,12 @@ public class ShopHandler {
     private void deindexShop(Shop shop) {
         if (shop == null || shop.getWorld() == null || shop.getLocation() == null) return;
         UUID worldId = shop.getWorld().getUID();
-        Map<Long, UUID> byPos = shopIndex.get(worldId);
+        Map<Long, UUID> byPos = shopWorldIndex.get(worldId);
         if (byPos == null) return;
 
         long key = packBlockPos(shop.getLocation().getBlockX(), shop.getLocation().getBlockY(), shop.getLocation().getBlockZ());
         byPos.remove(key);
-        if (byPos.isEmpty()) shopIndex.remove(worldId);
+        if (byPos.isEmpty()) shopWorldIndex.remove(worldId);
     }
 
     private Shop getIndexedShop(World world, int bx, int by, int bz) {
@@ -283,7 +283,7 @@ public class ShopHandler {
 
     private UUID getIndexedShopId(World world, int bx, int by, int bz) {
         if (world == null) return null;
-        Map<Long, UUID> byPos = shopIndex.get(world.getUID());
+        Map<Long, UUID> byPos = shopWorldIndex.get(world.getUID());
         if (byPos == null) return null;
         return byPos.get(packBlockPos(bx, by, bz));
     }

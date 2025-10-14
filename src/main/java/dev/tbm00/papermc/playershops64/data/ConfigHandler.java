@@ -27,6 +27,11 @@ public class ConfigHandler {
     private double displayDisplayHeight = 0.0;
     private String displayHoloColor = "60,0,0,0";
 
+    private int maxStock = 10000;
+    private int maxBalance = 100000000;
+    private int maxBuyPrice = 10000000;
+    private int maxSellPrice = 10000000;
+
     private List<GuiSearchCategory> searchCategories = new ArrayList<>();
 
     /**
@@ -41,8 +46,10 @@ public class ConfigHandler {
         try {
             if (!loadHookSection()) passed = false;
             if (!loadLanguageSection()) passed = false;
+            if (!loadShopSection()) passed = false;
             if (!loadDisplaySection()) passed = false;
             if (!loadGuiSection()) passed = false;
+            
             if (passed)
                 StaticUtils.log(ChatColor.GREEN, "ConfigHandler initialized.");
             else StaticUtils.log(ChatColor.DARK_RED, "Config not loaded properly!");
@@ -79,11 +86,26 @@ public class ConfigHandler {
     private boolean loadDisplaySection() {
         ConfigurationSection display = javaPlugin.getConfig().getConfigurationSection("display");
         if (display != null) {
-            displayTickCycle = display.getInt("tick-cycle", 5);
-            displayViewDistance = display.getInt("view-distance", 16);
-            displayFocusDistance = display.getInt("focus-distance", 5);
-            displayDisplayHeight = display.getDouble("display-height", 0.0);
-            displayHoloColor = display.getString("holo-color", "60,0,0,0");
+            displayTickCycle = display.getInt("tickCycle", 5);
+            displayViewDistance = display.getInt("viewDistance", 16);
+            displayFocusDistance = display.getInt("focusDistance", 5);
+            displayDisplayHeight = display.getDouble("displayHeight", 0.0);
+            displayHoloColor = display.getString("holoColor", "60,0,0,0");
+        }
+
+        return true;
+    }
+
+    /**
+     * Loads the "shop" section of the configuration.
+     */
+    private boolean loadShopSection() {
+        ConfigurationSection shop = javaPlugin.getConfig().getConfigurationSection("shop");
+        if (shop != null) {
+            maxStock = shop.getInt("maxStock", 10000);
+            maxStock = shop.getInt("maxBalance", 100000000);
+            maxStock = shop.getInt("maxBuyPrice", 10000000);
+            maxStock = shop.getInt("maxSellPrice", 10000000);
         }
 
         return true;
@@ -179,6 +201,23 @@ public class ConfigHandler {
     // Language
     public String getChatPrefix() {
         return chatPrefix;
+    }
+
+    // Shop
+    public int getMaxStock() {
+        return maxStock;
+    }
+
+    public int getMaxBalance() {
+        return maxBalance;
+    }
+
+    public int getMaxBuyPrice() {
+        return maxBuyPrice;
+    }
+
+    public int getMaxSellPrice() {
+        return maxSellPrice;
     }
 
     // Display

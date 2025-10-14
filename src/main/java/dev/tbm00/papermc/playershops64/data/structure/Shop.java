@@ -1,4 +1,4 @@
-package dev.tbm00.papermc.playershops64.data;
+package dev.tbm00.papermc.playershops64.data.structure;
 
 import java.math.BigDecimal;
 import java.util.Date;

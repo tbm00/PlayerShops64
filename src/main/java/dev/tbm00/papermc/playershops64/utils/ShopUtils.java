@@ -17,8 +17,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
-import dev.tbm00.papermc.playershops64.data.Shop;
+import dev.tbm00.papermc.playershops64.data.ConfigHandler;
 import dev.tbm00.papermc.playershops64.data.enums.AdjustType;
+import dev.tbm00.papermc.playershops64.data.structure.Shop;
 
 public class ShopUtils {
     private static PlayerShops64 javaPlugin;
@@ -118,12 +119,12 @@ public class ShopUtils {
 
             ItemStack hand = player.getInventory().getItemInMainHand();
             if (hand == null || hand.getType().isAir()) {
-                StaticUtils.sendMessage(player, "&cFailed to set shop item, you weren't holding an item!");
+                StaticUtils.sendMessage(player, "&cFailed to set sale item, you weren't holding an item!");
                 return;
             }
 
             if (shop.getItemStock()>0) {
-                StaticUtils.sendMessage(player, "&cShop must have an empty item stock before changing shop items!");
+                StaticUtils.sendMessage(player, "&cShop must have an empty item stock before changing sale items!");
                 return;
             }
 
@@ -140,7 +141,7 @@ public class ShopUtils {
                 hand.setAmount(handCount-1);
             } else {player.getInventory().setItemInMainHand(null);}
             javaPlugin.getShopHandler().upsertShopObject(shop);
-            StaticUtils.sendMessage(player, "&aShop item set to &e" + StaticUtils.getItemName(one));
+            StaticUtils.sendMessage(player, "&aShop's sale item set to &e" + StaticUtils.getItemName(one));
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -194,13 +195,18 @@ public class ShopUtils {
             return;
         }
 
+        if (newPrice!=null && newPrice>javaPlugin.getConfigHandler().getMaxBuyPrice()) {
+            StaticUtils.sendMessage(player, "&cCannot set buy price greater than $" + StaticUtils.formatDoubleUS(javaPlugin.getConfigHandler().getMaxBuyPrice()));
+            return;
+        }
+
         try {
             Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
             if (shop == null) {
                 StaticUtils.sendMessage(player, "&cShop not found..!");
                 return;
             }
-
+            
             // edit shop
             if (newPrice==null || newPrice.equals(null)) shop.setBuyPrice(null);
             else shop.setBuyPrice(BigDecimal.valueOf(newPrice));
@@ -233,6 +239,11 @@ public class ShopUtils {
             Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
             if (shop == null) {
                 StaticUtils.sendMessage(player, "&cShop not found..!");
+                return;
+            }
+
+            if (newPrice!=null && newPrice>javaPlugin.getConfigHandler().getMaxSellPrice()) {
+                StaticUtils.sendMessage(player, "&cCannot set sell price greater than $" + StaticUtils.formatDoubleUS(javaPlugin.getConfigHandler().getMaxSellPrice()));
                 return;
             }
 
@@ -364,6 +375,9 @@ public class ShopUtils {
                     }
 
                     if (playerBalance < requestedAmount) workingAmount = playerBalance;
+                    if (workingAmount+shopBalance>javaPlugin.getConfigHandler().getMaxBalance()) {
+                        workingAmount = javaPlugin.getConfigHandler().getMaxBalance() - shopBalance;
+                    }
                     
                     boolean removedMoneyFromPlayer = javaPlugin.getVaultHook().removeMoney(player, workingAmount);
                     if (!removedMoneyFromPlayer) {
@@ -387,6 +401,9 @@ public class ShopUtils {
                     }
 
                     if (shopBalance < requestedAmount) workingAmount = shopBalance;
+                    if (shopBalance-workingAmount>javaPlugin.getConfigHandler().getMaxBalance()) {
+                        workingAmount = shopBalance - javaPlugin.getConfigHandler().getMaxBalance();
+                    }
 
                     boolean addMoneyToPlayer = javaPlugin.getVaultHook().giveMoney(player, workingAmount);
                     if (!addMoneyToPlayer) {
@@ -407,6 +424,9 @@ public class ShopUtils {
                         }
 
                         workingAmount = shopBalance-requestedAmount;
+                        if (requestedAmount>javaPlugin.getConfigHandler().getMaxBalance()) {
+                            workingAmount = shopBalance - javaPlugin.getConfigHandler().getMaxBalance();
+                        }
 
                         boolean addMoneyToPlayer = javaPlugin.getVaultHook().giveMoney(player, workingAmount);
                         if (!addMoneyToPlayer) {
@@ -423,7 +443,10 @@ public class ShopUtils {
                             return;
                         }
 
-                        workingAmount = requestedAmount-shopBalance;
+                        workingAmount = playerBalance-requestedAmount;
+                        if (requestedAmount+shopBalance>javaPlugin.getConfigHandler().getMaxBalance()) {
+                            workingAmount = javaPlugin.getConfigHandler().getMaxBalance() - shopBalance;
+                        }
 
                         boolean removedMoneyFromPlayer = javaPlugin.getVaultHook().removeMoney(player, workingAmount);
                         if (!removedMoneyFromPlayer) {
@@ -449,10 +472,10 @@ public class ShopUtils {
         }
     }
 
-    public static void adjustStock(Player player, UUID shopUuid, AdjustType adjustType, int requestedQuantity) {
+    public static void adjustStock(Player player, UUID shopUuid, AdjustType adjustType, int requestedAmount) {
             if (!Bukkit.isPrimaryThread()) {
                 StaticUtils.log(ChatColor.RED, player.getName() + " tried to adjust shop " + shopUuid + "'s stock off the main thread -- trying again during next tick on main thread!");
-                javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> adjustStock(player, shopUuid, adjustType, requestedQuantity));
+                javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> adjustStock(player, shopUuid, adjustType, requestedAmount));
                 return;
             }
 
@@ -474,17 +497,17 @@ public class ShopUtils {
                     return;
                 }
 
-                if (requestedQuantity < 0) {
+                if (requestedAmount < 0) {
                     StaticUtils.sendMessage(player, "&cInvalid quantity.");
                     return;
-                } int workingQuantity = requestedQuantity;
+                } int workingAmount = requestedAmount;
                 int playerStock = StaticUtils.countMatchingItems(player, saleItem);
                 int shopStock = shop.getItemStock();
 
                 // edit shop
                 switch (adjustType) {
                     case ADD: {
-                        if (requestedQuantity == 0) {
+                        if (requestedAmount == 0) {
                             StaticUtils.sendMessage(player, "&cCannot depsoit 0!");
                             return;
                         }
@@ -494,20 +517,23 @@ public class ShopUtils {
                             return;
                         }
 
-                        if (playerStock < requestedQuantity) workingQuantity = playerStock;
+                        if (playerStock < requestedAmount) workingAmount = playerStock;
+                        if (workingAmount+shopStock>javaPlugin.getConfigHandler().getMaxStock()) {
+                            workingAmount = javaPlugin.getConfigHandler().getMaxStock() - shopStock;
+                        }
                         
-                        boolean removedItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, workingQuantity);
+                        boolean removedItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, workingAmount);
                         if (!removedItemsFromPlayer) {
-                            StaticUtils.sendMessage(player, "&cError removing " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
+                            StaticUtils.sendMessage(player, "&cError removing " +workingAmount+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
                             return;
                         }
 
-                        shop.setItemStock(shopStock+workingQuantity);
-                        StaticUtils.sendMessage(player, "&aAdded "+workingQuantity+" to the shop's stock! Updated stock: " +(shopStock+workingQuantity));
+                        shop.setItemStock(shopStock+workingAmount);
+                        StaticUtils.sendMessage(player, "&aAdded "+workingAmount+" to the shop's stock! Updated stock: " +(shopStock+workingAmount));
                         break;
                     }
                     case REMOVE: {
-                        if (requestedQuantity == 0) {
+                        if (requestedAmount == 0) {
                             StaticUtils.sendMessage(player, "&cCannot withdraw 0!");
                             return;
                         }
@@ -517,52 +543,68 @@ public class ShopUtils {
                             return;
                         }
 
-                        if (shopStock < requestedQuantity) workingQuantity = shopStock;
+                        if (shopStock < requestedAmount) workingAmount = shopStock;
+                        if (shopStock-workingAmount>javaPlugin.getConfigHandler().getMaxStock()) {
+                            workingAmount = shopStock - javaPlugin.getConfigHandler().getMaxStock();
+                        }
 
-                        boolean addItemsToPlayer = StaticUtils.addToInventoryOrDrop(player, saleItem, workingQuantity);
-                        if (!addItemsToPlayer) {
-                            StaticUtils.sendMessage(player, "&cError adding " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
+                        double newBalnce = workingAmount+playerStock;
+                        if (newBalnce>javaPlugin.getConfigHandler().getMaxBalance()) {
+                            StaticUtils.sendMessage(player, "&cCannot store more than " + StaticUtils.formatIntUS(javaPlugin.getConfigHandler().getMaxStock()));
                             return;
                         }
 
-                        shop.setItemStock(shopStock-workingQuantity);
-                        StaticUtils.sendMessage(player, "&aRemoved "+workingQuantity+" from the shop's stock! Updated stock: " +(shopStock-workingQuantity));
+                        boolean addItemsToPlayer = StaticUtils.addToInventoryOrDrop(player, saleItem, workingAmount);
+                        if (!addItemsToPlayer) {
+                            StaticUtils.sendMessage(player, "&cError adding " +workingAmount+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
+                            return;
+                        }
+
+                        shop.setItemStock(shopStock-workingAmount);
+                        StaticUtils.sendMessage(player, "&aRemoved "+workingAmount+" from the shop's stock! Updated stock: " +(shopStock-workingAmount));
                         break;
                     }
                     case SET: {
-                        if (shopStock == requestedQuantity) return;
-                        if (shopStock > requestedQuantity) {
+                        if (shopStock == requestedAmount) return;
+                        if (shopStock > requestedAmount) {
                             if (shopStock <= 0) {
                                 StaticUtils.sendMessage(player, "&cThe shop doesn't have any stock to withdraw!");
                                 return;
                             }
 
-                            workingQuantity = shopStock-requestedQuantity;
+                            workingAmount = shopStock-requestedAmount;
+                            if (requestedAmount>javaPlugin.getConfigHandler().getMaxStock()) {
+                                workingAmount = shopStock - javaPlugin.getConfigHandler().getMaxStock();
+                            }
 
-                            boolean addItemsToPlayer = StaticUtils.addToInventoryOrDrop(player, saleItem, workingQuantity);
+
+                            boolean addItemsToPlayer = StaticUtils.addToInventoryOrDrop(player, saleItem, workingAmount);
                             if (!addItemsToPlayer) {
-                                StaticUtils.sendMessage(player, "&cError adding " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
+                                StaticUtils.sendMessage(player, "&cError adding " +workingAmount+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
                                 return;
                             }
 
-                            shop.setItemStock(shopStock-workingQuantity);
-                            StaticUtils.sendMessage(player, "&aRemoved "+workingQuantity+" from the shop's stock! Updated stock: " +(shopStock-workingQuantity));
-                        } else if (shopStock < requestedQuantity) {
+                            shop.setItemStock(shopStock-workingAmount);
+                            StaticUtils.sendMessage(player, "&aRemoved "+workingAmount+" from the shop's stock! Updated stock: " +(shopStock-workingAmount));
+                        } else if (shopStock < requestedAmount) {
                             if (playerStock <= 0) {
                                 StaticUtils.sendMessage(player, "&cYou don't have any matching items to deposit!");
                                 return;
                             }
 
-                            workingQuantity = requestedQuantity-shopStock;
+                            workingAmount = requestedAmount-shopStock;
+                            if (requestedAmount+shopStock>javaPlugin.getConfigHandler().getMaxStock()) {
+                                workingAmount = javaPlugin.getConfigHandler().getMaxStock() - shopStock;
+                            }
 
-                            boolean removeItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, workingQuantity);
+                            boolean removeItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, workingAmount);
                             if (!removeItemsFromPlayer) {
-                                StaticUtils.sendMessage(player, "&cError removing " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
+                                StaticUtils.sendMessage(player, "&cError removing " +workingAmount+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
                                 return;
                             }
 
-                            shop.setItemStock(shopStock+workingQuantity);
-                            StaticUtils.sendMessage(player, "&aAdded "+workingQuantity+" to the shop's stock! Updated stock: " +(shopStock+workingQuantity));
+                            shop.setItemStock(shopStock+workingAmount);
+                            StaticUtils.sendMessage(player, "&aAdded "+workingAmount+" to the shop's stock! Updated stock: " +(shopStock+workingAmount));
                         }
                         break;
                     }
@@ -600,7 +642,7 @@ public class ShopUtils {
             if (quantity <= 0) {
                 StaticUtils.sendMessage(player, "&cInvalid quantity.");
                 return;
-            } int workingQuantity = quantity;
+            } int workingAmount = quantity;
 
             ItemStack saleItem = shop.getItemStack();
             if (saleItem == null || saleItem.getType().isAir()) {
@@ -610,13 +652,15 @@ public class ShopUtils {
 
             int playerHas = StaticUtils.countMatchingItems(player, saleItem);
             if (playerHas < quantity) {
-                workingQuantity = playerHas;
+                workingAmount = playerHas;
             } if (playerHas <= 0) {
                 StaticUtils.sendMessage(player, "&cYou don't have any matching items to sell!");
                 return;
+            } if (workingAmount+shop.getItemStock()>javaPlugin.getConfigHandler().getMaxStock()) {
+                workingAmount = javaPlugin.getConfigHandler().getMaxStock()-shop.getItemStock();
             }
 
-            if (shop.getSellPrice()==null || shop.getSellPrice().compareTo(BigDecimal.ZERO)<0) {
+            if (shop.getSellPrice()==null || shop.getSellPrice().compareTo(BigDecimal.ZERO)<0 || shop.getMoneyStock()==null) {
                 StaticUtils.sendMessage(player, "&cThis shop is not buying (sell-to is disabled)!");
                 return;
             }
@@ -627,7 +671,7 @@ public class ShopUtils {
                 return;
             }
 
-            BigDecimal totalPrice = StaticUtils.normalizeBigDecimal( perItem.multiply(BigDecimal.valueOf(workingQuantity)) );
+            BigDecimal totalPrice = StaticUtils.normalizeBigDecimal( perItem.multiply(BigDecimal.valueOf(workingAmount)) );
             if (!shop.hasInfiniteMoney()) {
                 BigDecimal moneyStock = shop.getMoneyStock() == null ? BigDecimal.ZERO : shop.getMoneyStock();
                 if (moneyStock.compareTo(totalPrice) < 0) {
@@ -638,12 +682,12 @@ public class ShopUtils {
                         return;
                     }
 
-                    workingQuantity = Math.min(shopCanAfford, playerHas);
-                    totalPrice = StaticUtils.normalizeBigDecimal( perItem.multiply(BigDecimal.valueOf(workingQuantity)) );
+                    workingAmount = Math.min(shopCanAfford, playerHas);
+                    totalPrice = StaticUtils.normalizeBigDecimal( perItem.multiply(BigDecimal.valueOf(workingAmount)) );
                 }
             }
 
-            if (workingQuantity <= 0) {
+            if (workingAmount <= 0) {
                 StaticUtils.sendMessage(player, "&cNothing to sell..!");
                 return;
             } totalPrice = totalPrice.max(BigDecimal.ZERO);
@@ -654,22 +698,22 @@ public class ShopUtils {
                 return;
             }
 
-            boolean removedItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, workingQuantity);
+            boolean removedItemsFromPlayer = StaticUtils.removeMatchingItems(player, saleItem, workingAmount);
             if (!removedItemsFromPlayer) {
                 if (!javaPlugin.getVaultHook().removeMoney( player, totalPrice.doubleValue()))
                     {StaticUtils.log(ChatColor.RED, "CRITICAL ERROR: removeMoney("+player.getName()+", "+totalPrice.doubleValue()+") failed -- money was duped to player!");}
-                StaticUtils.sendMessage(player, "&cError removing " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
+                StaticUtils.sendMessage(player, "&cError removing " +workingAmount+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
                 return;
             }
 
             // edit shop
-            if (!shop.hasInfiniteStock()) shop.setItemStock(shop.getItemStock() + workingQuantity);
+            if (!shop.hasInfiniteStock()) shop.setItemStock(shop.getItemStock() + workingAmount);
             if (!shop.hasInfiniteMoney()) shop.setMoneyStock((shop.getMoneyStock()==null) ? BigDecimal.ZERO: shop.getMoneyStock().subtract(totalPrice));
             shop.setLastTransactionDate(new Date());
             
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
-            StaticUtils.sendMessage(player, "&fSold " + workingQuantity + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
+            StaticUtils.sendMessage(player, "&fSold " + workingAmount + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -697,7 +741,7 @@ public class ShopUtils {
             if (quantity <= 0) {
                 StaticUtils.sendMessage(player, "&cInvalid quantity.");
                 return;
-            } int workingQuantity = quantity;
+            } int workingAmount = quantity;
 
             ItemStack saleItem = shop.getItemStack();
             if (saleItem == null || saleItem.getType().isAir()) {
@@ -708,14 +752,14 @@ public class ShopUtils {
             int shopHas = shop.getItemStock();
             if (!shop.hasInfiniteStock()) {
                 if (shopHas < quantity) {
-                    workingQuantity = shopHas;
+                    workingAmount = shopHas;
                 } if (shopHas <= 0) {
                     StaticUtils.sendMessage(player, "&cThis shop doesn't have any stock to sell!");
                     return;
                 }
             }
 
-            if (shop.getBuyPrice()==null || shop.getBuyPrice().compareTo(BigDecimal.ZERO)<0) {
+            if (shop.getBuyPrice()==null || shop.getBuyPrice().compareTo(BigDecimal.ZERO)<0 || shop.getMoneyStock()==null) {
                 StaticUtils.sendMessage(player, "&cThis shop is not selling (buy-from is disabled)!");
                 return;
             }
@@ -726,7 +770,7 @@ public class ShopUtils {
                 return;
             }
 
-            BigDecimal totalPrice = StaticUtils.normalizeBigDecimal( perItem.multiply(BigDecimal.valueOf(workingQuantity)) );
+            BigDecimal totalPrice = StaticUtils.normalizeBigDecimal( perItem.multiply(BigDecimal.valueOf(workingAmount)) );
             BigDecimal balance = BigDecimal.valueOf(javaPlugin.getVaultHook().getBalance(player));
             if (balance.compareTo(totalPrice) < 0) {
                 // get max afforded
@@ -736,12 +780,17 @@ public class ShopUtils {
                     return;
                 }
 
-                if (shop.hasInfiniteStock()) workingQuantity = playerCanAfford;
-                else workingQuantity = Math.min(playerCanAfford, shopHas);
-                totalPrice = StaticUtils.normalizeBigDecimal( perItem.multiply(BigDecimal.valueOf(workingQuantity)) );
+                if (shop.hasInfiniteStock()) workingAmount = playerCanAfford;
+                else workingAmount = Math.min(playerCanAfford, shopHas);
+                totalPrice = StaticUtils.normalizeBigDecimal( perItem.multiply(BigDecimal.valueOf(workingAmount)) );
             }
 
-            if (workingQuantity <= 0) {
+            if (totalPrice.doubleValue()+shop.getMoneyStock().doubleValue()>javaPlugin.getConfigHandler().getMaxBalance()) {
+                StaticUtils.sendMessage(player, "&cTransaction canceled as it would cause this shop to exceed the max stored balance!");
+                return;
+            }
+
+            if (workingAmount <= 0) {
                 StaticUtils.sendMessage(player, "&cNothing to buy..!");
                 return;
             } totalPrice = totalPrice.max(BigDecimal.ZERO);
@@ -752,22 +801,22 @@ public class ShopUtils {
                 return;
             }
 
-            boolean addedItemsToPlayer = StaticUtils.addToInventoryOrDrop(player, saleItem, workingQuantity);
+            boolean addedItemsToPlayer = StaticUtils.addToInventoryOrDrop(player, saleItem, workingAmount);
             if (!addedItemsToPlayer) {
                 if (!javaPlugin.getVaultHook().giveMoney(player, totalPrice.doubleValue()))
                     {StaticUtils.log(ChatColor.RED, "CRITICAL ERROR: giveMoney("+player.getName()+", "+totalPrice.doubleValue()+") failed -- money was nuked from player!");}
-                StaticUtils.sendMessage(player, "&cError adding " +workingQuantity+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
+                StaticUtils.sendMessage(player, "&cError adding " +workingAmount+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
                 return;
             }
 
             // edit shop
-            if (!shop.hasInfiniteStock()) shop.setItemStock(shop.getItemStock() - workingQuantity);
+            if (!shop.hasInfiniteStock()) shop.setItemStock(shop.getItemStock() - workingAmount);
             if (!shop.hasInfiniteMoney()) shop.setMoneyStock((shop.getMoneyStock()==null) ? totalPrice : shop.getMoneyStock().add(totalPrice));
             shop.setLastTransactionDate(new Date());
             
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
-            StaticUtils.sendMessage(player, "&fBought " + workingQuantity + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
+            StaticUtils.sendMessage(player, "&fBought " + workingAmount + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
