@@ -19,7 +19,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
-import dev.tbm00.papermc.playershops64.data.ConfigHandler;
 import dev.tbm00.papermc.playershops64.data.enums.AdjustType;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
 

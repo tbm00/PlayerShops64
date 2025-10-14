@@ -3,25 +3,19 @@ package dev.tbm00.papermc.playershops64.gui;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.MaterialData;
 import org.bukkit.scheduler.BukkitScheduler;
-
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
+import dev.triumphteam.gui.guis.Gui;
+
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.structure.PriceNode;
 import dev.tbm00.papermc.playershops64.data.structure.PriceQueue;
-import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
-import dev.triumphteam.gui.guis.Gui;
-import dev.triumphteam.gui.guis.PaginatedGui;
 
 public class SellGui {
     private final PlayerShops64 javaPlugin;
@@ -39,14 +33,14 @@ public class SellGui {
         gui.setCloseGuiAction(event -> {
             BukkitScheduler scheduler = Bukkit.getScheduler();
             scheduler.runTask(javaPlugin, () -> {
-                if (player.isOnline() && !player.isDead()) sellItems(player, null);
+                if (player.isOnline() && !player.isDead()) sellItems(event.getInventory());
             });
         });
         gui.enableAllInteractions();
         gui.open(player);
     }
 
-    private void sellItems(Player player, Inventory inv) {
+    private void sellItems(Inventory inv) {
         int totalEarned = 0, totalItemsSold = 0;
 
         invItemFor:
