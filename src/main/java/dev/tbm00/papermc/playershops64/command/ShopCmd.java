@@ -16,6 +16,7 @@ import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.enums.QueryType;
 import dev.tbm00.papermc.playershops64.data.enums.SortType;
 import dev.tbm00.papermc.playershops64.gui.ListShopsGui;
+import dev.tbm00.papermc.playershops64.gui.SellGui;
 import dev.tbm00.papermc.playershops64.utils.*;
 
 public class ShopCmd implements TabExecutor {
@@ -56,6 +57,8 @@ public class ShopCmd implements TabExecutor {
                 return handleMenuCmd(player);
             case "own":
                 return handleOwnCmd(player);
+            case "sellgui":
+                return handleSellGuiCmd(player);
             default: {
                 StaticUtils.sendMessage(sender, "&cNo applicable argument provided!");
                 return true;
@@ -67,6 +70,11 @@ public class ShopCmd implements TabExecutor {
         player.sendMessage(ChatColor.DARK_PURPLE + "--- " + ChatColor.LIGHT_PURPLE + "Player Shop Commands" + ChatColor.DARK_PURPLE + " ---\n"
             + ChatColor.WHITE + "/testshop" + ChatColor.GRAY + " Base player command\n"
         );
+        return true;
+    }
+
+    private boolean handleSellGuiCmd(Player player) {
+        new SellGui(javaPlugin, player);
         return true;
     }
 

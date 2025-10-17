@@ -196,7 +196,7 @@ public class StaticUtils {
      * @param string the message to send
      */
     public static void sendMessage(CommandSender target, String string) {
-        if (!string.isBlank())
+        if (string!=null && !string.equals(null) && !string.isBlank())
             target.spigot().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', javaPlugin.getConfigHandler().getChatPrefix() + string)));
     }
 

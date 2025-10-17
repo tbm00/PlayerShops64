@@ -80,7 +80,9 @@ public class ShopManageGui {
             item.setType(Material.BARRIER);
             gui.setItem(2, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
-                                                                            gui.close(viewer);
+                                                                            //gui.close(viewer);
+                                                                            viewer.closeInventory();
+                                                                            
                                                                             ShopUtils.setShopItem(viewer, shopUuid);
                                                                         }));
         } else { 
@@ -109,7 +111,9 @@ public class ShopManageGui {
             item.setType(Material.RED_BANNER);
             gui.setItem(1, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
-                                                                            gui.close(viewer);
+                                                                            //gui.close(viewer);
+                                                                            viewer.closeInventory();
+
                                                                             ShopUtils.clearShopItem(viewer, shopUuid);
                                                                         }));
         }
@@ -117,11 +121,14 @@ public class ShopManageGui {
         { // Set Sell Price
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to set this shop's sell price");
-            meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            if (shop.getSellPrice()!=null && !shop.getSellPrice().equals(null)) 
+            if (shop.getSellPrice()!=null && !shop.getSellPrice().equals(null)) {
+                lore.add("&6Click to set this shop's sell price");
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&4Sell Price: &f$" + StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue())));
-            else meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&4Sell Price: &cDISABLED"));
+            } else { 
+                lore.add("&6Click to re-enable selling & set this shop's sell price");
+                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&4Sell Price: &cDISABLED"));
+            }
+            meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             item.setItemMeta(meta);
             item.setType(Material.GOLD_INGOT);
             gui.setItem(3, 4, ItemBuilder.from(item).asGuiItem(event -> {
@@ -152,11 +159,14 @@ public class ShopManageGui {
         { // Set Buy Price
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to set this shop's buy price");
-            meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            if (shop.getBuyPrice()!=null && !shop.getBuyPrice().equals(null)) 
+            if (shop.getBuyPrice()!=null && !shop.getBuyPrice().equals(null)) {
+                lore.add("&6Click to set this shop's buy price");
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&2Buy Price: &f$" + StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue())));
-            else meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&2Buy Price: &cDISABLED"));
+            } else { 
+                lore.add("&6Click to re-enable buying & set this shop's buy price");
+                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&2Buy Price: &cDISABLED"));
+            }
+            meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             item.setItemMeta(meta);
             item.setType(Material.GOLD_INGOT);
             gui.setItem(3, 6, ItemBuilder.from(item).asGuiItem(event -> {
@@ -189,8 +199,9 @@ public class ShopManageGui {
             lore.add("&8-----------------------");
             lore.add("&6Click to manage this shop's balance");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            if (shop.getBuyPrice()!=null && !shop.getBuyPrice().equals(null)) 
+            if (shop.getMoneyStock()!=null && !shop.getMoneyStock().equals(null)) 
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Balance: &f$" + StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue())));
+            else meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Balance: &f$(null)"));
             item.setItemMeta(meta);
             item.setType(Material.HOPPER_MINECART);
             gui.setItem(3, 5, ItemBuilder.from(item).asGuiItem(event -> {
@@ -205,8 +216,7 @@ public class ShopManageGui {
             lore.add("&8-----------------------");
             lore.add("&6Click to manage this shop's stock");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            if (shop.getBuyPrice()!=null && !shop.getBuyPrice().equals(null)) 
-                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Stock: &f" + StaticUtils.formatIntUS(shop.getItemStock())));
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Stock: &f" + StaticUtils.formatIntUS(shop.getItemStock())));
             item.setItemMeta(meta);
             item.setType(Material.BARREL);
             gui.setItem(4, 5, ItemBuilder.from(item).asGuiItem(event -> {
@@ -301,7 +311,9 @@ public class ShopManageGui {
             item.setType(Material.BARRIER);
             gui.setItem(1, 9, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
-                                                                            gui.close(viewer);
+                                                                            //gui.close(viewer);
+                                                                            viewer.closeInventory();
+                                                                            
                                                                             ShopUtils.deleteShop(viewer, shopUuid, null);
                                                                         }));
         } 

@@ -367,7 +367,7 @@ public class ListShopsGui {
         else shopItem = shop.getItemStack().clone();
 
         ItemMeta shopMeta = shopItem.getItemMeta();
-        List<String> shopLore = shopMeta.getLore();
+        List<String> shopLore;
         UUID ownerUuid = shop.getOwnerUuid();
 
         shopLore = ShopUtils.formatSaleItemLoreText(shop, true);

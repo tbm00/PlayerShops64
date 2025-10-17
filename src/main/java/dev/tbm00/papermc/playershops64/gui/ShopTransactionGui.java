@@ -146,7 +146,7 @@ public class ShopTransactionGui {
         if (shop.getSellPrice()!=null) { // Sell Button
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to &csell " + quantity + " &6for $" + StaticUtils.formatDoubleUS((ShopUtils.getShopSellPriceForOne(shop).multiply(BigDecimal.valueOf(quantity))).doubleValue()));
+            lore.add("&6Click to &csell " + quantity + " &6for $" + StaticUtils.formatDoubleUS((shop.getSellPriceForOne().multiply(BigDecimal.valueOf(quantity))).doubleValue()));
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cConfirm Sell"));
             item.setItemMeta(meta);
@@ -158,7 +158,8 @@ public class ShopTransactionGui {
                                                                                 gui.setCloseGuiAction(null);
                                                                                 new ShopTransactionGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, closeGuiAfter);
                                                                             } else {
-                                                                                gui.close(viewer);
+                                                                                //gui.close(viewer);
+                                                                                viewer.closeInventory();
                                                                             }
                                                                         }));
         }
@@ -166,7 +167,7 @@ public class ShopTransactionGui {
         if (shop.getBuyPrice()!=null) { // Buy Button
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to &abuy " + quantity + " &6for $" + StaticUtils.formatDoubleUS((ShopUtils.getShopBuyPriceForOne(shop).multiply(BigDecimal.valueOf(quantity))).doubleValue()));
+            lore.add("&6Click to &abuy " + quantity + " &6for $" + StaticUtils.formatDoubleUS((shop.getBuyPriceForOne().multiply(BigDecimal.valueOf(quantity))).doubleValue()));
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aConfirm Buy"));
             item.setItemMeta(meta);
@@ -178,7 +179,8 @@ public class ShopTransactionGui {
                                                                                 gui.setCloseGuiAction(null);
                                                                                 new ShopTransactionGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, closeGuiAfter);
                                                                             } else {
-                                                                                gui.close(viewer);
+                                                                                //gui.close(viewer);
+                                                                                viewer.closeInventory();
                                                                             }
                                                                         }));
         }

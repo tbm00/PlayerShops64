@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -51,13 +52,13 @@ public class ShopAdjustInvGui {
         label = "Adjust "+AdjustAttribute.toString(attribute);
         switch (attribute) {
             case BALANCE:
-                label += ": $" + StaticUtils.formatIntUS(quantity);
+                label += ": $" + StaticUtils.formatIntUS(this.quantity);
                 break;
             case STOCK:
-                label += ": " + StaticUtils.formatIntUS(quantity);
+                label += ": " + StaticUtils.formatIntUS(this.quantity);
                 break;
             case DISPLAY_HEIGHT:
-                label += ": " + quantity;
+                label += ": " + this.quantity;
                 break;
             default:
                 break;
@@ -190,9 +191,12 @@ public class ShopAdjustInvGui {
                                                                                 ShopUtils.adjustStock(viewer, shopUuid, AdjustType.REMOVE, quantity);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
-                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
+                                                                                        new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    }, 2L);
                                                                                 } else {
                                                                                     gui.close(viewer);
+                                                                                    //viewer.closeInventory();
                                                                                 }
                                                                             }));
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
@@ -208,9 +212,12 @@ public class ShopAdjustInvGui {
                                                                                 ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.REMOVE, quantity);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
-                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
+                                                                                        new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    }, 2L);
                                                                                 } else {
                                                                                     gui.close(viewer);
+                                                                                    //viewer.closeInventory();
                                                                                 }
                                                                             }));
             }
@@ -230,9 +237,12 @@ public class ShopAdjustInvGui {
                                                                                 ShopUtils.adjustStock(viewer, shopUuid, AdjustType.SET, quantity);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
-                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
+                                                                                        new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    }, 2L);
                                                                                 } else {
                                                                                     gui.close(viewer);
+                                                                                    //viewer.closeInventory();
                                                                                 }
                                                                             }));
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
@@ -248,9 +258,12 @@ public class ShopAdjustInvGui {
                                                                                 ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.SET, quantity);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
-                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
+                                                                                        new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    }, 2L);
                                                                                 } else {
                                                                                     gui.close(viewer);
+                                                                                    //viewer.closeInventory();
                                                                                 }
                                                                             }));
             } else if (attribute.equals(AdjustAttribute.DISPLAY_HEIGHT)) {
@@ -266,9 +279,12 @@ public class ShopAdjustInvGui {
                                                                                 ShopUtils.setDisplayHeight(viewer, shopUuid, quantity);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
-                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
+                                                                                        new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    }, 2L);
                                                                                 } else {
                                                                                     gui.close(viewer);
+                                                                                    //viewer.closeInventory();
                                                                                 }
                                                                             }));
             }
@@ -288,9 +304,12 @@ public class ShopAdjustInvGui {
                                                                                 ShopUtils.adjustStock(viewer, shopUuid, AdjustType.ADD, quantity);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
-                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
+                                                                                        new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    }, 2L);
                                                                                 } else {
                                                                                     gui.close(viewer);
+                                                                                    //viewer.closeInventory();
                                                                                 }
                                                                             }));
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
@@ -306,9 +325,12 @@ public class ShopAdjustInvGui {
                                                                                 ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.ADD, quantity);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
-                                                                                    new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
+                                                                                        new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
+                                                                                    }, 2L);
                                                                                 } else {
                                                                                     gui.close(viewer);
+                                                                                    //viewer.closeInventory();
                                                                                 }
                                                                             }));
             }

@@ -1,6 +1,7 @@
 package dev.tbm00.papermc.playershops64.data.structure;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.UUID;
 
@@ -153,6 +154,20 @@ public class Shop {
     public Material getBaseMaterial() {
         if (baseMaterial == null) baseMaterial = Material.LECTERN;
         return baseMaterial;
+    }
+
+    public BigDecimal getBuyPriceForOne() {
+        if (sellPrice==null) return null;
+        if (stackSize<=0) return null;
+        
+        return buyPrice.divide(BigDecimal.valueOf(stackSize), 2, RoundingMode.DOWN);
+    }
+
+    public BigDecimal getSellPriceForOne() {
+        if (sellPrice==null) return null;
+        if (stackSize<=0) return null;
+        
+        return sellPrice.divide(BigDecimal.valueOf(stackSize), 2, RoundingMode.DOWN);
     }
 
     // --- Setters ---

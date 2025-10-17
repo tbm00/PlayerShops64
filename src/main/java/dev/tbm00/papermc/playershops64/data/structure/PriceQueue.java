@@ -24,6 +24,10 @@ public class PriceQueue implements Iterable<PriceNode> {
             uuidIndexMap.put(heap.get(i).getUuid(), i);
     }
 
+    public PriceQueue snapshot() {
+        return new PriceQueue(this);
+    }
+
     public int size() { return heap.size(); }
     public boolean isEmpty() { return heap.isEmpty(); }
     public void clear() { heap.clear(); uuidIndexMap.clear(); }
