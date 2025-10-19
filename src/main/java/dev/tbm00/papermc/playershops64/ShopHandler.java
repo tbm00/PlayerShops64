@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
@@ -208,32 +209,39 @@ public class ShopHandler {
     }
 
     public void upsertShopObject(Shop shop) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, "Tried to upsert shop off main thread... rescheduling on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> upsertShopObject(shop));
+            return;
+        }
+
         if (shop == null || shop.getUuid() == null) {
             return;
         }
+
+        // on main thread first (so all internal references to it are immediately updated, rather than being delayed by async operation)
+        // update memory + visuals 
+        Shop prev = shops.put(shop.getUuid(), shop);
+        if (prev != null) deindexShop(prev);
+        indexShop(shop);
+
+        // instantly refresh this shop's display
+        ShopDisplay shopDisplay = displayManager.getOrCreate(shop.getUuid());
+        if (shopDisplay != null) shopDisplay.update(shop.getWorld(), ShopUtils.formatHologramText(shop));
 
         // run DB operations async
         javaPlugin.getServer().getScheduler().runTaskAsynchronously(javaPlugin, () -> {
             boolean ok = dao.upsertShopToSql(shop);
             if (!ok) {
-                StaticUtils.log(ChatColor.RED, "DB upsert failed for shop " + shop.getUuid());
+                StaticUtils.log(ChatColor.RED, "DB upsert failed for shop " + shop.getUuid() + "... Upserting previously saved shop..!");
                 return;
             } else {
                 StaticUtils.log(ChatColor.GREEN, "DB upsert passed for shop " + shop.getUuid());
             }
-
-            // go back to main for memory + visuals
-            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> {
-                Shop prev = shops.put(shop.getUuid(), shop);
-                if (prev != null) deindexShop(prev);
-                indexShop(shop);
-
-                // instantly refresh this shop's display
-                ShopDisplay shopDisplay = displayManager.getOrCreate(shop.getUuid());
-                if (shopDisplay != null) shopDisplay.update(shop.getWorld(), ShopUtils.formatHologramText(shop));
-            });
         });
     }
+
+
 
     public void deleteShopObject(UUID uuid) {
         if (uuid == null || uuid.equals(null)) return;

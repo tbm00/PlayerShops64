@@ -1,4 +1,4 @@
-package dev.tbm00.papermc.playershops64.utils;
+package dev.tbm00.papermc.playershops64.engine;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -15,8 +15,9 @@ import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.structure.PriceNode;
 import dev.tbm00.papermc.playershops64.data.structure.PriceQueue;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
+import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
-public final class SellGuiEngine {
+public final class QuickSellEngine {
 
     public static final class Plan {
         public final SellPlan sellPlan;
@@ -75,8 +76,8 @@ public final class SellGuiEngine {
     public Plan plans;
     public Player player;
 
-    public SellGuiEngine(PlayerShops64 javaPlugin, Player player) {
-        SellGuiEngine.javaPlugin = javaPlugin;
+    public QuickSellEngine(PlayerShops64 javaPlugin, Player player) {
+        QuickSellEngine.javaPlugin = javaPlugin;
         this.player = player;
     }
 

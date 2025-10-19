@@ -58,6 +58,8 @@ public class AdminCmd implements TabExecutor {
                 return handleMenuCmd(player);
             case "sellgui":
                 return handleSellGuiCmd(player);
+            case "give":
+                return handleGiveCmd(player, args);
             default: {
                 StaticUtils.sendMessage(sender, "&cNo applicable argument provided!");
                 return true;
@@ -83,7 +85,7 @@ public class AdminCmd implements TabExecutor {
             amount = Integer.parseInt(args[1]);
         }
 
-        StaticUtils.addToInventoryOrDrop(player, ShopUtils.prepPlayerShopItemStack(amount));
+        StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepPlayerShopItemStack(amount));
         player.sendMessage(ChatColor.GREEN + "You should've received "+amount+" lectern(s) with the PDC key!");
         return true;
     }
@@ -91,6 +93,55 @@ public class AdminCmd implements TabExecutor {
     private boolean handleMenuCmd(Player player) {
         new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), player, true, SortType.MATERIAL, QueryType.NO_QUERY, null);
         return true;
+    }
+
+    private boolean handleGiveCmd(CommandSender sender, String[] args) {
+        String argument = args.length >= 2 ? args[1] : null; // should be player
+        String argument2 = args.length >= 3 ? args[2] : null; // should be item type
+        String argument3 = args.length >= 4 ? args[3] : null; // should be amount
+
+        int amount = 1;
+        Integer j = Integer.parseInt(argument3);
+        if (j!=null) amount = j;
+
+        Player player = getPlayerFromCommand(sender, argument);
+        if (player == null) {
+            sender.sendMessage(ChatColor.RED + "Could not find target player!");
+            return false;
+        }
+
+        if (argument2==null || argument2.isBlank()) {
+            sender.sendMessage(ChatColor.RED + "Can't give nothing!");
+            return false;
+        } argument2.replace("_","");
+
+        if (argument2.equalsIgnoreCase("SELLWAND")) {
+            StaticUtils.sendMessage(player, "&aReceived " + amount + " sell wand!");
+            StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepSellWandItemStack(amount));
+        } else if (argument2.equalsIgnoreCase("DEPOSITWAND")) {
+            StaticUtils.sendMessage(player, "&aReceived " + amount + " deposit wand!");
+            StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepDepositWandItemStack(amount));
+        } else if (argument2.equalsIgnoreCase("SHOP") || argument2.equalsIgnoreCase("SHOPBLOCK") || argument2.equalsIgnoreCase("BASEBLOCK")) {
+            StaticUtils.sendMessage(player, "&aReceived " + amount + " player shops!");
+            StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepPlayerShopItemStack(amount));
+        } else {
+            sender.sendMessage(ChatColor.RED + "'"+argument2+"' is not defined!");
+            return false;
+        }
+
+        return true;
+    }
+
+    private Player getPlayerFromCommand(CommandSender sender, String arg) {
+        if (arg == null) {
+            sender.sendMessage(ChatColor.RED + "Could not find target player!");
+            return null;
+        } else {
+            Player player = javaPlugin.getServer().getPlayer(arg);
+            if (player == null) {
+            }
+            return player;
+        }
     }
 
     /**

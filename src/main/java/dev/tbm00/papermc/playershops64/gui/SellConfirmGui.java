@@ -14,18 +14,18 @@ import dev.triumphteam.gui.guis.Gui;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
-import dev.tbm00.papermc.playershops64.utils.SellGuiEngine;
+import dev.tbm00.papermc.playershops64.engine.QuickSellEngine;
+import dev.tbm00.papermc.playershops64.engine.QuickSellEngine.SellPlanEntry;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
-import dev.tbm00.papermc.playershops64.utils.SellGuiEngine.SellPlanEntry;
 
 public final class SellConfirmGui {
     private final PlayerShops64 javaPlugin;
     private final Player player;
-    private final SellGuiEngine engine;
+    private final QuickSellEngine engine;
     private final Gui gui;
     private String label = "Confirm Sales";
 
-    public SellConfirmGui(PlayerShops64 javaPlugin, Player player, SellGuiEngine engine) {
+    public SellConfirmGui(PlayerShops64 javaPlugin, Player player, QuickSellEngine engine) {
         this.javaPlugin = javaPlugin;
         this.player = player;
         this.engine = engine;

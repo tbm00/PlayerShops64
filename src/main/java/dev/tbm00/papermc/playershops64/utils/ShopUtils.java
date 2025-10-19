@@ -16,7 +16,6 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.enums.AdjustType;
@@ -92,7 +91,7 @@ public class ShopUtils {
             if (block==null || block.equals(null)) {
                 javaPlugin.getServer().getWorld(shop.getWorld().getUID()).getBlockAt(shop.getLocation()).setType(Material.AIR, false);
             } else block.setType(Material.AIR, false);
-            StaticUtils.addToInventoryOrDrop(player, ShopUtils.prepPlayerShopItemStack(1));
+            StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepPlayerShopItemStack(1));
             StaticUtils.sendMessage(player, "&aDeleted shop!");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
@@ -867,6 +866,54 @@ public class ShopUtils {
         }
     }
 
+    public static int quickDepositToShop(Player player, UUID shopUuid, int quantity) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to quick deposit to shop " + shopUuid + " off the main thread -- canceling..!");
+            return 0;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            return 0;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                return 0;
+            }
+
+            if (shop.getOwnerUuid().equals(player.getUniqueId())) {
+                return 0;
+            }
+
+            ItemStack saleItem = shop.getItemStack();
+            if (saleItem == null || saleItem.getType().isAir()) {
+                return 0;
+            }
+
+            if (quantity <= 0) {
+                return 0;
+            } int workingAmount = quantity;
+            if (workingAmount+shop.getItemStock()>javaPlugin.getConfigHandler().getMaxStock()) {
+                workingAmount = javaPlugin.getConfigHandler().getMaxStock()-shop.getItemStock();
+            }
+
+            if (workingAmount <= 0) {
+                return 0;
+            }
+
+            // edit shop
+            if (!shop.hasInfiniteStock()) shop.setItemStock(shop.getItemStock() + workingAmount);
+            
+            // apply updates
+            javaPlugin.getShopHandler().upsertShopObject(shop);
+            return workingAmount;
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
+
     // One offs
     public static void teleportPlayerToShop(Player player, Shop shop) {
         double x=shop.getLocation().getX(), y=shop.getLocation().getY(), z=shop.getLocation().getZ();
@@ -965,18 +1012,5 @@ public class ShopUtils {
                 +(int)shop.getLocation().getZ());
 
         return lore;
-    }
-
-    public static ItemStack prepPlayerShopItemStack(Integer amount) {
-        ItemStack lectern = new ItemStack(Material.LECTERN);
-        ItemMeta meta = lectern.getItemMeta();
-
-        meta.getPersistentDataContainer().set(StaticUtils.SHOP_KEY, PersistentDataType.STRING, "true");
-        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aPlayerShop"));
-
-        lectern.setItemMeta(meta);
-        if (amount!=null) lectern.setAmount(amount);
-
-        return lectern;
     }
 }

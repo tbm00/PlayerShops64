@@ -3,6 +3,7 @@ package dev.tbm00.papermc.playershops64.utils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -21,6 +22,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import net.md_5.bungee.api.chat.TextComponent;
 
@@ -36,6 +38,8 @@ public class StaticUtils {
 
     public static NamespacedKey DISPLAY_KEY;
     public static NamespacedKey SHOP_KEY;
+    public static NamespacedKey DESPOIT_WAND_KEY;
+    public static NamespacedKey SELL_WAND_KEY;
 
     public static String CATEGORY_GUI_TITLE = "Shop Categories";
 
@@ -43,6 +47,8 @@ public class StaticUtils {
         StaticUtils.javaPlugin = javaPlugin;
         SHOP_KEY = new NamespacedKey(javaPlugin, "shop-base");
         DISPLAY_KEY = new NamespacedKey(javaPlugin, "display-entity");
+        DESPOIT_WAND_KEY = new NamespacedKey(javaPlugin, "deposit-wand");
+        SELL_WAND_KEY = new NamespacedKey(javaPlugin, "sell-wand");
     }
 
     /**
@@ -491,5 +497,54 @@ public class StaticUtils {
 
         if (droppedOnFloor) StaticUtils.sendMessage(player, "&eYour inventory is full -- check the ground for your items!");
         return remaining == 0;
+    }
+
+    public static ItemStack prepPlayerShopItemStack(Integer amount) {
+        ItemStack lectern = new ItemStack(Material.LECTERN);
+        ItemMeta meta = lectern.getItemMeta();
+
+        meta.getPersistentDataContainer().set(StaticUtils.SHOP_KEY, PersistentDataType.STRING, "true");
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aPlayerShop"));
+
+        lectern.setItemMeta(meta);
+        if (amount!=null) lectern.setAmount(amount);
+
+        return lectern;
+    }
+
+    public static ItemStack prepDepositWandItemStack(Integer amount) {
+        ItemStack wand = new ItemStack(Material.SPYGLASS);
+        ItemMeta meta = wand.getItemMeta();
+
+        meta.getPersistentDataContainer().set(StaticUtils.DESPOIT_WAND_KEY, PersistentDataType.STRING, "true");
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&6Deposit Wand"));
+        meta.setLore(null);
+        List<String> lore = new ArrayList<>();
+        lore.add("&7&oShift-click a container to");
+        lore.add("&7&odeposit items into your shops");
+        meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+
+        wand.setItemMeta(meta);
+        if (amount!=null) wand.setAmount(amount);
+
+        return wand;
+    }
+
+    public static ItemStack prepSellWandItemStack(Integer amount) {
+        ItemStack wand = new ItemStack(Material.SPYGLASS);
+        ItemMeta meta = wand.getItemMeta();
+
+        meta.getPersistentDataContainer().set(StaticUtils.SELL_WAND_KEY, PersistentDataType.STRING, "true");
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&6Sell Wand"));
+        meta.setLore(null);
+        List<String> lore = new ArrayList<>();
+        lore.add("&7&oShift-click a container to");
+        lore.add("&7&osell items to matching shops");
+        meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+
+        wand.setItemMeta(meta);
+        if (amount!=null) wand.setAmount(amount);
+
+        return wand;
     }
 }
