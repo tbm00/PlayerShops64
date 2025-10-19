@@ -12,27 +12,27 @@ import java.util.NoSuchElementException;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 // max priority queue
-public class PriceQueue implements Iterable<PriceNode> {
-    private final List<PriceNode> heap = new ArrayList<>();
+public class ShopPriceQueue implements Iterable<ShopPriceNode> {
+    private final List<ShopPriceNode> heap = new ArrayList<>();
     private final Map<UUID, Integer> uuidIndexMap = new HashMap<>();
 
-    public PriceQueue() {}
+    public ShopPriceQueue() {}
 
-    private PriceQueue(PriceQueue other) {
+    private ShopPriceQueue(ShopPriceQueue other) {
         this.heap.addAll(other.heap);
         for (int i = 0; i < heap.size(); i++)
             uuidIndexMap.put(heap.get(i).getUuid(), i);
     }
 
-    public PriceQueue snapshot() {
-        return new PriceQueue(this);
+    public ShopPriceQueue snapshot() {
+        return new ShopPriceQueue(this);
     }
 
     public int size() { return heap.size(); }
     public boolean isEmpty() { return heap.isEmpty(); }
     public void clear() { heap.clear(); uuidIndexMap.clear(); }
 
-    public void insert(PriceNode node) {
+    public void insert(ShopPriceNode node) {
         if (node == null) throw new NullPointerException("node");
         UUID id = node.getUuid();
         if (uuidIndexMap.containsKey(id)) {
@@ -43,10 +43,10 @@ public class PriceQueue implements Iterable<PriceNode> {
         uuidIndexMap.put(id, idx);
         siftUp(idx);
     } public void insert(UUID value, BigDecimal weight) {
-        insert(new PriceNode(StaticUtils.normalizeBigDecimal(weight), value));
+        insert(new ShopPriceNode(StaticUtils.normalizeBigDecimal(weight), value));
     }
 
-    public PriceNode get(UUID id) {
+    public ShopPriceNode get(UUID id) {
         Integer idx = uuidIndexMap.get(id);
         return (idx == null) ? null : heap.get(idx);
     }
@@ -57,10 +57,10 @@ public class PriceQueue implements Iterable<PriceNode> {
     public boolean update(UUID id, BigDecimal newWeight) {
         Integer idx = uuidIndexMap.get(id);
         if (idx == null) return false;
-        PriceNode old = heap.get(idx);
+        ShopPriceNode old = heap.get(idx);
         BigDecimal normalized = StaticUtils.normalizeBigDecimal(newWeight);
         if (old.getPrice().compareTo(normalized) == 0) return true; // no-op
-        PriceNode updated = new PriceNode(normalized, id);
+        ShopPriceNode updated = new ShopPriceNode(normalized, id);
         heap.set(idx, updated);
         
         if (normalized.compareTo(old.getPrice()) > 0) {
@@ -72,13 +72,13 @@ public class PriceQueue implements Iterable<PriceNode> {
     }
 
     /** Delete by UUID; returns the removed node or null if not present. */
-    public PriceNode delete(UUID id) {
+    public ShopPriceNode delete(UUID id) {
         Integer idxObj = uuidIndexMap.get(id);
         if (idxObj == null) return null;
         int idx = idxObj;
         int last = heap.size() - 1;
 
-        PriceNode removed = heap.get(idx);
+        ShopPriceNode removed = heap.get(idx);
         swap(idx, last);
         heap.remove(last);
         uuidIndexMap.remove(id);
@@ -89,23 +89,23 @@ public class PriceQueue implements Iterable<PriceNode> {
         return removed;
     }
 
-    public PriceNode peek() { return heap.isEmpty() ? null : heap.get(0); }
+    public ShopPriceNode peek() { return heap.isEmpty() ? null : heap.get(0); }
 
-    private PriceNode poll() {
+    private ShopPriceNode poll() {
         if (heap.isEmpty()) return null;
-        PriceNode max = heap.get(0);
+        ShopPriceNode max = heap.get(0);
         delete(max.getUuid());
         return max;
     }
 
     // returns a non-destructive iterator - going in descending weight order
     @Override
-    public Iterator<PriceNode> iterator() {
-        PriceQueue snap = new PriceQueue(this);
-        return new Iterator<PriceNode>() {
+    public Iterator<ShopPriceNode> iterator() {
+        ShopPriceQueue snap = new ShopPriceQueue(this);
+        return new Iterator<ShopPriceNode>() {
             @Override public boolean hasNext() { return !snap.isEmpty(); }
-            @Override public PriceNode next() {
-                PriceNode n = snap.poll();
+            @Override public ShopPriceNode next() {
+                ShopPriceNode n = snap.poll();
                 if (n == null) throw new NoSuchElementException();
                 return n;
             }
@@ -140,8 +140,8 @@ public class PriceQueue implements Iterable<PriceNode> {
 
     private void swap(int i, int j) {
         if (i == j) return;
-        PriceNode a = heap.get(i);
-        PriceNode b = heap.get(j);
+        ShopPriceNode a = heap.get(i);
+        ShopPriceNode b = heap.get(j);
         heap.set(i, b);
         heap.set(j, a);
         uuidIndexMap.put(b.getUuid(), i);

@@ -882,7 +882,7 @@ public class ShopUtils {
                 return 0;
             }
 
-            if (shop.getOwnerUuid().equals(player.getUniqueId())) {
+            if (!shop.getOwnerUuid().equals(player.getUniqueId())) {
                 return 0;
             }
 

@@ -10,8 +10,8 @@ import org.bukkit.Material;
 import dev.triumphteam.gui.guis.Gui;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
-import dev.tbm00.papermc.playershops64.data.structure.PriceNode;
-import dev.tbm00.papermc.playershops64.data.structure.PriceQueue;
+import dev.tbm00.papermc.playershops64.data.structure.ShopPriceNode;
+import dev.tbm00.papermc.playershops64.data.structure.ShopPriceQueue;
 import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
@@ -30,7 +30,7 @@ public class DepositGui {
 
         gui.setCloseGuiAction(event -> {
             Bukkit.getScheduler().runTask(javaPlugin, () -> {
-                if (player.isOnline() && !player.isDead()) depositItems(event.getInventory());
+                if (player.isOnline() && !player.isDead()) depositItemsFromGui(event.getInventory());
                 else {
                     for (ItemStack item : event.getInventory().getStorageContents()) {
                         StaticUtils.addToInventoryOrDrop(player, item);
@@ -42,8 +42,8 @@ public class DepositGui {
         gui.open(player);
     }
 
-    private void depositItems(Inventory inv) {
-        int totalItemsSold = 0;
+    private void depositItemsFromGui(Inventory inv) {
+        int totalItemsDeposited = 0;
 
         invItemFor:
         for (ItemStack invItem : inv.getContents()) {
@@ -51,13 +51,17 @@ public class DepositGui {
 
             Material material = invItem.getType();
             int currentInvAmount = invItem.getAmount();
-            
+            if (currentInvAmount<1) continue;
             
             try {
-                PriceQueue queue = javaPlugin.getShopHandler().getSellPriceQueue(material);
-                if (queue==null || queue.isEmpty()) continue invItemFor;
-                for (PriceNode node : queue) {
+                ShopPriceQueue queue = javaPlugin.getShopHandler().getShopPriceQueue(material);
+                if (queue==null || queue.isEmpty()) {
+                    StaticUtils.addToInventoryOrDrop(player, invItem, currentInvAmount);
+                    continue;
+                }
+                for (ShopPriceNode node : queue) {
                     if (currentInvAmount<=0) continue invItemFor;
+                    if (!javaPlugin.getShopHandler().getShop(node.getUuid()).getOwnerUuid().equals(player.getUniqueId())) continue;
                     if (javaPlugin.getShopHandler().getShop(node.getUuid()).getItemStack().isSimilar(invItem)) {
                         int result = ShopUtils.quickDepositToShop(player, node.getUuid(), currentInvAmount);
 
@@ -65,7 +69,7 @@ public class DepositGui {
                             continue;
                         } else {
                             currentInvAmount -= result;
-                            totalItemsSold += result;
+                            totalItemsDeposited += result;
                         }
                     } else continue;
                 }
@@ -78,7 +82,7 @@ public class DepositGui {
             }
         }
 
-        if (totalItemsSold<1) StaticUtils.sendMessage(player, "&cCouldn't find any applicable shops for your items!");
-        else StaticUtils.sendMessage(player, "&aDepsoited " + totalItemsSold + " items into your shops!");
+        if (totalItemsDeposited<1) StaticUtils.sendMessage(player, "&cCouldn't find any applicable shops for your items!");
+        else StaticUtils.sendMessage(player, "&aDeposited " + totalItemsDeposited + " items into your shops!");
     }
 }

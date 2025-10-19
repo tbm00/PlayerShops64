@@ -4,8 +4,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.bukkit.Bukkit;
@@ -19,6 +21,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -42,6 +45,11 @@ public class StaticUtils {
     public static NamespacedKey SELL_WAND_KEY;
 
     public static String CATEGORY_GUI_TITLE = "Shop Categories";
+
+    public static final Set<Material> CONTAINER_MATERIALS = EnumSet.of(
+        Material.CHEST,
+        Material.BARREL
+    );
 
     public static void init(PlayerShops64 javaPlugin) {
         StaticUtils.javaPlugin = javaPlugin;
@@ -496,6 +504,62 @@ public class StaticUtils {
         }
 
         if (droppedOnFloor) StaticUtils.sendMessage(player, "&eYour inventory is full -- check the ground for your items!");
+        return remaining == 0;
+    }
+
+    public static boolean addToInventoryOrDrop(Inventory inv, ItemStack item, int quantity) {
+        if (quantity <= 0) return true;
+        if (inv == null || item == null || item.getType().isAir()) return false;
+
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, "Cannot addToInventoryOrDrop() because it was called off the main thread..!");
+            return false;
+        }
+
+        ItemStack itemCopy = item.clone();
+        int maxStackSize = itemCopy.getType().getMaxStackSize();
+        int remaining = quantity;
+        itemCopy.setAmount(1);
+
+        
+        // add to existing itemstacks in inv
+        ItemStack[] storage = inv.getStorageContents();
+        for (int i = 0; i < storage.length && remaining > 0; i++) {
+            ItemStack invStack = storage[i];
+            if (invStack == null || invStack.getType().isAir()) continue;
+            if (!invStack.isSimilar(itemCopy)) continue;
+
+            int invAmount = invStack.getAmount();
+            int invStackSpace = maxStackSize - invAmount;
+            if (invStackSpace<=0) continue;
+
+            int add = Math.min(invStackSpace, remaining);
+            invStack.setAmount(invAmount + add);
+            storage[i] = invStack;
+            remaining -= add;
+        } inv.setStorageContents(storage);
+        
+        
+        if (remaining > 0) { // create new itemstacks in empty inv spots
+            // storage (hotbar + main, excludes armor)
+            ItemStack[] storage2 = inv.getStorageContents();
+            for (int i = 0; i < storage2.length && remaining > 0; i++) {
+                ItemStack slot = storage2[i];
+                if (slot!=null && !slot.getType().isAir()) continue;
+
+                ItemStack newStack = itemCopy.clone();
+                int add = Math.min(maxStackSize, remaining);
+
+                newStack.setAmount(add);
+                storage2[i] = newStack;
+                remaining -= add;
+            } inv.setStorageContents(storage2);
+        }
+
+        if (remaining > 0) {
+            StaticUtils.log(ChatColor.RED, "A physical inventory was full and couldn't accept " + remaining + " more " + item.getType().toString());
+        }
+        
         return remaining == 0;
     }
 

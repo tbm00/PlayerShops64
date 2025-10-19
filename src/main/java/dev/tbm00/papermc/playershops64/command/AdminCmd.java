@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.enums.QueryType;
 import dev.tbm00.papermc.playershops64.data.enums.SortType;
+import dev.tbm00.papermc.playershops64.gui.DepositGui;
 import dev.tbm00.papermc.playershops64.gui.ListShopsGui;
 import dev.tbm00.papermc.playershops64.gui.SellGui;
 import dev.tbm00.papermc.playershops64.utils.*;
@@ -58,6 +59,8 @@ public class AdminCmd implements TabExecutor {
                 return handleMenuCmd(player);
             case "sellgui":
                 return handleSellGuiCmd(player);
+            case "depositgui":
+                return handleDepositGuiCmd(player);
             case "give":
                 return handleGiveCmd(player, args);
             default: {
@@ -76,6 +79,11 @@ public class AdminCmd implements TabExecutor {
 
     private boolean handleSellGuiCmd(Player player) {
         new SellGui(javaPlugin, player);
+        return true;
+    }
+
+    private boolean handleDepositGuiCmd(Player player) {
+        new DepositGui(javaPlugin, player);
         return true;
     }
 

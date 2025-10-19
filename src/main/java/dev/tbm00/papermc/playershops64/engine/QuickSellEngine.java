@@ -12,8 +12,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
-import dev.tbm00.papermc.playershops64.data.structure.PriceNode;
-import dev.tbm00.papermc.playershops64.data.structure.PriceQueue;
+import dev.tbm00.papermc.playershops64.data.structure.ShopPriceNode;
+import dev.tbm00.papermc.playershops64.data.structure.ShopPriceQueue;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
@@ -75,16 +75,20 @@ public final class QuickSellEngine {
     private static PlayerShops64 javaPlugin;
     public Plan plans;
     public Player player;
+    public final Inventory physicalInv;
+    public final boolean isPhysicalInv;
 
-    public QuickSellEngine(PlayerShops64 javaPlugin, Player player) {
+    public QuickSellEngine(PlayerShops64 javaPlugin, Player player, Inventory physicalInv) {
         QuickSellEngine.javaPlugin = javaPlugin;
         this.player = player;
+        this.isPhysicalInv = (physicalInv!=null);
+        this.physicalInv = physicalInv;
     }
 
     public void computePlans(Inventory inv, UUID playerUuid) {
         // 1) deep snapshots
         Map<UUID, Shop> simShops = javaPlugin.getShopHandler().snapshotShopMap();
-        Map<Material, PriceQueue> simPriceMap = javaPlugin.getShopHandler().snapshotSellPriceMap();
+        Map<Material, ShopPriceQueue> simMaterialPriceMap = javaPlugin.getShopHandler().snapshotMaterialPriceMap();
 
         SellPlan sellPlan = new SellPlan();
         ReturnPlan returnPlan = new ReturnPlan();
@@ -96,16 +100,16 @@ public final class QuickSellEngine {
                 stackAmount = initialAmount;
 
             Material mat = invItem.getType();
-            PriceQueue matQueue = simPriceMap.get(mat);
+            ShopPriceQueue matQueue = simMaterialPriceMap.get(mat);
             if (matQueue == null || matQueue.isEmpty()) {
-                if (stackAmount>0) {
+                if (!isPhysicalInv && stackAmount>0) {
                     returnPlan.entries.add(new ReturnPlanEntry(invItem, stackAmount));
                 }
                 continue;
             }
 
             // Non-destructive descending iterator
-            for (PriceNode shopNode : matQueue) {
+            for (ShopPriceNode shopNode : matQueue) {
                 if (stackAmount <= 0) break;
 
                 Shop shop = simShops.get(shopNode.getUuid());
@@ -158,7 +162,9 @@ public final class QuickSellEngine {
                 stackAmount -= sellingAmount;
             }
 
-            if (stackAmount>0) {
+            if (isPhysicalInv) {
+                invItem.setAmount(stackAmount);
+            } else if (!isPhysicalInv && stackAmount>0) {
                 returnPlan.entries.add(new ReturnPlanEntry(invItem, stackAmount));
             }
         }
@@ -247,7 +253,7 @@ public final class QuickSellEngine {
             }
 
             StaticUtils.sendMessage(player, "&aSold " + totalSold + " items for a total of $" + StaticUtils.formatIntUS(totalEarned));
-            returnUnsoldItems();
+            returnNonmatchedItems();
         } finally {
             // 4) always unlock
             StaticUtils.log(ChatColor.RED, "finally unlock:");
@@ -261,34 +267,33 @@ public final class QuickSellEngine {
         acquired.clear();
     }
 
-    public void returnUnsoldItems() {
+    public void returnNonmatchedItems() {
         if (!plans.returnPlan.entries.isEmpty()) {
             for (ReturnPlanEntry entry : plans.returnPlan.entries) {
-                StaticUtils.addToInventoryOrDrop(player, entry.item, entry.amount);
+                if (isPhysicalInv) StaticUtils.addToInventoryOrDrop(physicalInv, entry.item, entry.amount);
+                else StaticUtils.addToInventoryOrDrop(player, entry.item, entry.amount);
             }
-            StaticUtils.sendMessage(player, "&a(returnPlan items should have been returned)");
+            //StaticUtils.sendMessage(player, "&a(returnPlan items should have been returned)");
         } else {
-            StaticUtils.sendMessage(player, "&a(returnPlans empty...)");
+            //StaticUtils.sendMessage(player, "&a(returnPlans empty...)");
+        }
+    }
+
+    public void returnMatchedItems() {
+        if (!plans.sellPlan.entries.isEmpty()) {
+            for (SellPlanEntry entry : plans.sellPlan.entries) {
+                if (isPhysicalInv) StaticUtils.addToInventoryOrDrop(physicalInv, entry.item, entry.amount);
+                else StaticUtils.addToInventoryOrDrop(player, entry.item, entry.amount);
+            }
+            //StaticUtils.sendMessage(player, "&a(sellPlan items should have been returned)");
+        } else {
+           // StaticUtils.sendMessage(player, "&a(sellPlans empty...)");
         }
     }
 
     public void returnAllItems() {
-        if (!plans.returnPlan.entries.isEmpty()) {
-            for (ReturnPlanEntry entry : plans.returnPlan.entries) {
-                StaticUtils.addToInventoryOrDrop(player, entry.item, entry.amount);
-            }
-            StaticUtils.sendMessage(player, "&a(returnPlan items should have been returned)");
-        } else {
-            StaticUtils.sendMessage(player, "&a(returnPlans empty...)");
-        }
-        if (!plans.sellPlan.entries.isEmpty()) {
-            for (SellPlanEntry entry : plans.sellPlan.entries) {
-                StaticUtils.addToInventoryOrDrop(player, entry.item, entry.amount);
-            }
-            StaticUtils.sendMessage(player, "&a(sellPlan items should have been returned)");
-        } else {
-            StaticUtils.sendMessage(player, "&a(sellPlans empty...)");
-        }
+        returnNonmatchedItems();
+        returnMatchedItems();
     }
 
     public int[] quickSellToShop(Player player, UUID shopUuid, int quantity) {
@@ -364,11 +369,10 @@ public final class QuickSellEngine {
             shop.setLastTransactionDate(new Date());
             
             // apply updates
-            shop.setCurrentEditor(null);
             javaPlugin.getShopHandler().upsertShopObject(shop);
             return new int[] {quantity, totalPrice.intValue()};
         } finally {
-            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+            //javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
     }
 }

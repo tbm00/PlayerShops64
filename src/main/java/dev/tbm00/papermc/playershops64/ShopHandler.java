@@ -1,11 +1,13 @@
 package dev.tbm00.papermc.playershops64;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Map.Entry;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -20,7 +22,7 @@ import org.bukkit.util.Vector;
 
 import dev.tbm00.papermc.playershops64.data.MySQLConnection;
 import dev.tbm00.papermc.playershops64.data.ShopDAO;
-import dev.tbm00.papermc.playershops64.data.structure.PriceQueue;
+import dev.tbm00.papermc.playershops64.data.structure.ShopPriceQueue;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.display.DisplayManager;
 import dev.tbm00.papermc.playershops64.display.ShopDisplay;
@@ -35,7 +37,7 @@ public class ShopHandler {
     private final Map<UUID, Shop> shops = new LinkedHashMap<>();
     private final Map<UUID, Map<Long, UUID>> shopLocationMap = new HashMap<>(); 
                // Map<WorldUID, Map<PackedBlockPos, ShopUUID>>
-    private final Map<Material, PriceQueue> shopPriceMap = new HashMap<>();
+    private final Map<Material, ShopPriceQueue> shopMaterialPriceMap = new HashMap<>();
 
     private VisualTask visualTask;
 
@@ -56,7 +58,7 @@ public class ShopHandler {
         int loaded = 0, skippedNullShop = 0, skippedNullWorld = 0, skippedNullLoc = 0;
 
         shopLocationMap.clear();
-        shopPriceMap.clear();
+        shopMaterialPriceMap.clear();
         for (Shop shop : dao.getAllShopsFromSql()) {
             if (shop == null) {
                 skippedNullShop++;
@@ -106,13 +108,12 @@ public class ShopHandler {
     }
 
     public Map<UUID, Shop> snapshotShopMap() {
-        // copies already; getShopView() returns copies & unmodifiable
         return new LinkedHashMap<>(getShopView());
     }
 
-    public Map<Material, PriceQueue> snapshotSellPriceMap() {
-        Map<Material, PriceQueue> copy = new HashMap<>(shopPriceMap.size());
-        for (var e : shopPriceMap.entrySet()) {
+    public Map<Material, ShopPriceQueue> snapshotMaterialPriceMap() {
+        Map<Material, ShopPriceQueue> copy = new HashMap<>(shopMaterialPriceMap.size());
+        for (Entry<Material, ShopPriceQueue> e : shopMaterialPriceMap.entrySet()) {
             copy.put(e.getKey(), e.getValue() == null ? null : e.getValue().snapshot());
         }
         return copy;
@@ -122,12 +123,12 @@ public class ShopHandler {
         return copyOf(shops.get(uuid));
     }
 
-    public Map<Material, PriceQueue> getSellPriceMap() {
-        return shopPriceMap;
+    public Map<Material, ShopPriceQueue> getShopMaterialPriceMap() {
+        return shopMaterialPriceMap;
     }
 
-    public PriceQueue getSellPriceQueue(Material material) {
-        return shopPriceMap.containsKey(material) ? shopPriceMap.get(material) : null;
+    public ShopPriceQueue getShopPriceQueue(Material material) {
+        return shopMaterialPriceMap.containsKey(material) ? shopMaterialPriceMap.get(material) : null;
     }
 
     private void indexShop(Shop shop) {
@@ -147,20 +148,22 @@ public class ShopHandler {
         }
 
         if (shop.getItemStack()!=null) {
-            if (shop.getSellPrice()==null || shop.getSellPrice().equals(null)) return;
+            //if (shop.getSellPrice()==null || shop.getSellPrice().equals(null)) return;
 
             Material material = shop.getItemStack().getType();
             if (material==null) return;
 
-            if (!shopPriceMap.containsKey(material) || shopPriceMap.get(material)==null) {
-                shopPriceMap.put(material, new PriceQueue());
+            if (!shopMaterialPriceMap.containsKey(material) || shopMaterialPriceMap.get(material)==null) {
+                shopMaterialPriceMap.put(material, new ShopPriceQueue());
             }
 
-            PriceQueue queue = shopPriceMap.get(material);
-            if (queue.contains(shop.getUuid())) queue.update(shop.getUuid(), shop.getSellPrice());
-            else queue.insert(shop.getUuid(), shop.getSellPrice());
+            ShopPriceQueue queue = shopMaterialPriceMap.get(material);
+            BigDecimal sellPrice = (shop.getSellPrice()==null) ? BigDecimal.ZERO : shop.getSellPrice();
 
-            shopPriceMap.put(material, queue);
+            if (queue.contains(shop.getUuid())) queue.update(shop.getUuid(), sellPrice);
+            else queue.insert(shop.getUuid(), sellPrice);
+
+            shopMaterialPriceMap.put(material, queue);
         }
     }
 
@@ -183,14 +186,14 @@ public class ShopHandler {
             Material material = shop.getItemStack().getType();
             if (material==null) return;
 
-            if (!shopPriceMap.containsKey(material) || shopPriceMap.get(material)==null) {
+            if (!shopMaterialPriceMap.containsKey(material) || shopMaterialPriceMap.get(material)==null) {
                 return;
             }
 
-            PriceQueue queue = shopPriceMap.get(material);
+            ShopPriceQueue queue = shopMaterialPriceMap.get(material);
             if (queue.contains(shop.getUuid())) {
                 queue.delete(shop.getUuid());
-                shopPriceMap.put(material, queue);
+                shopMaterialPriceMap.put(material, queue);
             }
         }
     }

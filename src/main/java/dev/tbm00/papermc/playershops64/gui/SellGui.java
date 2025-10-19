@@ -33,12 +33,12 @@ public class SellGui {
                     } return;
                 }
 
-                QuickSellEngine engine = new QuickSellEngine(javaPlugin, player);
+                QuickSellEngine engine = new QuickSellEngine(javaPlugin, player, null);
                 engine.computePlans(event.getInventory(), player.getUniqueId());
                 
                 if (engine.plans.sellPlan.totalItems<=0) {
                     StaticUtils.sendMessage(player, "&cCouldn't find any applicable shops for your items!");
-                    engine.returnUnsoldItems();
+                    engine.returnNonmatchedItems();
                     return;
                 }
 

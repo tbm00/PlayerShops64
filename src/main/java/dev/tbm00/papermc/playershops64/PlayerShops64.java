@@ -11,6 +11,7 @@ import dev.tbm00.papermc.playershops64.data.ConfigHandler;
 import dev.tbm00.papermc.playershops64.data.MySQLConnection;
 import dev.tbm00.papermc.playershops64.hook.VaultHook;
 import dev.tbm00.papermc.playershops64.listener.PlayerMovement;
+import dev.tbm00.papermc.playershops64.listener.PlayerWand;
 import dev.tbm00.papermc.playershops64.listener.ServerStartup;
 import dev.tbm00.papermc.playershops64.listener.ShopBaseBlock;
 
@@ -45,6 +46,7 @@ public class PlayerShops64 extends JavaPlugin {
             // Register Listeners
             getServer().getPluginManager().registerEvents(new ServerStartup(this), this);
             getServer().getPluginManager().registerEvents(new PlayerMovement(), this);
+            getServer().getPluginManager().registerEvents(new PlayerWand(this), this);
             getServer().getPluginManager().registerEvents(new ShopBaseBlock(this), this);
 
             // Register Commands

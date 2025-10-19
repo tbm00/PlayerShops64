@@ -77,7 +77,7 @@ public class ShopBaseBlock implements Listener {
         if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
 
         Block block = event.getClickedBlock();
-        if (!isProtected(block)) return;
+        if (!isProtectedShopBlock(block)) return;
 
         event.setCancelled(true);
         Player player = event.getPlayer();
@@ -133,22 +133,22 @@ public class ShopBaseBlock implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
-        if (isProtected(block)) {
+        if (isProtectedShopBlock(block)) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onEntityExplode(EntityExplodeEvent event) {
-        event.blockList().removeIf(this::isProtected);
+        event.blockList().removeIf(this::isProtectedShopBlock);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockExplode(BlockExplodeEvent event) {
-        event.blockList().removeIf(this::isProtected);
+        event.blockList().removeIf(this::isProtectedShopBlock);
     }
 
-    private boolean isProtected(Block b) {
+    private boolean isProtectedShopBlock(Block b) {
         BlockState blockState = b.getState();
         if (!(blockState instanceof TileState tileState)) return false;
         return tileState.getPersistentDataContainer().has(StaticUtils.SHOP_KEY, PersistentDataType.STRING);

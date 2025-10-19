@@ -6,11 +6,11 @@ import java.util.UUID;
 
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
-public final class PriceNode implements Comparable<PriceNode> {
+public final class ShopPriceNode implements Comparable<ShopPriceNode> {
     private final BigDecimal price;
     private final UUID shopUuid;
 
-    public PriceNode(BigDecimal price, UUID shopUuid) {
+    public ShopPriceNode(BigDecimal price, UUID shopUuid) {
         if (price == null || shopUuid == null) throw new NullPointerException("price/shopUuid");
         this.price = StaticUtils.normalizeBigDecimal(price);
         this.shopUuid = shopUuid;
@@ -21,7 +21,7 @@ public final class PriceNode implements Comparable<PriceNode> {
 
     // higher price first -- ties break by UUID
     @Override
-    public int compareTo(PriceNode o) {
+    public int compareTo(ShopPriceNode o) {
         int c = this.price.compareTo(o.price);
         if (c != 0) return c;
         return this.shopUuid.compareTo(o.shopUuid);
@@ -30,8 +30,8 @@ public final class PriceNode implements Comparable<PriceNode> {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof PriceNode)) return false;
-        PriceNode other = (PriceNode) obj;
+        if (!(obj instanceof ShopPriceNode)) return false;
+        ShopPriceNode other = (ShopPriceNode) obj;
         return price.compareTo(other.price) == 0 && shopUuid.equals(other.shopUuid);
     }
 
