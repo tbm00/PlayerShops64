@@ -2,7 +2,10 @@ package dev.tbm00.papermc.playershops64.data.structure;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Location;
@@ -31,6 +34,7 @@ public class Shop {
     private String description; // null if not set
     private int displayHeight; // -5 thru 5, 0 default
     private Material baseMaterial; // default lectern (will have a predefined set to select from via gui)
+    private Set<UUID> assistants; // list of player uuids, should never be null (default to empty)
 
     // NOT on SQL
     private UUID currentEditor; // null for none
@@ -55,6 +59,7 @@ public class Shop {
                 String description,
                 int displayHeight,
                 Material baseMaterial,
+                Set<UUID> assistants,
                 UUID currentEditor
                 ) {
         this.uuid = uuid;
@@ -74,6 +79,7 @@ public class Shop {
         this.description = description;
         this.displayHeight = displayHeight;
         this.baseMaterial = baseMaterial;
+        this.assistants = (assistants == null) ? new HashSet<>() : new HashSet<>(assistants);
         this.currentEditor = currentEditor;
     }
 
@@ -157,7 +163,7 @@ public class Shop {
     }
 
     public BigDecimal getBuyPriceForOne() {
-        if (sellPrice==null) return null;
+        if (buyPrice==null) return null;
         if (stackSize<=0) return null;
         
         return buyPrice.divide(BigDecimal.valueOf(stackSize), 2, RoundingMode.DOWN);
@@ -168,6 +174,14 @@ public class Shop {
         if (stackSize<=0) return null;
         
         return sellPrice.divide(BigDecimal.valueOf(stackSize), 2, RoundingMode.DOWN);
+    }
+
+    public Set<UUID> getAssistants() {
+        return Collections.unmodifiableSet(assistants);
+    }
+
+    public boolean isAssistant(UUID assistant) {
+        return assistant != null && assistants.contains(assistant);
     }
 
     // --- Setters ---
@@ -260,4 +274,17 @@ public class Shop {
     public void setCurrentEditor(UUID currentEditor) {
         this.currentEditor = currentEditor;
     }
+
+    public void setAssistants(Set<UUID> assistants) {
+        this.assistants = (assistants == null) ? new HashSet<>() : new HashSet<>(assistants);
+    }
+
+    public void addAssistant(UUID assistant) {
+        if (assistant != null) assistants.add(assistant);
+    }
+
+    public void removeAssistant(UUID assistant) {
+        if (assistant != null) assistants.remove(assistant);
+    }
 }
+/// Update my old ShopDAO.java and MySQLConnection.java to reflect the addition of 
