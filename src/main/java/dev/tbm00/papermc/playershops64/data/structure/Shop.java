@@ -287,4 +287,3 @@ public class Shop {
         if (assistant != null) assistants.remove(assistant);
     }
 }
-/// Update my old ShopDAO.java and MySQLConnection.java to reflect the addition of 

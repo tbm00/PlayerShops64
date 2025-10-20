@@ -148,8 +148,10 @@ public class StaticUtils {
      */
     public static String formatTitleCase(String string) {
         StringBuilder builder = new StringBuilder();
-        for(String word : string.toString().split("_"))
+        for(String word : string.toString().split("_")) {
+            if (word.isEmpty()) continue;
             builder.append(word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase() + " ");
+        }
      
         return builder.toString().trim();
     }
@@ -220,7 +222,7 @@ public class StaticUtils {
      * @param string the message to send
      */
     public static void sendMessage(CommandSender target, String string) {
-        if (string!=null && !string.equals(null) && !string.isBlank())
+        if (string!=null && !string.isBlank())
             target.spigot().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', javaPlugin.getConfigHandler().getChatPrefix() + string)));
     }
 

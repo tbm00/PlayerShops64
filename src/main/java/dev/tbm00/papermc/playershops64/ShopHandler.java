@@ -124,7 +124,7 @@ public class ShopHandler {
     }
 
     public Map<Material, ShopPriceQueue> getShopMaterialPriceMap() {
-        return shopMaterialPriceMap;
+        return Collections.unmodifiableMap(shopMaterialPriceMap);
     }
 
     public ShopPriceQueue getShopPriceQueue(Material material) {
@@ -148,7 +148,7 @@ public class ShopHandler {
         }
 
         if (shop.getItemStack()!=null) {
-            //if (shop.getSellPrice()==null || shop.getSellPrice().equals(null)) return;
+            //if (shop.getSellPrice()==null) return;
 
             Material material = shop.getItemStack().getType();
             if (material==null) return;
@@ -181,7 +181,7 @@ public class ShopHandler {
         }
 
         if (shop.getItemStack()!=null) {
-            if (shop.getSellPrice()==null || shop.getSellPrice().equals(null)) return;
+            if (shop.getSellPrice()==null) return;
 
             Material material = shop.getItemStack().getType();
             if (material==null) return;
@@ -247,7 +247,18 @@ public class ShopHandler {
 
 
     public void deleteShopObject(UUID uuid) {
-        if (uuid == null || uuid.equals(null)) return;
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, "Tried to delete shop off main thread... rescheduling on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> deleteShopObject(uuid));
+            return;
+        }
+
+        if (uuid == null) return;
+
+        // update memory + visuals 
+        Shop removed = shops.remove(uuid);
+        if (removed != null) deindexShop(removed);
+        displayManager.delete(uuid);
 
         // run DB operations async
         javaPlugin.getServer().getScheduler().runTaskAsynchronously(javaPlugin, () -> {
@@ -255,21 +266,16 @@ public class ShopHandler {
             if (!ok) {
                 StaticUtils.log(ChatColor.RED, "DB delete failed for shop " + uuid);
                 return;
+            } else {
+                StaticUtils.log(ChatColor.GREEN, "DB delete passed for shop " + uuid);
             }
-
-            // go back to main for memory + visuals
-            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> {
-                Shop removed = shops.remove(uuid);
-                if (removed != null) deindexShop(removed);
-                displayManager.delete(uuid);
-            });
         });
     }
 
     public void unlockShop(UUID shopUuid, UUID expectedEditor) {
         StaticUtils.log(ChatColor.WHITE, "Unlocking shop: " + shopUuid.toString());
         Shop shop = getShop(shopUuid);
-        if (shop==null || shop.equals(null)) {
+        if (shop==null) {
             StaticUtils.log(ChatColor.YELLOW, "Tried to unlock a null shop!" +
                                             "\nShop: " + shopUuid.toString());
             return;
@@ -294,7 +300,7 @@ public class ShopHandler {
     public boolean tryLockShop(UUID shopUuid, Player player) {
         StaticUtils.log(ChatColor.WHITE, player.getName() + " trying to lock shop: " + shopUuid.toString());
         Shop shop = getShop(shopUuid);
-        if (shop==null || shop.equals(null)) {
+        if (shop==null) {
             StaticUtils.log(ChatColor.YELLOW, player.getName() + " tried to tryLock a null shop!" +
                                             "\nShop: " + shopUuid.toString());
             StaticUtils.sendMessage(player, "&cShop object not found..!");

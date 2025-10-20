@@ -68,7 +68,7 @@ public class ShopManageGui {
         ItemMeta meta = item.getItemMeta();
         List<String> lore = new ArrayList<>();
         
-        if (shop.getItemStack()==null || shop.getItemStack().equals(null)) {
+        if (shop.getItemStack()==null) {
             // Null Sale Item
             lore.clear();
             lore.add("&8-----------------------");
@@ -121,7 +121,7 @@ public class ShopManageGui {
         { // Set Sell Price
             lore.clear();
             lore.add("&8-----------------------");
-            if (shop.getSellPrice()!=null && !shop.getSellPrice().equals(null)) {
+            if (shop.getSellPrice()!=null) {
                 lore.add("&6Click to set this shop's sell price");
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&4Sell Price: &f$" + StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue())));
             } else { 
@@ -136,7 +136,7 @@ public class ShopManageGui {
                                                                             gui.setCloseGuiAction(null);
                                                                             new ShopAdjustTextGui(javaPlugin, viewer, isAdmin, shopUuid, AdjustAttribute.SELL_PRICE, true);
                                                                         }));
-        } if (shop.getSellPrice()!=null && !shop.getSellPrice().equals(null)) {
+        } if (shop.getSellPrice()!=null) {
             // Disable Selling
             lore.clear();
             lore.add("&8-----------------------");
@@ -159,7 +159,7 @@ public class ShopManageGui {
         { // Set Buy Price
             lore.clear();
             lore.add("&8-----------------------");
-            if (shop.getBuyPrice()!=null && !shop.getBuyPrice().equals(null)) {
+            if (shop.getBuyPrice()!=null) {
                 lore.add("&6Click to set this shop's buy price");
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&2Buy Price: &f$" + StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue())));
             } else { 
@@ -174,7 +174,7 @@ public class ShopManageGui {
                                                                             gui.setCloseGuiAction(null);
                                                                             new ShopAdjustTextGui(javaPlugin, viewer, isAdmin, shopUuid, AdjustAttribute.BUY_PRICE, false);
                                                                         }));
-        } if (shop.getBuyPrice()!=null && !shop.getBuyPrice().equals(null)) {
+        } if (shop.getBuyPrice()!=null) {
             // Disable Buying
             lore.clear();
             lore.add("&8-----------------------");
@@ -199,7 +199,7 @@ public class ShopManageGui {
             lore.add("&8-----------------------");
             lore.add("&6Click to manage this shop's balance");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            if (shop.getMoneyStock()!=null && !shop.getMoneyStock().equals(null)) 
+            if (shop.getMoneyStock()!=null) 
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Balance: &f$" + StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue())));
             else meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Balance: &f$(null)"));
             item.setItemMeta(meta);
@@ -245,7 +245,7 @@ public class ShopManageGui {
                                                                             gui.setCloseGuiAction(null);
                                                                             new ShopAdjustTextGui(javaPlugin, viewer, isAdmin, shopUuid, AdjustAttribute.DESCRIPTION, false);
                                                                         }));
-        } if (shop.getDescription()!=null && !shop.getDescription().equals(null)) {
+        } if (shop.getDescription()!=null) {
             // Clear Description
             lore.clear();
             lore.add("&8-----------------------");

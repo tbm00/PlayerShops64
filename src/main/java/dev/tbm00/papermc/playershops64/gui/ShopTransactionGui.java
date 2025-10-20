@@ -98,7 +98,7 @@ public class ShopTransactionGui {
                                                                         }));
         }
 
-        if (shop.getItemStack()!=null && !shop.getItemStack().equals(null)) { //  Similar Search Button
+        if (shop.getItemStack()!=null) { //  Similar Search Button
             lore.clear();
             lore.add("&8-----------------------");
             lore.add("&6Click to find similar shops");

@@ -92,7 +92,7 @@ public class ShopUtils {
 
             // delete shop
             javaPlugin.getShopHandler().deleteShopObject(shop.getUuid());
-            if (block==null || block.equals(null)) {
+            if (block==null) {
                 javaPlugin.getServer().getWorld(shop.getWorld().getUID()).getBlockAt(shop.getLocation()).setType(Material.AIR, false);
             } else block.setType(Material.AIR, false);
             StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepPlayerShopItemStack(1));
@@ -212,12 +212,12 @@ public class ShopUtils {
             }
             
             // edit shop
-            if (newPrice==null || newPrice.equals(null)) shop.setBuyPrice(null);
+            if (newPrice==null) shop.setBuyPrice(null);
             else shop.setBuyPrice(BigDecimal.valueOf(newPrice));
 
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
-            if (newPrice!=null && !newPrice.equals(null)) {
+            if (newPrice!=null) {
                 StaticUtils.sendMessage(player, "&aSet buy price to $" + StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue()) + "!");
             } else {
                 StaticUtils.sendMessage(player, "&aDisabled buying from this shop!");
@@ -252,12 +252,12 @@ public class ShopUtils {
             }
 
             // edit shop
-            if (newPrice==null || newPrice.equals(null)) shop.setSellPrice(null);
+            if (newPrice==null) shop.setSellPrice(null);
             else shop.setSellPrice(BigDecimal.valueOf(newPrice));
 
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
-            if (newPrice!=null && !newPrice.equals(null)) {
+            if (newPrice!=null) {
                 StaticUtils.sendMessage(player, "&aSet sell price to $" + StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue()) + "!");
             } else {
                 StaticUtils.sendMessage(player, "&aDisabled selling to this shop!");

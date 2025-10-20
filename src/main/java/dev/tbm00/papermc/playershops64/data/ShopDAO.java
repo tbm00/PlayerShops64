@@ -1,8 +1,17 @@
 package dev.tbm00.papermc.playershops64.data;
 
 import java.math.BigDecimal;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
@@ -156,7 +165,8 @@ public class ShopDAO {
         String worldName = rs.getString("world");
         World world = (worldName == null) ? null : Bukkit.getWorld(worldName);
         Location location = deserializeLocation(world, rs.getString("location"));
-        ItemStack itemStack = ItemSerializer.itemStackFromBase64(rs.getString("itemstack_b64"));
+        String raw = rs.getString("itemstack_b64");
+        ItemStack itemStack = (raw==null || raw.isBlank()) ? null : ItemSerializer.itemStackFromBase64(raw);
         int stackSize = rs.getInt("stack_size");
         int itemStock = rs.getInt("item_stock");
         BigDecimal moneyStock = rs.getBigDecimal("money_stock");
@@ -219,7 +229,7 @@ public class ShopDAO {
         
         try { return Material.valueOf(s); }
         catch (Exception ex) {
-            StaticUtils.log(ChatColor.RED, "Failed to map shop row: " + ex.getMessage());
+            StaticUtils.log(ChatColor.RED, "Invalid base material: " + ex.getMessage());
             return null;
         }
     }
