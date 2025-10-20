@@ -13,9 +13,12 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.TileState;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.enums.AdjustType;
@@ -394,6 +397,46 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aRemoved '" + javaPlugin.getServer().getOfflinePlayer(playerUuid).getName() + "' from shop's assistants!");
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
+    public static void setBaseMaterial(Player player, UUID shopUuid, Material material) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to set shop " + shopUuid + "'s base material off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> setBaseMaterial(player, shopUuid, material));
+            return;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            return;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                StaticUtils.sendMessage(player, "&cShop not found..!");
+                return;
+            }
+
+            shop.setBaseMaterial(material);
+
+            Block block = javaPlugin.getServer().getWorld(shop.getWorld().getUID()).getBlockAt(shop.getLocation());
+            block.setType(material, false);
+
+            BlockState state = block.getState();
+            if (state instanceof TileState tileState) {
+                tileState.getPersistentDataContainer().set(StaticUtils.SHOP_KEY, PersistentDataType.STRING, "true");
+                tileState.update(true, false); // apply to world
+            } else {
+                StaticUtils.log(ChatColor.RED, "Shop's new base block's state was not a TileState, so it doesn't have the PDC key!");
+            }
+
+            // apply updates
+            javaPlugin.getShopHandler().upsertShopObject(shop);
+            StaticUtils.sendMessage(player, "&aSet base block material to " + material.toString() + "!");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }

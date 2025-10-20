@@ -95,11 +95,12 @@ public class ShopDisplay {
                 ent.setVelocity(new Vector(0, 0, 0));       // no initial fling
                 ent.setGravity(false);                       // keep it hovering
                 ent.setCustomNameVisible(false);
-                ent.setCanPlayerPickup(false);               // Paper API
-                ent.setCanMobPickup(false);                  // Paper API
                 ent.setUnlimitedLifetime(true);              // never despawn
                 ent.setPersistent(false);
                 ent.setInvulnerable(true);
+                ent.setPickupDelay(Integer.MAX_VALUE);       // Vanilla fallback
+                ent.setCanPlayerPickup(false);               // Paper API
+                ent.setCanMobPickup(false);                  // Paper API
                 ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "item");
             });
             tracked.add(itemDisplay.getUniqueId());

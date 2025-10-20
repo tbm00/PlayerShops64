@@ -28,7 +28,7 @@ public class ShopManageGui {
     private final boolean isAdmin;
     private final UUID shopUuid;
     private final Shop shop;
-    private String label = "Shop Management";
+    private final String label = "Shop Management";
     private String shopHint;
     
     public ShopManageGui(PlayerShops64 javaPlugin, Player viewer, boolean isAdmin, UUID shopUuid) {
@@ -44,7 +44,7 @@ public class ShopManageGui {
             return;
         } StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+shopHint+"'s manage gui");
 
-        label = "Shop Management (" + shopHint+ ")";
+        //label = "Shop Management (" + shopHint+ ")";
         gui.updateTitle(label);
         setup();
         gui.disableAllInteractions();
@@ -296,7 +296,8 @@ public class ShopManageGui {
             item.setType(Material.LECTERN);
             gui.setItem(6, 6, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
-                                                                            // TODO: create shop base material GUI
+                                                                            gui.setCloseGuiAction(null);
+                                                                            new ListMaterialsGui(javaPlugin, viewer, shopUuid, isAdmin);
                                                                         }));
         }
 
@@ -304,7 +305,7 @@ public class ShopManageGui {
             // Manage Assistants
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&7Assistants can completely manage the shop!");
+            lore.add("&7Assistants can modify the shop entirely!");
             if (!shop.getAssistants().isEmpty()) {
                 lore.add("&8-----------------------");
                 lore.add("&7Assistants:");
@@ -321,7 +322,7 @@ public class ShopManageGui {
             gui.setItem(1, 1, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             gui.setCloseGuiAction(null);
-                                                                            new AssistantGui(javaPlugin, viewer, shopUuid, isAdmin);
+                                                                            new ListAssistantsGui(javaPlugin, viewer, shopUuid, isAdmin);
                                                                         }));
         }
 

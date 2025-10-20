@@ -3,7 +3,9 @@ package dev.tbm00.papermc.playershops64.data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -31,8 +33,10 @@ public class ConfigHandler {
     private int maxBalance = 100000000;
     private int maxBuyPrice = 10000000;
     private int maxSellPrice = 10000000;
+    private Set<Material> baseBlockMaterials = new HashSet<>();
 
     private List<GuiSearchCategory> searchCategories = new ArrayList<>();
+    
 
     /**
      * Constructs a ConfigHandler instance.
@@ -106,6 +110,13 @@ public class ConfigHandler {
             maxStock = shop.getInt("maxBalance", 100000000);
             maxStock = shop.getInt("maxBuyPrice", 10000000);
             maxStock = shop.getInt("maxSellPrice", 10000000);
+
+            List<String> materialStrings = shop.getStringList("baseBlockMaterials");
+            for (String string : materialStrings) {
+                Material material = Material.getMaterial(string);
+                if (material == null) StaticUtils.log(ChatColor.RED, "Error loading base block material '" + string + "' from config.yml!");
+                else baseBlockMaterials.add(material);
+            }
         }
 
         return true;
@@ -218,6 +229,10 @@ public class ConfigHandler {
 
     public int getMaxSellPrice() {
         return maxSellPrice;
+    }
+    
+    public Set<Material> getBaseBlockMaterials() {
+        return baseBlockMaterials;
     }
 
     // Display

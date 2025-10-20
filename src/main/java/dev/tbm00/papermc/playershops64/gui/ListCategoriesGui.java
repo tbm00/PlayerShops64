@@ -23,7 +23,7 @@ public class ListCategoriesGui {
     private final Gui gui;
     private final Player viewer;
     private final boolean isAdmin;
-    private String label = StaticUtils.CATEGORY_GUI_TITLE;
+    private final String label = StaticUtils.CATEGORY_GUI_TITLE;
     
     public ListCategoriesGui(PlayerShops64 javaPlugin, Player viewer, boolean isAdmin) {
         this.javaPlugin = javaPlugin;

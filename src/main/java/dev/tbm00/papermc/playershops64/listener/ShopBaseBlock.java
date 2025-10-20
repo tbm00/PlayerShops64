@@ -15,6 +15,7 @@ import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -74,7 +75,7 @@ public class ShopBaseBlock implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onBlockClick(PlayerInteractEvent event) {
         if (event.getClickedBlock() == null) return;
-        if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
+        if (event.getHand() != EquipmentSlot.HAND) return;
 
         Block block = event.getClickedBlock();
         if (!isProtectedShopBlock(block)) return;
@@ -87,11 +88,11 @@ public class ShopBaseBlock implements Listener {
             return;
         }
 
-        boolean isOwner = player.getUniqueId().equals(shop.getOwnerUuid());
+        boolean isManager = player.getUniqueId().equals(shop.getOwnerUuid()) || shop.isAssistant(player.getUniqueId());
         boolean isSneaking = player.isSneaking();
         Action action = event.getAction();
 
-        if (isOwner) {
+        if (isManager) {
             if (isSneaking) {
                 if (action==Action.LEFT_CLICK_BLOCK) {
                     /*if (shop.getItemStack()==null || shop.getItemStock()<1) {

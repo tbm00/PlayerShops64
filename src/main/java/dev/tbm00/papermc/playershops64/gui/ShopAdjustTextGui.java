@@ -25,8 +25,6 @@ import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ShopAdjustTextGui {
 
-    private final String title = "Enter Amount";
-
     /**
      * Creates an anvil gui for player to enter text and search shops with.
      */
@@ -55,7 +53,7 @@ public class ShopAdjustTextGui {
     private void adjustBedrockInt(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute, boolean closeGuiAfter) {
         try {
             CustomForm form = CustomForm.builder()
-                .title(title)
+                .title("Enter Amount")
                 .label("Enter new amount to set")
                 .input("", "integer", "")
                 .build();
@@ -102,7 +100,7 @@ public class ShopAdjustTextGui {
     private void setBedrockDescription(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute) {
         try {
             CustomForm form = CustomForm.builder()
-                .title(title)
+                .title("Enter Description")
                 .label("Enter new description to set")
                 .input("", "short description", "")
                 .build();
@@ -153,7 +151,7 @@ public class ShopAdjustTextGui {
     private void addBedrockAssistant(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute) {
         try {
             CustomForm form = CustomForm.builder()
-                .title(title)
+                .title("Enter Player")
                 .label("Enter assistant to add")
                 .input("", "player name", "")
                 .build();
@@ -232,6 +230,11 @@ public class ShopAdjustTextGui {
                     }
 
                     String query = stateSnapshot.getText();
+                    if (query.isEmpty() || query.isBlank()) {
+                        query = " ";
+                    } else {
+                        query = query.stripLeading();
+                    }
                     String finalQuery = (query.isEmpty()) ? " " : query;
 
                     return Arrays.asList(
@@ -250,7 +253,7 @@ public class ShopAdjustTextGui {
                 .itemLeft(leftItem)
                 .itemRight(rightItem)
                 .itemOutput(outputItem)
-                .title(title)
+                .title("Enter Player")
                 .plugin(javaPlugin)
                 .open(player);
     }
@@ -286,7 +289,12 @@ public class ShopAdjustTextGui {
                     }
 
                     String query = stateSnapshot.getText();
-                    String finalQuery = (query.isEmpty()) ? " " : query;
+                    String finalQuery;
+                    if (query.isEmpty() || query.isBlank()) {
+                        finalQuery = " ";
+                    } else {
+                        finalQuery = query.stripLeading();
+                    }
 
                     return Arrays.asList(
                         AnvilGUI.ResponseAction.close(),
@@ -304,7 +312,7 @@ public class ShopAdjustTextGui {
                 .itemLeft(leftItem)
                 .itemRight(rightItem)
                 .itemOutput(outputItem)
-                .title(title)
+                .title("Enter Description")
                 .plugin(javaPlugin)
                 .open(player);
     }
@@ -355,7 +363,7 @@ public class ShopAdjustTextGui {
                 .itemLeft(leftItem)
                 .itemRight(rightItem)
                 .itemOutput(outputItem)
-                .title(title)
+                .title("Enter Amount")
                 .plugin(javaPlugin)
                 .open(player);
     }

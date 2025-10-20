@@ -31,6 +31,11 @@ shop:
   maxBalance: 100000000
   maxBuyPrice: 10000000
   maxSellPrice: 10000000
+  baseBlockMaterials:
+    - "LECTERN"
+    - "CHEST"
+    - "ENDER_CHEST"
+    - "HOPPER"
 
 display:
   tickCycle: 5 # ticks
