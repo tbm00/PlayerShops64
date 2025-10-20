@@ -5,10 +5,16 @@ import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -17,6 +23,7 @@ import org.bukkit.World;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.HumanEntity;
@@ -25,6 +32,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import net.md_5.bungee.api.chat.TextComponent;
@@ -610,5 +618,60 @@ public class StaticUtils {
         if (amount!=null) wand.setAmount(amount);
 
         return wand;
+    }
+
+    // Headcache
+    public static final Map<UUID, Pair<SkullMeta, Long>> headMetaCache = new HashMap<>();
+    private static final Set<UUID> refreshInProgress = new HashSet<>();
+
+    /**
+     * Adds skin texture to head meta.
+     * 
+     * If player+skin is in cached map, retrieve it
+     * else use setOwningPlayer and save the SkullMeta to cache
+     *
+     * @param headMeta the head meta to modify
+     * @param player the player whose head we want
+     */
+    public static void applyHeadTexture(ItemStack head, OfflinePlayer player) {
+        UUID uuid = player.getUniqueId();
+        SkullMeta headMeta = (SkullMeta) head.getItemMeta();
+        Pair<SkullMeta, Long> entry = headMetaCache.get(uuid);
+
+        if (isCacheValid(player, entry)) {
+            head.setItemMeta(entry.getLeft().clone());
+            return;
+        }
+        
+        headMeta.setOwningPlayer(player);
+        head.setItemMeta(headMeta);
+
+        if (refreshInProgress.contains(uuid)) return;
+        else refreshInProgress.add(uuid);
+        
+        // Delay to allow the server to apply the skin texture
+        Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
+            try {
+                SkullMeta updatedMeta = (SkullMeta) head.getItemMeta();
+                headMetaCache.put(uuid, Pair.of(updatedMeta, System.currentTimeMillis()));
+            } finally {
+                refreshInProgress.remove(uuid);
+            }
+        }, 20L);
+    }
+
+    private static boolean isCacheValid(OfflinePlayer player, Pair<SkullMeta, Long> entry) {
+        if (entry==null) {
+            return false;
+        }
+        
+        if (player.isOnline() && player instanceof Player) {
+            long currentTime = System.currentTimeMillis();
+            if ((currentTime - entry.getRight()) >= 3600000) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

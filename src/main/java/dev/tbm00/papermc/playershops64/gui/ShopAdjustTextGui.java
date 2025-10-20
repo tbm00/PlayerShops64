@@ -31,17 +31,23 @@ public class ShopAdjustTextGui {
      * Creates an anvil gui for player to enter text and search shops with.
      */
     public ShopAdjustTextGui(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute, boolean closeGuiAfter) {
-        if (!attribute.equals(AdjustAttribute.DESCRIPTION)) {
+        if (attribute.equals(AdjustAttribute.DESCRIPTION)) {
+            if (javaPlugin.getConfigHandler().isFloodgateEnabled() && FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
+                setBedrockDescription(javaPlugin, player, isAdmin, shopUuid, attribute);
+            } else {
+                setJavaDescription(javaPlugin, player, isAdmin, shopUuid, attribute);
+            }
+        } else if (attribute.equals(AdjustAttribute.ASSISTANT)) {
+            if (javaPlugin.getConfigHandler().isFloodgateEnabled() && FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
+                addBedrockAssistant(javaPlugin, player, isAdmin, shopUuid, attribute);
+            } else {
+                addJavaAssistant(javaPlugin, player, isAdmin, shopUuid, attribute);
+            }
+        } else {
             if (javaPlugin.getConfigHandler().isFloodgateEnabled() && FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
                 adjustBedrockInt(javaPlugin, player, isAdmin, shopUuid, attribute, closeGuiAfter);
             } else {
                 adjustJavaInt(javaPlugin, player, isAdmin, shopUuid, attribute, closeGuiAfter);
-            }
-        } else {
-            if (javaPlugin.getConfigHandler().isFloodgateEnabled() && FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
-                adjustBedrockString(javaPlugin, player, isAdmin, shopUuid, attribute);
-            } else {
-                adjustJavaString(javaPlugin, player, isAdmin, shopUuid, attribute);
             }
         }
     }
@@ -93,7 +99,7 @@ public class ShopAdjustTextGui {
         }
     }
 
-    private void adjustBedrockString(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute) {
+    private void setBedrockDescription(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute) {
         try {
             CustomForm form = CustomForm.builder()
                 .title(title)
@@ -144,7 +150,112 @@ public class ShopAdjustTextGui {
         }
     }
 
-    private void adjustJavaString(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute) {
+    private void addBedrockAssistant(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute) {
+        try {
+            CustomForm form = CustomForm.builder()
+                .title(title)
+                .label("Enter assistant to add")
+                .input("", "player name", "")
+                .build();
+
+            form.setResponseHandler(responseData -> {
+                CustomFormResponse response = form.parseResponse(responseData);
+                try {
+                    if (!response.isCorrect()) {
+                        StaticUtils.sendMessage(player, "&cInput cancelled!");
+                        return;
+                    }
+
+                    String query = response.next();
+                    if (query == null) {
+                        StaticUtils.sendMessage(player, "&cPlease enter a player name!");
+                        return;
+                    } if (query.isEmpty()) {
+                        query = " ";
+                    }
+
+                    try {
+                        ShopUtils.addAssistant(player, shopUuid, query);
+                        new ShopManageGui(javaPlugin, player, isAdmin, shopUuid);
+                    } catch (Exception e) {
+                        StaticUtils.log(ChatColor.RED, "Caught exception adding assistant and/or opening new manage inv from bedrock form: " + e.getMessage());
+                        StaticUtils.sendMessage(player, "&cError adding an assistant from your input!");
+                    }
+                } finally {
+                    unlock(javaPlugin, shopUuid, player, attribute);
+                }
+            });
+
+            Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
+                if (player.isOnline()) {
+                    if (FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
+                        FloodgatePlayer fgp = FloodgateApi.getInstance().getPlayer(player.getUniqueId());
+                        fgp.sendForm(form);
+                    }
+                }
+            }, 1L);
+
+            return;
+        } catch (Exception e) {
+            StaticUtils.log(ChatColor.RED, "Caught exception creating custom bedrock form: " + e.getMessage());
+        }
+    }
+
+    private void addJavaAssistant(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute) {
+            ItemStack leftItem = new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE);
+            ItemMeta leftMeta = leftItem.getItemMeta();
+            leftMeta.setDisplayName(" ");
+            leftMeta.setItemName(" ");
+            leftItem.setItemMeta(leftMeta);
+
+            ItemStack rightItem = new ItemStack(Material.WRITABLE_BOOK);
+            ItemMeta rightMeta = rightItem.getItemMeta();
+            rightMeta.setDisplayName("type player name");
+            rightMeta.setItemName("type player name");
+            rightItem.setItemMeta(rightMeta);
+
+            ItemStack outputItem = new ItemStack(Material.GREEN_BANNER);
+            ItemMeta outputMeta = outputItem.getItemMeta();
+            outputMeta.setDisplayName("click to add assistant");
+            outputMeta.setItemName("click to add assistant");
+            outputItem.setItemMeta(outputMeta);
+
+            if (!tryLock(javaPlugin, shopUuid, player, attribute)) return;
+
+            new AnvilGUI.Builder()
+                .onClose((stateSnapshot) -> {
+                    unlock(javaPlugin, shopUuid, player, attribute);
+                })
+                .onClick((slot, stateSnapshot) -> {
+                    if(slot != AnvilGUI.Slot.OUTPUT) {
+                        return Collections.emptyList();
+                    }
+
+                    String query = stateSnapshot.getText();
+                    String finalQuery = (query.isEmpty()) ? " " : query;
+
+                    return Arrays.asList(
+                        AnvilGUI.ResponseAction.close(),
+                        AnvilGUI.ResponseAction.run(() -> {
+                            try {
+                                ShopUtils.addAssistant(player, shopUuid, finalQuery);
+                                new ShopManageGui(javaPlugin, player, isAdmin, shopUuid); 
+                            } catch (Exception e) {
+                                StaticUtils.log(ChatColor.RED, "Caught exception adding assistant and/or opening new manage inv from anvil gui: " + e.getMessage());
+                                StaticUtils.sendMessage(player, "&cError adding an assistant from your input!");
+                            }})
+                    );
+                })
+                .text(" ")
+                .itemLeft(leftItem)
+                .itemRight(rightItem)
+                .itemOutput(outputItem)
+                .title(title)
+                .plugin(javaPlugin)
+                .open(player);
+    }
+
+    private void setJavaDescription(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, AdjustAttribute attribute) {
             ItemStack leftItem = new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE);
             ItemMeta leftMeta = leftItem.getItemMeta();
             leftMeta.setDisplayName(" ");

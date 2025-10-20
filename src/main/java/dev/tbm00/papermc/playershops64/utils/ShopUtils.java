@@ -329,6 +329,76 @@ public class ShopUtils {
         }
     }
 
+    public static void addAssistant(Player player, UUID shopUuid, String playerName) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to add assistant to shop " + shopUuid + "'s off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> addAssistant(player, shopUuid, playerName));
+            return;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            return;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                StaticUtils.sendMessage(player, "&cShop not found..!");
+                return;
+            }
+
+            UUID addUuid = null;
+            try {
+                addUuid = javaPlugin.getServer().getOfflinePlayer(playerName).getUniqueId();
+            } catch (Exception e) {
+                StaticUtils.sendMessage(player, "&cCould not find player from input: '"+playerName+"'");
+                return;
+            }
+            if (addUuid==null) {
+                StaticUtils.sendMessage(player, "&cCould not find player from input: '"+playerName+"'");
+                return;
+            }
+
+            shop.addAssistant(addUuid);
+
+            // apply updates
+            javaPlugin.getShopHandler().upsertShopObject(shop);
+            StaticUtils.sendMessage(player, "&aAdded '" + playerName + "' to shop's assistants!");
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
+    public static void removeAssistant(Player player, UUID shopUuid, UUID playerUuid) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to remove assistant to shop " + shopUuid + "'s off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> removeAssistant(player, shopUuid, playerUuid));
+            return;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            return;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                StaticUtils.sendMessage(player, "&cShop not found..!");
+                return;
+            }
+
+            shop.removeAssistant(playerUuid);
+
+            // apply updates
+            javaPlugin.getShopHandler().upsertShopObject(shop);
+            StaticUtils.sendMessage(player, "&aRemoved '" + javaPlugin.getServer().getOfflinePlayer(playerUuid).getName() + "' from shop's assistants!");
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
     public static void adjustBalance(Player player, UUID shopUuid, AdjustType adjustType, double requestedAmount) {
         if (!Bukkit.isPrimaryThread()) {
             StaticUtils.log(ChatColor.RED, player.getName() + " tried to adjust shop " + shopUuid + "'s balance off the main thread -- trying again during next tick on main thread!");
@@ -679,6 +749,11 @@ public class ShopUtils {
                 return;
             }
 
+            if (shop.isAssistant(player.getUniqueId())) {
+                StaticUtils.sendMessage(player, "&cYou can't sell to shops you are an assistant to");
+                return;
+            }
+
             if (quantity <= 0) {
                 StaticUtils.sendMessage(player, "&cInvalid quantity.");
                 return;
@@ -780,6 +855,11 @@ public class ShopUtils {
 
             if (shop.getOwnerUuid().equals(player.getUniqueId())) {
                 StaticUtils.sendMessage(player, "&cYou cannot buy from your own shop!");
+                return;
+            }
+
+            if (shop.isAssistant(player.getUniqueId())) {
+                StaticUtils.sendMessage(player, "&cYou can't buy from shops you are an assistant to");
                 return;
             }
 

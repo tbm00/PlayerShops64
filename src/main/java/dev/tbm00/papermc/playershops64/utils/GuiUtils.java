@@ -202,18 +202,18 @@ public class GuiUtils {
         lore.clear();
     }
 
-    public static void setGuiItemPageBack(PaginatedGui gui, ItemStack item, ItemMeta meta, List<String> lore, String label) {
+    public static void setGuiItemPageBack(PaginatedGui gui, ItemStack item, ItemMeta meta, List<String> lore, String label, int column) {
         lore.add("&8-----------------------");
         lore.add("&6Click to go to the previous page");
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
         meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&fPrevious Page"));
         item.setItemMeta(meta);
         item.setType(Material.STONE_BUTTON);
-        gui.setItem(6, 5, ItemBuilder.from(item).asGuiItem(event -> handleClickPage(event, gui, false, label)));
+        gui.setItem(6, column, ItemBuilder.from(item).asGuiItem(event -> handleClickPage(event, gui, false, label)));
         lore.clear();
     }
 
-    public static void setGuiItemPageNext(PaginatedGui gui, ItemStack item, ItemMeta meta, List<String> lore, String label) {
+    public static void setGuiItemPageNext(PaginatedGui gui, ItemStack item, ItemMeta meta, List<String> lore, String label, int column) {
         lore.add("&8-----------------------");
         lore.add("&6Click to go to the next page");
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
@@ -276,34 +276,17 @@ public class GuiUtils {
         lore.clear();
     }
 
-    /*public static boolean openGuiTransaction(Player player, UUID shopUuid, Integer quantity, boolean closeGuiAfter) {
-        //if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
-
-        if (quantity==null) new ShopTransactionGui(javaPlugin, player, shopUuid, 1, closeGuiAfter);
-        else new ShopTransactionGui(javaPlugin, player, shopUuid, quantity, closeGuiAfter);
-        return true;
-    }*/
-
-    /*public static boolean openGuiAdjustInv(Player player, UUID shopUuid, Integer quantity, AdjustAttribute attribute, boolean closeGuiAfter) {
-        //if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
-
-        if (quantity==null) new ShopAdjustInvGui(javaPlugin, player, shopUuid, 1, attribute, closeGuiAfter);
-        else new ShopAdjustInvGui(javaPlugin, player, shopUuid, quantity, attribute, closeGuiAfter);
-        return true;
-    }*/
-
-    /*public static boolean openGuiAdjustText(Player player, UUID shopUuid, AdjustAttribute attribute, boolean closeGuiAfter) {
-        //if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
-
-        new ShopAdjustTextGui(javaPlugin, player, shopUuid, attribute, closeGuiAfter);
-        return true;
-    }*/
-
-    /*public static boolean openGuiManage(Player player, boolean isAdmin, UUID shopUuid) {
-        //if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
-
-        new ShopManageGui(javaPlugin, player, isAdmin, shopUuid);
-        return true;
-    }*/
+    /**
+     * Handles the event when a page button is clicked.
+     * 
+     * @param event the inventory click event
+     * @param next true to go to the next page; false to go to the previous page
+     */
+    public static void handlePageClick(InventoryClickEvent event, PaginatedGui gui, boolean next, String label) {
+        event.setCancelled(true);
+        if (next) gui.next();
+        else gui.previous();
+        gui.updateTitle(label + gui.getCurrentPageNum() + "/" + gui.getPagesNum());
+    }
 }
 

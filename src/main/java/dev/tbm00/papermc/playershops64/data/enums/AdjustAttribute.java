@@ -7,6 +7,8 @@ public enum AdjustAttribute {
     BALANCE,
     DESCRIPTION,
     DISPLAY_HEIGHT,
+    ASSISTANT,
+    BASE_MATERIAL,
     TRANSACTION;
 
     public static String toString(AdjustAttribute adjustAttribute) {
@@ -23,6 +25,10 @@ public enum AdjustAttribute {
                 return "Description";
             case DISPLAY_HEIGHT:
                 return "Display Height";
+            case ASSISTANT:
+                return "Assistant";
+            case BASE_MATERIAL:
+                return "Material";
             case TRANSACTION:
                 return "Transaction";
             default:

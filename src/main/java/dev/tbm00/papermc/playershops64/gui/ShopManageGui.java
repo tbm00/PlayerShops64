@@ -296,7 +296,32 @@ public class ShopManageGui {
             item.setType(Material.LECTERN);
             gui.setItem(6, 6, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
-                                                                            // TODO: set shop base material
+                                                                            // TODO: create shop base material GUI
+                                                                        }));
+        }
+
+        {
+            // Manage Assistants
+            lore.clear();
+            lore.add("&8-----------------------");
+            lore.add("&7Assistants can completely manage the shop!");
+            if (!shop.getAssistants().isEmpty()) {
+                lore.add("&8-----------------------");
+                lore.add("&7Assistants:");
+                for (UUID id : shop.getAssistants()) {
+                    lore.add("&7 - " + javaPlugin.getServer().getOfflinePlayer(id).getName());
+                }
+            }
+            lore.add("&8-----------------------");
+            lore.add("&6Click to manage this shop's assistants");
+            meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dManage Assistants"));
+            item.setItemMeta(meta);
+            item.setType(Material.PLAYER_HEAD);
+            gui.setItem(1, 1, ItemBuilder.from(item).asGuiItem(event -> {
+                                                                            event.setCancelled(true);
+                                                                            gui.setCloseGuiAction(null);
+                                                                            new AssistantGui(javaPlugin, viewer, shopUuid, isAdmin);
                                                                         }));
         }
 

@@ -119,7 +119,7 @@ public class ShopAdjustInvGui {
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dExit to Manage GUI"));
             item.setItemMeta(meta);
-            item.setType(Material.STONE_BUTTON);
+            item.setType(Material.POLISHED_BLACKSTONE_BUTTON);
             gui.setItem(2, 9, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
                                                                             gui.setCloseGuiAction(null);

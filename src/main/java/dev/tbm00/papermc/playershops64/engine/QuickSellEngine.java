@@ -116,6 +116,7 @@ public final class QuickSellEngine {
                 if (shop == null) continue;
 
                 if (shop.getOwnerUuid().equals(playerUuid)) continue;
+                if (shop.isAssistant(playerUuid)) continue;
 
                 // shop must match the item (lore/meta/etc)
                 if (!shop.getItemStack().isSimilar(invItem)) continue;
@@ -316,6 +317,11 @@ public final class QuickSellEngine {
 
             if (shop.getOwnerUuid().equals(player.getUniqueId())) {
                 StaticUtils.sendMessage(player, "&cQuick Sell Error: cant sell to own shop");
+                return new int[] {0, 0};
+            }
+
+            if (shop.isAssistant(player.getUniqueId())) {
+                StaticUtils.sendMessage(player, "&cQuick Sell Error: cant sell to shops you are an assistant to");
                 return new int[] {0, 0};
             }
 
