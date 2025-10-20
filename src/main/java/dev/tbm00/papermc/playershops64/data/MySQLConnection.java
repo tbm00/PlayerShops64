@@ -20,7 +20,6 @@ public class MySQLConnection {
             "playershops64_shops"
     };
     
-
     public MySQLConnection(PlayerShops64 javaPlugin) {
         this.javaPlugin = javaPlugin;
         
@@ -92,6 +91,7 @@ public class MySQLConnection {
           + "  `description` VARCHAR(256) NULL,"
           + "  `display_height` INT NULL DEFAULT "+javaPlugin.getConfigHandler().getDisplayDefaultHeight()+","
           + "  `base_material` VARCHAR(256) NULL,"
+          + "  `assistants` LONGTEXT NULL,"
           + "  PRIMARY KEY (`uuid`),"
           + "  KEY `idx_owner_uuid` (`owner_uuid`),"
           + "  KEY `idx_world` (`world`),"
@@ -116,7 +116,8 @@ public class MySQLConnection {
                         "ALTER TABLE `"+TABLES[0]+"` " +
                         "ADD COLUMN IF NOT EXISTS `description` VARCHAR(256) NULL AFTER `inf_stock`, " +
                         "ADD COLUMN IF NOT EXISTS `display_height` INT NOT NULL DEFAULT "+javaPlugin.getConfigHandler().getDisplayDefaultHeight()+" AFTER `description`, " +
-                        "ADD COLUMN IF NOT EXISTS `base_material` VARCHAR(256) NULL AFTER `display_height`"
+                        "ADD COLUMN IF NOT EXISTS `base_material` VARCHAR(256) NULL AFTER `display_height`, " +
+                        "ADD COLUMN IF NOT EXISTS `assistants` LONGTEXT NULL AFTER `base_material`"
                     );
                 StaticUtils.log(ChatColor.YELLOW, "Updated table '"+tbl+"'.");
             }

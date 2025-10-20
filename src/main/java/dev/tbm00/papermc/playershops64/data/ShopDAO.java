@@ -3,6 +3,7 @@ package dev.tbm00.papermc.playershops64.data;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -78,8 +79,8 @@ public class ShopDAO {
 
         final String sql = "INSERT INTO playershops64_shops " +
             "(uuid, owner_uuid, owner_name, world, location, itemstack_b64, stack_size, item_stock, money_stock, " +
-            " buy_price, sell_price, last_tx, inf_money, inf_stock, description, display_height, base_material) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+            " buy_price, sell_price, last_tx, inf_money, inf_stock, description, display_height, base_material, assistants) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
             "ON DUPLICATE KEY UPDATE " +
             " owner_uuid=VALUES(owner_uuid), " +
             " owner_name=VALUES(owner_name), " +
@@ -96,7 +97,8 @@ public class ShopDAO {
             " inf_stock=VALUES(inf_stock), " +
             " description=VALUES(description)," +
             " display_height=VALUES(display_height)," +
-            " base_material=VALUES(base_material)";
+            " base_material=VALUES(base_material), " +
+            " assistants=VALUES(assistants)";
 
         try (Connection conn = mySQL.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -118,6 +120,7 @@ public class ShopDAO {
             bindStringOrNull(ps, 15, shop.getDescription());
             ps.setInt(16, shop.getDisplayHeight());
             ps.setString(17, materialToString(shop.getBaseMaterial()));
+            ps.setString(18, serializeAssistants(shop.getAssistants()));
 
             ps.executeUpdate();
             return true;
@@ -166,8 +169,9 @@ public class ShopDAO {
         String description = rs.getString("description");
         int displayHeight = rs.getInt("display_height");
         Material baseMaterial = stringToMaterial(rs.getString("base_material"));
+        Set<UUID> assistants = deserializeAssistants(rs.getString("assistants"));
 
-        return new Shop(uuid, ownerUuid, ownerName, world, location, itemStack, stackSize, itemStock, moneyStock, buyPrice, sellPrice, lastTx, infiniteMoney, infiniteStock, description, displayHeight, baseMaterial, null);
+        return new Shop(uuid, ownerUuid, ownerName, world, location, itemStack, stackSize, itemStock, moneyStock, buyPrice, sellPrice, lastTx, infiniteMoney, infiniteStock, description, displayHeight, baseMaterial, assistants, null);
     }
 
     // --- Helper methods ---
@@ -186,6 +190,28 @@ public class ShopDAO {
         int y = Integer.parseInt(parts[1]);
         int z = Integer.parseInt(parts[2]);
         return new Location(world, x, y, z);
+    }
+
+    private String serializeAssistants(Set<UUID> assistants) {
+        if (assistants == null || assistants.isEmpty()) return "";
+        return assistants.stream().map(UUID::toString).collect(Collectors.joining(","));
+    }
+
+    private Set<UUID> deserializeAssistants(String raw) {
+        Set<UUID> out = new HashSet<>();
+        if (raw == null || raw.isEmpty()) return out;
+        String[] parts = raw.split(",");
+        for (String p : parts) {
+            String t = p.trim();
+            if (t.isEmpty()) continue;
+            try {
+                out.add(UUID.fromString(t));
+            } catch (Exception e) {
+                StaticUtils.log(ChatColor.RED, "Bad assistant UUID: " + t);
+                e.printStackTrace();
+            }
+        }
+        return out;
     }
 
     private Material stringToMaterial(String s) {

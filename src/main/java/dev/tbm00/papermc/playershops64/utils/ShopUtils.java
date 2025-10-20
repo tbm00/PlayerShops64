@@ -49,6 +49,7 @@ public class ShopUtils {
                             null,
                             0,
                             Material.LECTERN,
+                            null,
                             null);
 
         javaPlugin.getShopHandler().upsertShopObject(shop);

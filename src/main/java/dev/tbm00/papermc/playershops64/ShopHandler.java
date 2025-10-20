@@ -391,37 +391,8 @@ public class ShopHandler {
             s.getDescription(),
             s.getDisplayHeight(),
             s.getBaseMaterial(),
+            s.getAssistants(),
             s.getCurrentEditor()
         );
     }
-
-    /*private boolean canPlayerEditShop(UUID shopUuid, Player player) {
-        if (!isShopBeingEdited(shopUuid)) return true;
-
-        Shop shop = getShop(shopUuid);
-        if (shop.getCurrentEditor().equals(player.getUniqueId())) return true;
-
-        StaticUtils.sendMessage(player, "&cThis shop is being used by " + javaPlugin.getServer().getOfflinePlayer(shop.getCurrentEditor()).getName());
-        return false;
-    }*/
-
-    /*private boolean isShopBeingEdited(UUID shopUuid) {
-        Shop shop = getShop(shopUuid);
-        if (shop.getCurrentEditor()!=null) return true;
-        else return false;
-    }*/
-
-    /*public void setCurrentShopEditor(UUID shopUuid, Player player) {
-        Shop shop = getShop(shopUuid);
-        shop.setCurrentEditor(player.getUniqueId());
-        shops.put(shopUuid, shop);
-        upsertShopObject(shop);
-    }*/
-
-    /* public void clearCurrentShopEditor(UUID shopUuid) {
-        Shop shop = getShop(shopUuid);
-        shop.setCurrentEditor(null);
-        shops.put(shopUuid, shop);
-        upsertShopObject(shop);
-    } */
 }
