@@ -174,7 +174,7 @@ public class ShopAdjustTextGui {
 
                     try {
                         ShopUtils.addAssistant(player, shopUuid, query);
-                        new ShopManageGui(javaPlugin, player, isAdmin, shopUuid);
+                        new ListAssistantsGui(javaPlugin, player, shopUuid, isAdmin);
                     } catch (Exception e) {
                         StaticUtils.log(ChatColor.RED, "Caught exception adding assistant and/or opening new manage inv from bedrock form: " + e.getMessage());
                         StaticUtils.sendMessage(player, "&cError adding an assistant from your input!");
@@ -242,7 +242,7 @@ public class ShopAdjustTextGui {
                         AnvilGUI.ResponseAction.run(() -> {
                             try {
                                 ShopUtils.addAssistant(player, shopUuid, finalQuery);
-                                new ShopManageGui(javaPlugin, player, isAdmin, shopUuid); 
+                                new ListAssistantsGui(javaPlugin, player, shopUuid, isAdmin);
                             } catch (Exception e) {
                                 StaticUtils.log(ChatColor.RED, "Caught exception adding assistant and/or opening new manage inv from anvil gui: " + e.getMessage());
                                 StaticUtils.sendMessage(player, "&cError adding an assistant from your input!");

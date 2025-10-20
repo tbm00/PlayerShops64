@@ -11,6 +11,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import dev.triumphteam.gui.builder.item.ItemBuilder;
 import dev.triumphteam.gui.guis.PaginatedGui;
+
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.engine.QuickSellEngine;
@@ -63,7 +64,7 @@ public final class SellConfirmGui {
         if (shopLore==null) shopLore = new ArrayList<>();
 
         shopLore.add("&8-----------------------");
-        shopLore.add("&7Selling &e" + StaticUtils.formatIntUS(entry.amount) + " for");
+        shopLore.add("&7Selling &e" + StaticUtils.formatIntUS(entry.amount) + " &7for");
         shopLore.add("&a$" + StaticUtils.formatDoubleUS(entry.unitPrice.doubleValue()) + " &7each");
         shopLore.add("&7to " + shop.getOwnerName());
         shopLore.add(" ");

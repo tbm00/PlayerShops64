@@ -26,9 +26,11 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -595,6 +597,8 @@ public class StaticUtils {
         lore.add("&7&oShift-click a container to");
         lore.add("&7&odeposit items into your shops");
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+        meta.addEnchant(Enchantment.LURE, 1, true);
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
         wand.setItemMeta(meta);
         if (amount!=null) wand.setAmount(amount);
@@ -613,6 +617,8 @@ public class StaticUtils {
         lore.add("&7&oShift-click a container to");
         lore.add("&7&osell items to matching shops");
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+        meta.addEnchant(Enchantment.LURE, 1, true);
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
         wand.setItemMeta(meta);
         if (amount!=null) wand.setAmount(amount);
