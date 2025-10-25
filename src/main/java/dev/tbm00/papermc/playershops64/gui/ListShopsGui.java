@@ -377,7 +377,7 @@ public class ListShopsGui {
             shopLore.add("&eShift-click to edit this shop");
 
         shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-        shopMeta.setDisplayName(StaticUtils.getFormattedSaleItemName(shop));
+        shopMeta.setDisplayName(StaticUtils.getSaleItemNameWithQuantity(shop));
         /*shopMeta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         shopMeta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
         shopMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);

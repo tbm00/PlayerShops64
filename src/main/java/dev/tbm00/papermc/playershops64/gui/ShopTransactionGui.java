@@ -45,15 +45,15 @@ public class ShopTransactionGui {
 
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
             return;
-        } String shopHint = shopUuid.toString().substring(0, 6);
-        StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+shopHint+"'s transcation gui: " + this.quantity);
+        }
+        StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s transcation gui: " + this.quantity);
 
         label = "Shop Transaction: " + StaticUtils.formatIntUS(this.quantity);
         gui.updateTitle(label);
         setup();
         gui.disableAllInteractions();
         gui.setCloseGuiAction(event -> {
-            StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+shopHint+"'s transaction gui: " + this.quantity);
+            StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s transaction gui: " + this.quantity);
             javaPlugin.getShopHandler().unlockShop(shopUuid, viewer.getUniqueId());
         });
 
@@ -135,7 +135,7 @@ public class ShopTransactionGui {
 
             shopLore = ShopUtils.formatSaleItemLoreText(shop, true);
             shopItem.setAmount(shop.getStackSize());
-
+            shopMeta.setDisplayName(StaticUtils.getItemName(shop.getItemStack()));
             shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             shopItem.setItemMeta(shopMeta);
             gui.setItem(3, 5, ItemBuilder.from(shopItem).asGuiItem(event -> {

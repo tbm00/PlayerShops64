@@ -169,7 +169,7 @@ public class ShopAdjustInvGui {
             shopLore = ShopUtils.formatSaleItemLoreText(shop, true);
 
             shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            shopMeta.setDisplayName(StaticUtils.getFormattedSaleItemName(shop));
+            shopMeta.setDisplayName(StaticUtils.getSaleItemNameWithQuantity(shop));
             shopItem.setItemMeta(shopMeta);
             shopItem.setAmount(shop.getStackSize());
             gui.setItem(2, 2, ItemBuilder.from(shopItem).asGuiItem(event -> {

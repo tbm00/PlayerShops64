@@ -29,7 +29,6 @@ public class ShopManageGui {
     private final UUID shopUuid;
     private final Shop shop;
     private final String label = "Shop Management";
-    private String shopHint;
     
     public ShopManageGui(PlayerShops64 javaPlugin, Player viewer, boolean isAdmin, UUID shopUuid) {
         this.javaPlugin = javaPlugin;
@@ -38,13 +37,11 @@ public class ShopManageGui {
         this.shopUuid = shopUuid;
         this.shop = javaPlugin.getShopHandler().getShop(shopUuid);
         this.gui = new Gui(6, label);
-        this.shopHint = shopUuid.toString().substring(0, 6);
 
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
             return;
-        } StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+shopHint+"'s manage gui");
+        } StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s manage gui");
 
-        //label = "Shop Management (" + shopHint+ ")";
         gui.updateTitle(label);
         setup();
         gui.disableAllInteractions();
@@ -56,7 +53,7 @@ public class ShopManageGui {
     }
 
     private void closeAction() {
-        StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+shopHint+"'s manage gui");
+        StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s manage gui");
         javaPlugin.getShopHandler().unlockShop(shopUuid, viewer.getUniqueId());
     }
 
@@ -94,7 +91,7 @@ public class ShopManageGui {
             shopLore = ShopUtils.formatSaleItemLoreText(shop, true);
 
             shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            shopMeta.setDisplayName(StaticUtils.getFormattedSaleItemName(shop));
+            shopMeta.setDisplayName(StaticUtils.getSaleItemNameWithQuantity(shop));
             shopItem.setItemMeta(shopMeta);
             shopItem.setAmount(shop.getStackSize());
             gui.setItem(2, 5, ItemBuilder.from(shopItem).asGuiItem(event -> {

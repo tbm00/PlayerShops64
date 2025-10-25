@@ -43,8 +43,8 @@ public class ListAssistantsGui {
         
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
             return;
-        } String shopHint = shopUuid.toString().substring(0, 6);
-        StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+shopHint+"'s manage assistants gui");
+        }
+        StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s manage assistants gui");
         
 
         fillPlayers(shop);
@@ -52,7 +52,7 @@ public class ListAssistantsGui {
         
         gui.disableAllInteractions();
         gui.setCloseGuiAction(event -> {
-            StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+shopHint+"'s manage assistants gui");
+            StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s manage assistants gui");
             javaPlugin.getShopHandler().unlockShop(shopUuid, viewer.getUniqueId());
         });
 

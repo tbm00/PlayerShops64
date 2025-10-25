@@ -15,6 +15,7 @@ import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.structure.ShopPriceNode;
 import dev.tbm00.papermc.playershops64.data.structure.ShopPriceQueue;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
+import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public final class QuickSellEngine {
@@ -376,6 +377,7 @@ public final class QuickSellEngine {
             
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
+            StaticUtils.logEdit(player.getName()+" quick sold "+quantity+" "+StaticUtils.getItemName(saleItem)+" ("+StaticUtils.formatTitleCase(saleItem.getType().toString())+") to "+shop.getOwnerName()+"'s shop ("+ShopUtils.getShopHint(shopUuid)+") for $"+totalPrice.doubleValue()+". Shop's updated stock: "+shop.getItemStock() + ", Shop's updated balance: $"+shop.getMoneyStock().doubleValue());
             return new int[] {quantity, totalPrice.intValue()};
         } finally {
             //javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());

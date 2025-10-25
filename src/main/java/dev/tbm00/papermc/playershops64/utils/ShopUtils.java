@@ -56,7 +56,7 @@ public class ShopUtils {
                             null);
 
         javaPlugin.getShopHandler().upsertShopObject(shop);
-        StaticUtils.log(ChatColor.GOLD, owner.getName() + " created a shop " + shop.getUuid() + " in " + world.getName()+ " @ " + (int)location.getX() + "," + (int)location.getY() + "," + (int)location.getZ());
+        StaticUtils.logEdit(owner.getName() + " created shop " + ShopUtils.getShopHint(shopUuid) + " in " + world.getName()+ " @ " + (int)location.getX() + "," + (int)location.getY() + "," + (int)location.getZ());
         return shopUuid;
     }
 
@@ -144,8 +144,10 @@ public class ShopUtils {
             if (handCount>1) {
                 hand.setAmount(handCount-1);
             } else {player.getInventory().setItemInMainHand(null);}
+
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aShop's sale item set to &e" + StaticUtils.getItemName(one));
+            StaticUtils.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s sale item to "+StaticUtils.getItemName(one)+" ("+StaticUtils.formatTitleCase(one.getType().toString())+")");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -182,6 +184,7 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aShop item set cleared!");
+            StaticUtils.logEdit(player.getName()+" cleared shop "+ShopUtils.getShopHint(shopUuid)+"'s sale item");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -219,8 +222,10 @@ public class ShopUtils {
             javaPlugin.getShopHandler().upsertShopObject(shop);
             if (newPrice!=null) {
                 StaticUtils.sendMessage(player, "&aSet buy price to $" + StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue()) + "!");
+                StaticUtils.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s buy price to $"+shop.getBuyPrice().doubleValue());
             } else {
                 StaticUtils.sendMessage(player, "&aDisabled buying from this shop!");
+                StaticUtils.logEdit(player.getName()+" disabled buying from shop "+ShopUtils.getShopHint(shopUuid));
             }
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
@@ -259,8 +264,10 @@ public class ShopUtils {
             javaPlugin.getShopHandler().upsertShopObject(shop);
             if (newPrice!=null) {
                 StaticUtils.sendMessage(player, "&aSet sell price to $" + StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue()) + "!");
+                StaticUtils.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s sell price to $"+shop.getSellPrice().doubleValue());
             } else {
                 StaticUtils.sendMessage(player, "&aDisabled selling to this shop!");
+                StaticUtils.logEdit(player.getName()+" disabled selling to shop "+ShopUtils.getShopHint(shopUuid));
             }
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
@@ -292,6 +299,7 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aSet display height to " + shop.getDisplayHeight() + "!");
+            StaticUtils.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s display height to "+shop.getDisplayHeight());
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -326,7 +334,8 @@ public class ShopUtils {
 
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
-            if (newDescription!=null) StaticUtils.sendMessage(player, "&aSet description to '" + newDescription + "'!");
+            StaticUtils.sendMessage(player, "&aSet description to '" + shop.getDescription() + "'!");
+            StaticUtils.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s description to '"+shop.getDescription()+"'");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -368,6 +377,7 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aAdded '" + playerName + "' to shop's assistants!");
+            StaticUtils.logEdit(player.getName()+" added assistant "+playerName+" to shop "+ShopUtils.getShopHint(shopUuid));
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -397,6 +407,7 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aRemoved '" + javaPlugin.getServer().getOfflinePlayer(playerUuid).getName() + "' from shop's assistants!");
+            StaticUtils.logEdit(player.getName()+" removed assistant "+ javaPlugin.getServer().getOfflinePlayer(playerUuid).getName() + " from shop " + ShopUtils.getShopHint(shopUuid));
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -437,6 +448,7 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aSet base block material to " + material.toString() + "!");
+            StaticUtils.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s base block to "+material.toString());
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -505,6 +517,7 @@ public class ShopUtils {
                     // apply updates
                     javaPlugin.getShopHandler().upsertShopObject(shop);
                     StaticUtils.sendMessage(player, "&aAdded $" + StaticUtils.formatDoubleUS(workingAmount) + " to the shop's balance! Updated balance: $" + StaticUtils.formatDoubleUS(newBalance));
+                    StaticUtils.logEdit(player.getName()+" added $" +workingAmount+ " to shop "+ShopUtils.getShopHint(shopUuid)+"'s balance! Updated balance: $"+newBalance);
                     break;
                 }
                 case REMOVE: {
@@ -534,6 +547,7 @@ public class ShopUtils {
                     // apply updates
                     javaPlugin.getShopHandler().upsertShopObject(shop);
                     StaticUtils.sendMessage(player, "&aRemoved $" + StaticUtils.formatDoubleUS(workingAmount) + " from the shop's balance! Updated balance: $" + StaticUtils.formatDoubleUS(newBalance));
+                    StaticUtils.logEdit(player.getName()+" removed $" + workingAmount + " from shop "+ShopUtils.getShopHint(shopUuid)+"'s balance! Updated balance: $" + newBalance);
                     break;
                 }
                 case SET: {
@@ -566,6 +580,7 @@ public class ShopUtils {
                         // apply updates
                         javaPlugin.getShopHandler().upsertShopObject(shop);
                         StaticUtils.sendMessage(player, "&aAdded $" + StaticUtils.formatDoubleUS(workingAmount) + " to the shop's balance! Updated balance: $" + StaticUtils.formatDoubleUS(newBalance));
+                        StaticUtils.logEdit(player.getName()+" added $" + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s balance! Updated balance: $" + newBalance);
                     } else { // negative: shop -> player
                         double needed = -delta;
                         if (shopBalance <= 0) {
@@ -589,6 +604,7 @@ public class ShopUtils {
                         // apply updates
                         javaPlugin.getShopHandler().upsertShopObject(shop);
                         StaticUtils.sendMessage(player, "&aRemoved $" + StaticUtils.formatDoubleUS(workingAmount) + " from the shop's balance! Updated balance: $" + StaticUtils.formatDoubleUS(newBalance));
+                        StaticUtils.logEdit(player.getName()+" removed $" + workingAmount + " from shop "+ShopUtils.getShopHint(shopUuid)+"'s balance! Updated balance: $" + newBalance);
                     }
                     break;
                 }
@@ -658,7 +674,7 @@ public class ShopUtils {
                     }
 
                     if (!StaticUtils.removeMatchingItems(player, saleItem, workingAmount)) {
-                        StaticUtils.sendMessage(player, "&cError removing " + workingAmount + " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
+                        StaticUtils.sendMessage(player, "&cError removing " + StaticUtils.formatIntUS(workingAmount) + " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
                         return;
                     }
 
@@ -667,7 +683,8 @@ public class ShopUtils {
                     
                     // apply updates
                     javaPlugin.getShopHandler().upsertShopObject(shop);
-                    StaticUtils.sendMessage(player, "&aAdded " + workingAmount + " to the shop's stock! Updated stock: " + newStock);
+                    StaticUtils.sendMessage(player, "&aAdded " + StaticUtils.formatIntUS(workingAmount) + " to the shop's stock! Updated stock: " + StaticUtils.formatIntUS(newStock));
+                    StaticUtils.logEdit(player.getName()+" added " + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + newStock);
                     break;
                 }
                 case REMOVE: {
@@ -687,7 +704,7 @@ public class ShopUtils {
                     }
 
                     if (!StaticUtils.addToInventoryOrDrop(player, saleItem, workingAmount)) {
-                        StaticUtils.sendMessage(player, "&cError adding " + workingAmount + " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
+                        StaticUtils.sendMessage(player, "&cError adding " + StaticUtils.formatIntUS(workingAmount) + " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
                         return;
                     }
 
@@ -696,7 +713,9 @@ public class ShopUtils {
 
                     // apply updates
                     javaPlugin.getShopHandler().upsertShopObject(shop);
-                    StaticUtils.sendMessage(player, "&aRemoved " + workingAmount + " from the shop's stock! Updated stock: " + newStock);
+                    StaticUtils.sendMessage(player, "&aRemoved " + StaticUtils.formatIntUS(workingAmount) + " from the shop's stock! Updated stock: " + StaticUtils.formatIntUS(newStock));
+                    StaticUtils.logEdit(player.getName()+" removed " + workingAmount + " from shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + newStock);
+
                     break;
                 }
                 case SET: {
@@ -724,7 +743,7 @@ public class ShopUtils {
                         }
 
                         if (!StaticUtils.removeMatchingItems(player, saleItem, workingAmount)) {
-                            StaticUtils.sendMessage(player, "&cError removing " + workingAmount + " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
+                            StaticUtils.sendMessage(player, "&cError removing " + StaticUtils.formatIntUS(workingAmount) + " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
                             return;
                         }
 
@@ -733,7 +752,8 @@ public class ShopUtils {
 
                         // apply updates
                         javaPlugin.getShopHandler().upsertShopObject(shop);
-                        StaticUtils.sendMessage(player, "&aAdded " + workingAmount + " to the shop's stock! Updated stock: " + newStock);
+                        StaticUtils.sendMessage(player, "&aAdded " + StaticUtils.formatIntUS(workingAmount) + " to the shop's stock! Updated stock: " + StaticUtils.formatIntUS(newStock));
+                        StaticUtils.logEdit(player.getName()+" added " + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + newStock);
                     } else { // negative: shop -> player
                         if (shopStock <= 0) {
                             StaticUtils.sendMessage(player, "&cThe shop doesn't have any stock to withdraw!");
@@ -747,7 +767,7 @@ public class ShopUtils {
                         }
 
                         if (!StaticUtils.addToInventoryOrDrop(player, saleItem, workingAmount)) {
-                            StaticUtils.sendMessage(player, "&cError adding " + workingAmount + " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
+                            StaticUtils.sendMessage(player, "&cError adding " + StaticUtils.formatIntUS(workingAmount) + " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
                             return;
                         }
 
@@ -756,7 +776,8 @@ public class ShopUtils {
 
                         // apply updates
                         javaPlugin.getShopHandler().upsertShopObject(shop);
-                        StaticUtils.sendMessage(player, "&aRemoved " + workingAmount + " from the shop's stock! Updated stock: " + newStock);
+                        StaticUtils.sendMessage(player, "&aRemoved " + StaticUtils.formatIntUS(workingAmount) + " from the shop's stock! Updated stock: " + StaticUtils.formatIntUS(newStock));
+                        StaticUtils.logEdit(player.getName()+" removed " + workingAmount + " from shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + newStock);
                     }
                     break;
                 }
@@ -860,7 +881,7 @@ public class ShopUtils {
             if (!removedItemsFromPlayer) {
                 if (!javaPlugin.getVaultHook().removeMoney( player, totalPrice.doubleValue()))
                     {StaticUtils.log(ChatColor.RED, "CRITICAL ERROR: removeMoney("+player.getName()+", "+totalPrice.doubleValue()+") failed -- money was duped to player!");}
-                StaticUtils.sendMessage(player, "&cError removing " +workingAmount+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
+                StaticUtils.sendMessage(player, "&cError removing " +StaticUtils.formatIntUS(workingAmount)+ " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
                 return;
             }
 
@@ -871,7 +892,8 @@ public class ShopUtils {
             
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
-            StaticUtils.sendMessage(player, "&fSold " + workingAmount + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
+            StaticUtils.sendMessage(player, "&fSold " + StaticUtils.formatIntUS(workingAmount) + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
+            StaticUtils.logEdit(player.getName()+" sold "+workingAmount+" x "+StaticUtils.getItemName(saleItem)+" ("+StaticUtils.formatTitleCase(saleItem.getType().toString())+")"+" to "+shop.getOwnerName()+"'s shop ("+ShopUtils.getShopHint(shopUuid)+") for $"+totalPrice.doubleValue()+". Shop's updated stock: "+shop.getItemStock() + ", Shop's updated balance: $"+shop.getMoneyStock().doubleValue());
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -973,7 +995,7 @@ public class ShopUtils {
             if (!addedItemsToPlayer) {
                 if (!javaPlugin.getVaultHook().giveMoney(player, totalPrice.doubleValue()))
                     {StaticUtils.log(ChatColor.RED, "CRITICAL ERROR: giveMoney("+player.getName()+", "+totalPrice.doubleValue()+") failed -- money was nuked from player!");}
-                StaticUtils.sendMessage(player, "&cError adding " +workingAmount+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
+                StaticUtils.sendMessage(player, "&cError adding " +StaticUtils.formatIntUS(workingAmount)+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
                 return;
             }
 
@@ -984,7 +1006,8 @@ public class ShopUtils {
             
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
-            StaticUtils.sendMessage(player, "&fBought " + workingAmount + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
+            StaticUtils.sendMessage(player, "&fBought " + StaticUtils.formatIntUS(workingAmount) + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
+            StaticUtils.logEdit(player.getName()+" bought "+workingAmount+" x "+StaticUtils.getItemName(saleItem)+" ("+StaticUtils.formatTitleCase(saleItem.getType().toString())+")"+" from "+shop.getOwnerName()+"'s shop ("+ShopUtils.getShopHint(shopUuid)+") for $"+totalPrice.doubleValue()+". Shop's updated stock: "+shop.getItemStock() + ", Shop's updated balance: $"+shop.getMoneyStock().doubleValue());
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -1031,6 +1054,7 @@ public class ShopUtils {
             
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
+            StaticUtils.logEdit(player.getName()+" added " + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + shop.getItemStock());
             return workingAmount;
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
@@ -1136,5 +1160,10 @@ public class ShopUtils {
                 +(int)shop.getLocation().getZ());
 
         return lore;
+    }
+
+    public static String getShopHint(UUID uuid) {
+        if (uuid==null) return null;
+        return uuid.toString().substring(0, 6);
     }
 }
