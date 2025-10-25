@@ -34,7 +34,7 @@ public class ShopDAO {
     }
 
     public List<Shop> getAllShopsFromSql() {
-        final String sql = "SELECT * FROM playershops64_shops";
+        final String sql = "SELECT * FROM "+StaticUtils.TBL_SHOPS;
         List<Shop> out = new ArrayList<>();
         try (Connection conn = mySQL.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -58,7 +58,7 @@ public class ShopDAO {
      * Retrieves a shop by UUID.
      */
     public Shop getShopFromSql(UUID uuid) {
-        final String sql = "SELECT * FROM playershops64_shops WHERE uuid = ?";
+        final String sql = "SELECT * FROM "+StaticUtils.TBL_SHOPS+" WHERE uuid = ?";
         try (Connection conn = mySQL.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -86,7 +86,7 @@ public class ShopDAO {
             return false;
         }
 
-        final String sql = "INSERT INTO playershops64_shops " +
+        final String sql = "INSERT INTO "+StaticUtils.TBL_SHOPS+" " +
             "(uuid, owner_uuid, owner_name, world, location, itemstack_b64, stack_size, item_stock, money_stock, " +
             " buy_price, sell_price, last_tx, inf_money, inf_stock, description, display_height, base_material, assistants) " +
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
@@ -143,7 +143,7 @@ public class ShopDAO {
      * Deletes a shop by UUID.
      */
     public boolean deleteShopFromSql(UUID uuid) {
-        final String sql = "DELETE FROM playershops64_shops WHERE uuid=?";
+        final String sql = "DELETE FROM "+StaticUtils.TBL_SHOPS+" WHERE uuid=?";
         try (Connection conn = mySQL.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, uuid.toString());

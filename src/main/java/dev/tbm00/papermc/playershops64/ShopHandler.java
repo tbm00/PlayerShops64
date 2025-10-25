@@ -34,7 +34,7 @@ public class ShopHandler {
     private final PlayerShops64 javaPlugin;
     private final ShopDAO dao;
     private final DisplayManager displayManager;
-    private final Map<UUID, Shop> shops = new LinkedHashMap<>();
+    private final Map<UUID, Shop> shopMap = new LinkedHashMap<>();
     private final Map<UUID, Map<Long, UUID>> shopLocationMap = new HashMap<>(); 
                // Map<WorldUID, Map<PackedBlockPos, ShopUUID>>
     private final Map<Material, ShopPriceQueue> shopMaterialPriceMap = new HashMap<>();
@@ -77,7 +77,7 @@ public class ShopHandler {
                 continue;
             }
 
-            shops.put(shop.getUuid(), shop);
+            shopMap.put(shop.getUuid(), shop);
             indexShop(shop);
             loaded++;
         }
@@ -102,8 +102,8 @@ public class ShopHandler {
     }
 
     public Map<UUID, Shop> getShopView() {
-        Map<UUID, Shop> copy = new LinkedHashMap<>(shops.size());
-        for (var e : shops.entrySet()) copy.put(e.getKey(), copyOf(e.getValue()));
+        Map<UUID, Shop> copy = new LinkedHashMap<>(shopMap.size());
+        for (var e : shopMap.entrySet()) copy.put(e.getKey(), copyOf(e.getValue()));
         return Collections.unmodifiableMap(copy);
     }
 
@@ -120,7 +120,7 @@ public class ShopHandler {
     }
 
     public Shop getShop(UUID uuid) {
-        return copyOf(shops.get(uuid));
+        return copyOf(shopMap.get(uuid));
     }
 
     public Map<Material, ShopPriceQueue> getShopMaterialPriceMap() {
@@ -200,7 +200,7 @@ public class ShopHandler {
 
     private Shop getIndexedShop(World world, int bx, int by, int bz) {
         UUID shopId = getIndexedShopId(world, bx, by, bz);
-        Shop live = (shopId == null) ? null : shops.get(shopId);
+        Shop live = (shopId == null) ? null : shopMap.get(shopId);
         return copyOf(live);
     }
 
@@ -224,7 +224,7 @@ public class ShopHandler {
 
         // on main thread first (so all internal references to it are immediately updated, rather than being delayed by async operation)
         // update memory + visuals 
-        Shop prev = shops.put(shop.getUuid(), shop);
+        Shop prev = shopMap.put(shop.getUuid(), shop);
         if (prev != null) deindexShop(prev);
         indexShop(shop);
 
@@ -244,8 +244,6 @@ public class ShopHandler {
         });
     }
 
-
-
     public void deleteShopObject(UUID uuid) {
         if (!Bukkit.isPrimaryThread()) {
             StaticUtils.log(ChatColor.RED, "Tried to delete shop off main thread... rescheduling on main thread!");
@@ -256,7 +254,7 @@ public class ShopHandler {
         if (uuid == null) return;
 
         // update memory + visuals 
-        Shop removed = shops.remove(uuid);
+        Shop removed = shopMap.remove(uuid);
         if (removed != null) deindexShop(removed);
         displayManager.delete(uuid);
 
@@ -293,7 +291,7 @@ public class ShopHandler {
                                             "\nActual: " + shop.getCurrentEditor().toString());
         } else {
             shop.setCurrentEditor(null);
-            shops.put(shopUuid, shop);
+            shopMap.put(shopUuid, shop);
         }
     } 
 
@@ -313,7 +311,7 @@ public class ShopHandler {
         }
         
         shop.setCurrentEditor(player.getUniqueId());
-        shops.put(shopUuid, shop);
+        shopMap.put(shopUuid, shop);
         return true;
     }
 

@@ -49,12 +49,14 @@ public class StaticUtils {
     public static final String PLAYER_PERM = "playershops64.player";
     public static final String ADMIN_PERM = "playershops64.admin";
 
+    public static final String TBL_SHOPS = "playershops64_shops";
+
+    public static final String CATEGORY_GUI_TITLE = "Shop Categories";
+
     public static NamespacedKey DISPLAY_KEY;
     public static NamespacedKey SHOP_KEY;
     public static NamespacedKey DESPOIT_WAND_KEY;
     public static NamespacedKey SELL_WAND_KEY;
-
-    public static String CATEGORY_GUI_TITLE = "Shop Categories";
 
     public static final Set<Material> CONTAINER_MATERIALS = EnumSet.of(
         Material.CHEST,

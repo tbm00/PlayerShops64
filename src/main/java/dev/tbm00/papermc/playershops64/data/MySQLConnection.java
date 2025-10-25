@@ -17,7 +17,7 @@ public class MySQLConnection {
     private PlayerShops64 javaPlugin;
     private HikariConfig config;
     private static String[] TABLES = {
-            "playershops64_shops"
+            StaticUtils.TBL_SHOPS
     };
     
     public MySQLConnection(PlayerShops64 javaPlugin) {
@@ -73,7 +73,7 @@ public class MySQLConnection {
     }
 
     private void initializeDatabase() {
-        final String shopTable = "CREATE TABLE IF NOT EXISTS "+TABLES[0]+" ("
+        final String shopTable = "CREATE TABLE IF NOT EXISTS "+StaticUtils.TBL_SHOPS+" ("
           + "  `uuid` CHAR(36) NOT NULL,"
           + "  `owner_uuid` CHAR(36) NOT NULL,"
           + "  `owner_name` VARCHAR(32) NOT NULL,"
@@ -112,14 +112,21 @@ public class MySQLConnection {
              Statement stmt = conn.createStatement()) {
     
             for (String tbl : TABLES) {
-                stmt.executeUpdate(
-                        "ALTER TABLE `"+TABLES[0]+"` " +
-                        "ADD COLUMN IF NOT EXISTS `description` VARCHAR(256) NULL AFTER `inf_stock`, " +
-                        "ADD COLUMN IF NOT EXISTS `display_height` INT NOT NULL DEFAULT "+javaPlugin.getConfigHandler().getDisplayDefaultHeight()+" AFTER `description`, " +
-                        "ADD COLUMN IF NOT EXISTS `base_material` VARCHAR(256) NULL AFTER `display_height`, " +
-                        "ADD COLUMN IF NOT EXISTS `assistants` LONGTEXT NULL AFTER `base_material`"
-                    );
-                StaticUtils.log(ChatColor.YELLOW, "Updated table '"+tbl+"'.");
+                switch (tbl) {
+                    case StaticUtils.TBL_SHOPS: {
+                        stmt.executeUpdate(
+                                "ALTER TABLE `"+StaticUtils.TBL_SHOPS+"` " +
+                                "ADD COLUMN IF NOT EXISTS `description` VARCHAR(256) NULL AFTER `inf_stock`, " +
+                                "ADD COLUMN IF NOT EXISTS `display_height` INT NOT NULL DEFAULT "+javaPlugin.getConfigHandler().getDisplayDefaultHeight()+" AFTER `description`, " +
+                                "ADD COLUMN IF NOT EXISTS `base_material` VARCHAR(256) NULL AFTER `display_height`, " +
+                                "ADD COLUMN IF NOT EXISTS `assistants` LONGTEXT NULL AFTER `base_material`"
+                            );
+                        StaticUtils.log(ChatColor.YELLOW, "Updated table '"+tbl+"'.");
+                        break;
+                    }
+                    default:
+                        break;
+                }
             }
         } catch (SQLException e) {
             if (e.getErrorCode() == 1060) return;
