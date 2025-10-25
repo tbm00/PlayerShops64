@@ -21,6 +21,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 
+import dev.tbm00.papermc.playershops64.data.structure.ItemPrice;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.utils.ItemSerializer;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
@@ -34,7 +35,7 @@ public class ShopDAO {
     }
 
     public List<Shop> getAllShopsFromSql() {
-        final String sql = "SELECT * FROM playershops64_shops";
+        final String sql = "SELECT * FROM "+StaticUtils.TBL_SHOPS;
         List<Shop> out = new ArrayList<>();
         try (Connection conn = mySQL.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -58,7 +59,7 @@ public class ShopDAO {
      * Retrieves a shop by UUID.
      */
     public Shop getShopFromSql(UUID uuid) {
-        final String sql = "SELECT * FROM playershops64_shops WHERE uuid = ?";
+        final String sql = "SELECT * FROM "+StaticUtils.TBL_SHOPS+" WHERE uuid = ?";
         try (Connection conn = mySQL.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -86,7 +87,7 @@ public class ShopDAO {
             return false;
         }
 
-        final String sql = "INSERT INTO playershops64_shops " +
+        final String sql = "INSERT INTO "+StaticUtils.TBL_SHOPS+" " +
             "(uuid, owner_uuid, owner_name, world, location, itemstack_b64, stack_size, item_stock, money_stock, " +
             " buy_price, sell_price, last_tx, inf_money, inf_stock, description, display_height, base_material, assistants) " +
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
@@ -143,7 +144,7 @@ public class ShopDAO {
      * Deletes a shop by UUID.
      */
     public boolean deleteShopFromSql(UUID uuid) {
-        final String sql = "DELETE FROM playershops64_shops WHERE uuid=?";
+        final String sql = "DELETE FROM "+StaticUtils.TBL_SHOPS+" WHERE uuid=?";
         try (Connection conn = mySQL.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, uuid.toString());
@@ -166,7 +167,7 @@ public class ShopDAO {
         World world = (worldName == null) ? null : Bukkit.getWorld(worldName);
         Location location = deserializeLocation(world, rs.getString("location"));
         String raw = rs.getString("itemstack_b64");
-        ItemStack itemStack = (raw==null || raw.isBlank()) ? null : ItemSerializer.itemStackFromBase64(raw);
+        ItemStack itemStack = (raw==null || raw.isBlank()) ? null : ItemSerializer.base64ToItemStack(raw);
         int stackSize = rs.getInt("stack_size");
         int itemStock = rs.getInt("item_stock");
         BigDecimal moneyStock = rs.getBigDecimal("money_stock");
@@ -182,6 +183,98 @@ public class ShopDAO {
         Set<UUID> assistants = deserializeAssistants(rs.getString("assistants"));
 
         return new Shop(uuid, ownerUuid, ownerName, world, location, itemStack, stackSize, itemStock, moneyStock, buyPrice, sellPrice, lastTx, infiniteMoney, infiniteStock, description, displayHeight, baseMaterial, assistants, null);
+    }
+
+    public List<ItemPrice> getAllItemPricesFromSql() {
+        final String sql = "SELECT * FROM " + StaticUtils.TBL_ITEM_PRICES;
+        List<ItemPrice> out = new ArrayList<>();
+        try (Connection conn = mySQL.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                try {
+                    ItemPrice p = mapResultSetToItemPrice(rs);
+                    out.add(p);
+                } catch (Exception ex) {
+                    StaticUtils.log(ChatColor.RED, "Failed to map item price row: " + ex.getMessage());
+                }
+            }
+        } catch (SQLException e) {
+            StaticUtils.log(ChatColor.RED, "Failed to fetch all item prices: " + e.getMessage());
+        }
+        return out;
+    }
+
+    /**
+     * Retrieves an item price by base64 string.
+     */
+    public ItemPrice getItemPriceFromSql(String itemStackBase64) {
+        final String sql = "SELECT * FROM "+StaticUtils.TBL_ITEM_PRICES+" WHERE itemstack_b64 = ?";
+        try (Connection conn = mySQL.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, itemStackBase64);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return mapResultSetToItemPrice(rs);
+            }
+        } catch (SQLException e) {
+            StaticUtils.log(ChatColor.RED, "Failed to fetch item price: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Adds or updates an item price.
+     */
+    public boolean upsertItemPriceToSql(ItemPrice itemPrice) {
+        final String sql = "INSERT INTO "+StaticUtils.TBL_ITEM_PRICES+" " +
+            "(itemstack_b64, average_price, quantity_sold) " +
+            "VALUES (?, ?, ?) " +
+            "ON DUPLICATE KEY UPDATE " +
+            " average_price=VALUES(average_price), " +
+            " quantity_sold=VALUES(quantity_sold)";
+
+        try (Connection conn = mySQL.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, itemPrice.getItemStackBase64());
+            ps.setBigDecimal(2, itemPrice.getAveragePrice());
+            ps.setInt(3, itemPrice.getQuantiySold());
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            StaticUtils.log(ChatColor.RED, "Failed to upsert item price: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Deletes a item price by base64 string.
+     */
+    public boolean deleteItemPriceFromSql(String itemStackBase64) {
+        final String sql = "DELETE FROM "+StaticUtils.TBL_ITEM_PRICES+" WHERE itemstack_b64=?";
+        try (Connection conn = mySQL.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, itemStackBase64);
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            StaticUtils.log(ChatColor.RED, "Failed to delete item price: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Maps a SQL row to a ItemPrice object.
+     */
+    private ItemPrice mapResultSetToItemPrice(ResultSet rs) throws SQLException {
+        String itemStackBase64 = rs.getString("itemstack_b64");
+        BigDecimal averagePrice = rs.getBigDecimal("average_price");
+        Integer quantitySold = rs.getInt("quantity_sold");
+
+        return new ItemPrice(itemStackBase64, averagePrice, quantitySold);
     }
 
     // --- Helper methods ---

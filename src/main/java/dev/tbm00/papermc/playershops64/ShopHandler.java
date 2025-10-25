@@ -17,16 +17,19 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import dev.tbm00.papermc.playershops64.data.MySQLConnection;
 import dev.tbm00.papermc.playershops64.data.ShopDAO;
 import dev.tbm00.papermc.playershops64.data.structure.ShopPriceQueue;
+import dev.tbm00.papermc.playershops64.data.structure.ItemPrice;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.display.DisplayManager;
 import dev.tbm00.papermc.playershops64.display.ShopDisplay;
 import dev.tbm00.papermc.playershops64.display.VisualTask;
+import dev.tbm00.papermc.playershops64.utils.ItemSerializer;
 import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
@@ -34,10 +37,11 @@ public class ShopHandler {
     private final PlayerShops64 javaPlugin;
     private final ShopDAO dao;
     private final DisplayManager displayManager;
-    private final Map<UUID, Shop> shops = new LinkedHashMap<>();
+    private final Map<UUID, Shop> shopMap = new LinkedHashMap<>();
     private final Map<UUID, Map<Long, UUID>> shopLocationMap = new HashMap<>(); 
                // Map<WorldUID, Map<PackedBlockPos, ShopUUID>>
     private final Map<Material, ShopPriceQueue> shopMaterialPriceMap = new HashMap<>();
+    private final Map<String, ItemPrice> itemPriceMap = new HashMap<>();
 
     private VisualTask visualTask;
 
@@ -51,18 +55,103 @@ public class ShopHandler {
         this.visualTask.runTaskTimer(javaPlugin, 20L, Math.max(1L, javaPlugin.getConfigHandler().getDisplayTickCycle()));
         StaticUtils.log(ChatColor.GREEN, "ShopHandler initialized.");
         loadShops();
+        loadItemPriceHistory();
+    }
+
+    public void loadItemPriceHistory() {
+        StaticUtils.log(ChatColor.YELLOW, "ShopHandler loading item prices from DB...");
+        int loaded = 0, skippedNullItemPriceObj = 0, skippedNullItemStack = 0;
+
+        shopLocationMap.clear();
+        shopMaterialPriceMap.clear();
+        for (ItemPrice itemPrice : dao.getAllItemPricesFromSql()) {
+            if (itemPrice == null) {
+                skippedNullItemPriceObj++;
+                StaticUtils.log(ChatColor.RED, "Skipping null item price obj...");
+                continue;
+            }
+
+            if (itemPrice.getItemStackBase64() == null) {
+                skippedNullItemStack++;
+                StaticUtils.log(ChatColor.RED, "Skipping item price... null item stack base 64 string");
+                continue;
+            }
+
+            itemPriceMap.put(itemPrice.getItemStackBase64(), itemPrice);
+            loaded++;
+        }
+
+
+        StaticUtils.log(ChatColor.GREEN, "ShopHandler loaded " + loaded + " item prices, " +
+                "\nskippedNullItemPriceObj: " + skippedNullItemPriceObj +
+                ", skippedNullItemStack:" + skippedNullItemStack);
+    }
+
+    public ItemPrice getItemPrice(ItemStack itemStack) {
+        return copyOf(itemPriceMap.get(ItemSerializer.itemStackToBase64(itemStack)));
+    }
+
+    public void deleteItemPriceObject(String itemStringBase64) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, "Tried to delete item price off main thread... rescheduling on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> deleteItemPriceObject(itemStringBase64));
+            return;
+        }
+
+        if (itemStringBase64 == null) return;
+
+        // update memory
+        itemPriceMap.remove(itemStringBase64);
+
+        // run DB operations async
+        javaPlugin.getServer().getScheduler().runTaskAsynchronously(javaPlugin, () -> {
+            boolean ok = dao.deleteItemPriceFromSql(itemStringBase64);
+            if (!ok) {
+                StaticUtils.log(ChatColor.RED, "DB delete failed for item price " + itemStringBase64);
+                return;
+            } else {
+                StaticUtils.log(ChatColor.GREEN, "DB delete passed for item price " + itemStringBase64);
+            }
+        });
+    }
+
+    public void upsertItemPriceObject(ItemPrice itemPrice) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, "Tried to upsert item price off main thread... rescheduling on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> upsertItemPriceObject(itemPrice));
+            return;
+        }
+
+        if (itemPrice == null || itemPrice.getItemStackBase64() == null) {
+            return;
+        }
+
+        // on main thread first (so all internal references to it are immediately updated, rather than being delayed by async operation)
+        // update memory
+        itemPriceMap.put(itemPrice.getItemStackBase64(), itemPrice);
+
+        // run DB operations async
+        javaPlugin.getServer().getScheduler().runTaskAsynchronously(javaPlugin, () -> {
+            boolean ok = dao.upsertItemPriceToSql(itemPrice);
+            if (!ok) {
+                StaticUtils.log(ChatColor.RED, "DB upsert failed for item price " + itemPrice.getItemStackBase64() + "... Upserting previously saved item price..!");
+                return;
+            } else {
+                StaticUtils.log(ChatColor.GREEN, "DB upsert passed for item price " + itemPrice.getItemStackBase64());
+            }
+        });
     }
 
     public void loadShops() {
         StaticUtils.log(ChatColor.YELLOW, "ShopHandler loading shops from DB...");
-        int loaded = 0, skippedNullShop = 0, skippedNullWorld = 0, skippedNullLoc = 0;
+        int loaded = 0, skippedNullShopObj = 0, skippedNullWorld = 0, skippedNullLoc = 0;
 
         shopLocationMap.clear();
         shopMaterialPriceMap.clear();
         for (Shop shop : dao.getAllShopsFromSql()) {
             if (shop == null) {
-                skippedNullShop++;
-                StaticUtils.log(ChatColor.RED, "Skipping null shop");
+                skippedNullShopObj++;
+                StaticUtils.log(ChatColor.RED, "Skipping null shop object");
                 continue;
             }
 
@@ -77,14 +166,14 @@ public class ShopHandler {
                 continue;
             }
 
-            shops.put(shop.getUuid(), shop);
+            shopMap.put(shop.getUuid(), shop);
             indexShop(shop);
             loaded++;
         }
 
 
         StaticUtils.log(ChatColor.GREEN, "ShopHandler loaded " + loaded + " shops, " +
-                "\nskippedNullShop: " + skippedNullShop +
+                "\nskippedNullShopObj: " + skippedNullShopObj +
                 ", skippedNullWorld:" + skippedNullWorld +
                 ", skippedNullLocation: " + skippedNullLoc);
     }
@@ -102,8 +191,8 @@ public class ShopHandler {
     }
 
     public Map<UUID, Shop> getShopView() {
-        Map<UUID, Shop> copy = new LinkedHashMap<>(shops.size());
-        for (var e : shops.entrySet()) copy.put(e.getKey(), copyOf(e.getValue()));
+        Map<UUID, Shop> copy = new LinkedHashMap<>(shopMap.size());
+        for (var e : shopMap.entrySet()) copy.put(e.getKey(), copyOf(e.getValue()));
         return Collections.unmodifiableMap(copy);
     }
 
@@ -120,7 +209,7 @@ public class ShopHandler {
     }
 
     public Shop getShop(UUID uuid) {
-        return copyOf(shops.get(uuid));
+        return copyOf(shopMap.get(uuid));
     }
 
     public Map<Material, ShopPriceQueue> getShopMaterialPriceMap() {
@@ -200,7 +289,7 @@ public class ShopHandler {
 
     private Shop getIndexedShop(World world, int bx, int by, int bz) {
         UUID shopId = getIndexedShopId(world, bx, by, bz);
-        Shop live = (shopId == null) ? null : shops.get(shopId);
+        Shop live = (shopId == null) ? null : shopMap.get(shopId);
         return copyOf(live);
     }
 
@@ -224,7 +313,7 @@ public class ShopHandler {
 
         // on main thread first (so all internal references to it are immediately updated, rather than being delayed by async operation)
         // update memory + visuals 
-        Shop prev = shops.put(shop.getUuid(), shop);
+        Shop prev = shopMap.put(shop.getUuid(), shop);
         if (prev != null) deindexShop(prev);
         indexShop(shop);
 
@@ -244,8 +333,6 @@ public class ShopHandler {
         });
     }
 
-
-
     public void deleteShopObject(UUID uuid) {
         if (!Bukkit.isPrimaryThread()) {
             StaticUtils.log(ChatColor.RED, "Tried to delete shop off main thread... rescheduling on main thread!");
@@ -256,7 +343,7 @@ public class ShopHandler {
         if (uuid == null) return;
 
         // update memory + visuals 
-        Shop removed = shops.remove(uuid);
+        Shop removed = shopMap.remove(uuid);
         if (removed != null) deindexShop(removed);
         displayManager.delete(uuid);
 
@@ -293,7 +380,7 @@ public class ShopHandler {
                                             "\nActual: " + shop.getCurrentEditor().toString());
         } else {
             shop.setCurrentEditor(null);
-            shops.put(shopUuid, shop);
+            shopMap.put(shopUuid, shop);
         }
     } 
 
@@ -313,7 +400,7 @@ public class ShopHandler {
         }
         
         shop.setCurrentEditor(player.getUniqueId());
-        shops.put(shopUuid, shop);
+        shopMap.put(shopUuid, shop);
         return true;
     }
 
@@ -400,5 +487,11 @@ public class ShopHandler {
             s.getAssistants(),
             s.getCurrentEditor()
         );
+    }
+
+    private ItemPrice copyOf(ItemPrice p) {
+        if (p == null) return null;
+
+        return new ItemPrice(p.getItemStackBase64(), p.getAveragePrice(), p.getQuantiySold());
     }
 }

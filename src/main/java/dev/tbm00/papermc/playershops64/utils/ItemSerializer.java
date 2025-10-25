@@ -28,7 +28,7 @@ public class ItemSerializer {
     /**
      * Converts a Base64 string back into an ItemStack.
      */
-    public static ItemStack itemStackFromBase64(String base64) {
+    public static ItemStack base64ToItemStack(String base64) {
         if (base64 == null) return null;
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64.getDecoder().decode(base64));
              BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream)) {

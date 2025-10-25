@@ -49,6 +49,9 @@ public class StaticUtils {
     public static final String PLAYER_PERM = "playershops64.player";
     public static final String ADMIN_PERM = "playershops64.admin";
 
+    public static final String TBL_SHOPS = "playershops64_shops";
+    public static final String TBL_ITEM_PRICES = "playershops64_item_prices";
+
     public static NamespacedKey DISPLAY_KEY;
     public static NamespacedKey SHOP_KEY;
     public static NamespacedKey DESPOIT_WAND_KEY;

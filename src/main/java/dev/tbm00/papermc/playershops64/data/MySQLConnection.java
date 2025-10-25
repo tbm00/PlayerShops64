@@ -16,8 +16,10 @@ public class MySQLConnection {
     private HikariDataSource dataSource;
     private PlayerShops64 javaPlugin;
     private HikariConfig config;
+    
     private static String[] TABLES = {
-            "playershops64_shops"
+            StaticUtils.TBL_SHOPS,
+            StaticUtils.TBL_ITEM_PRICES
     };
     
     public MySQLConnection(PlayerShops64 javaPlugin) {
@@ -111,15 +113,16 @@ public class MySQLConnection {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
     
-            for (String tbl : TABLES) {
+            { // Update playershops_shops
+                String table = StaticUtils.TBL_SHOPS;
                 stmt.executeUpdate(
-                        "ALTER TABLE `"+TABLES[0]+"` " +
+                        "ALTER TABLE `"+table+"` " +
                         "ADD COLUMN IF NOT EXISTS `description` VARCHAR(256) NULL AFTER `inf_stock`, " +
                         "ADD COLUMN IF NOT EXISTS `display_height` INT NOT NULL DEFAULT "+javaPlugin.getConfigHandler().getDisplayDefaultHeight()+" AFTER `description`, " +
                         "ADD COLUMN IF NOT EXISTS `base_material` VARCHAR(256) NULL AFTER `display_height`, " +
                         "ADD COLUMN IF NOT EXISTS `assistants` LONGTEXT NULL AFTER `base_material`"
                     );
-                StaticUtils.log(ChatColor.YELLOW, "Updated table '"+tbl+"'.");
+                StaticUtils.log(ChatColor.YELLOW, "Updated table '"+table+"'.");
             }
         } catch (SQLException e) {
             if (e.getErrorCode() == 1060) return;

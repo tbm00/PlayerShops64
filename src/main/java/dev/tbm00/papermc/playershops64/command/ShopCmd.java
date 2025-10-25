@@ -5,7 +5,9 @@ package dev.tbm00.papermc.playershops64.command;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -94,6 +96,37 @@ public class ShopCmd implements TabExecutor {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> list = new ArrayList<>();
+        if (args.length == 1) {
+            list.clear();
+            String[] subCmds = new String[]{"all","<item>","<player>","sellGui","depositGui","depositMoney","manage"};
+
+            for (String n : subCmds) {
+                if (n!=null && n.startsWith(args[0])) 
+                    list.add(n);
+            }
+            Bukkit.getOnlinePlayers().forEach(player -> {
+                if (player.getName().startsWith(args[0])&&args[0].length()>0)
+                    list.add(player.getName());
+            });
+            for (Material mat : Material.values()) {
+                if (mat.name().toLowerCase().startsWith(args[0].toLowerCase())&&args[0].length()>1)
+                    list.add(mat.name().toLowerCase());
+            }
+        } else if (args.length == 2) {
+            if (args[0].equals("transfer")) {
+                Bukkit.getOnlinePlayers().forEach(player -> {
+                    if (player.getName().startsWith(args[1]))
+                        list.add(player.getName());
+                });
+            }
+        } else if (args.length == 3) {
+            if (args[0].equals("transfer")) {
+                Bukkit.getOnlinePlayers().forEach(player -> {
+                    if (player.getName().startsWith(args[1]))
+                        list.add(player.getName());
+                });
+            }
+        }
         return list;
     }
 }
