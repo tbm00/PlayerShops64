@@ -16,9 +16,7 @@ import org.bukkit.entity.Player;
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.enums.QueryType;
 import dev.tbm00.papermc.playershops64.data.enums.SortType;
-import dev.tbm00.papermc.playershops64.gui.DepositGui;
 import dev.tbm00.papermc.playershops64.gui.ListShopsGui;
-import dev.tbm00.papermc.playershops64.gui.SellGui;
 import dev.tbm00.papermc.playershops64.utils.*;
 
 public class AdminCmd implements TabExecutor {
@@ -52,15 +50,9 @@ public class AdminCmd implements TabExecutor {
         switch (subCmd) {
             case "help":
                 return handleHelpCmd(player);
-            case "buy":
-                return handleBuyCmd(player, args);
             case "menu":
             case "gui":
                 return handleMenuCmd(player);
-            case "sellgui":
-                return handleSellGuiCmd(player);
-            case "depositgui":
-                return handleDepositGuiCmd(player);
             case "give":
                 return handleGiveCmd(player, args);
             default: {
@@ -74,27 +66,6 @@ public class AdminCmd implements TabExecutor {
         player.sendMessage(ChatColor.DARK_PURPLE + "--- " + ChatColor.LIGHT_PURPLE + "Admin Shop Commands" + ChatColor.DARK_PURPLE + " ---\n"
             + ChatColor.WHITE + "/testshopadmin" + ChatColor.GRAY + " Base admin command\n"
         );
-        return true;
-    }
-
-    private boolean handleSellGuiCmd(Player player) {
-        new SellGui(javaPlugin, player);
-        return true;
-    }
-
-    private boolean handleDepositGuiCmd(Player player) {
-        new DepositGui(javaPlugin, player);
-        return true;
-    }
-
-    private boolean handleBuyCmd(Player player, String[] args) {
-        Integer amount = 1;
-        if (args.length>1) {
-            amount = Integer.parseInt(args[1]);
-        }
-
-        StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepPlayerShopItemStack(amount));
-        player.sendMessage(ChatColor.GREEN + "You should've received "+amount+" lectern(s) with the PDC key!");
         return true;
     }
 

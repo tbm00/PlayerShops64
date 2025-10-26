@@ -4,8 +4,10 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.Map.Entry;
 
@@ -38,6 +40,7 @@ public class ShopHandler {
     private final Map<UUID, Map<Long, UUID>> shopLocationMap = new HashMap<>(); 
                // Map<WorldUID, Map<PackedBlockPos, ShopUUID>>
     private final Map<Material, ShopPriceQueue> shopMaterialPriceMap = new HashMap<>();
+    private final Map<UUID, Set<UUID>> shopOwnerMap = new HashMap<>();
 
     private VisualTask visualTask;
 
@@ -59,6 +62,8 @@ public class ShopHandler {
 
         shopLocationMap.clear();
         shopMaterialPriceMap.clear();
+        shopOwnerMap.clear();
+        shopMap.clear();
         for (Shop shop : dao.getAllShopsFromSql()) {
             if (shop == null) {
                 skippedNullShop++;
@@ -131,8 +136,18 @@ public class ShopHandler {
         return shopMaterialPriceMap.containsKey(material) ? shopMaterialPriceMap.get(material) : null;
     }
 
+    public Set<UUID> getPlayersShops(UUID playerUuid) {
+        Set<UUID> s = shopOwnerMap.get(playerUuid);
+        return (s == null) ? java.util.Collections.emptySet() : new HashSet<>(s);
+    }
+
     private void indexShop(Shop shop) {
         if (shop==null) return;
+
+        if (shop.getOwnerUuid()!=null && shop.getItemStack()!=null) {
+            Set<UUID> playersShops = shopOwnerMap.computeIfAbsent(shop.getOwnerUuid(), k -> new java.util.HashSet<>());
+            playersShops.add(shop.getUuid());
+        }
 
         if (shop.getWorld()!=null && shop.getLocation()!=null) {
             UUID worldId = shop.getWorld().getUID();
@@ -170,6 +185,16 @@ public class ShopHandler {
     private void deindexShop(Shop shop) {
         if (shop==null) return;
 
+        if (shop.getOwnerUuid()!=null) {
+            Set<UUID> playersShops = shopOwnerMap.get(shop.getOwnerUuid());
+            if (playersShops != null) {
+                playersShops.remove(shop.getUuid());
+                if (playersShops.isEmpty()) {
+                    shopOwnerMap.remove(shop.getOwnerUuid());
+                }
+            }
+        }
+
         if (shop.getWorld()!=null && shop.getLocation()!=null) {
             UUID worldId = shop.getWorld().getUID();
             Map<Long, UUID> byPos = shopLocationMap.get(worldId);
@@ -193,7 +218,7 @@ public class ShopHandler {
             ShopPriceQueue queue = shopMaterialPriceMap.get(material);
             if (queue.contains(shop.getUuid())) {
                 queue.delete(shop.getUuid());
-                shopMaterialPriceMap.put(material, queue);
+                if (queue.isEmpty()) shopMaterialPriceMap.remove(material);
             }
         }
     }

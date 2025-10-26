@@ -83,17 +83,6 @@ public class StaticUtils {
 	}
 
     /**
-     * Logs one or more shop edit messages to the a log file.
-     *
-     * @param strings one or more message strings to log
-     */
-    public static void logEdit(String... strings) {
-		for (String s : strings) {
-            // TODO: log to file
-        }
-	}
-
-    /**
      * Normalizes big decimal to avoid money drift beyond 2 decimals places
      */
     public static BigDecimal normalizeBigDecimal(BigDecimal amount) {

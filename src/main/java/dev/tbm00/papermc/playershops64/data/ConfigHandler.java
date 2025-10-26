@@ -29,6 +29,7 @@ public class ConfigHandler {
     private double displayDisplayHeight = 0.0;
     private String displayHoloColor = "60,0,0,0";
 
+    private int shopBlockBuyPrice = 500;
     private int maxStock = 10000;
     private int maxBalance = 100000000;
     private int maxBuyPrice = 10000000;
@@ -106,10 +107,11 @@ public class ConfigHandler {
     private boolean loadShopSection() {
         ConfigurationSection shop = javaPlugin.getConfig().getConfigurationSection("shop");
         if (shop != null) {
+            shopBlockBuyPrice = shop.getInt("shopBlockBuyPrice", 500);
             maxStock = shop.getInt("maxStock", 10000);
-            maxStock = shop.getInt("maxBalance", 100000000);
-            maxStock = shop.getInt("maxBuyPrice", 10000000);
-            maxStock = shop.getInt("maxSellPrice", 10000000);
+            maxBalance = shop.getInt("maxBalance", 100000000);
+            maxBuyPrice = shop.getInt("maxBuyPrice", 10000000);
+            maxSellPrice = shop.getInt("maxSellPrice", 10000000);
 
             List<String> materialStrings = shop.getStringList("baseBlockMaterials");
             for (String string : materialStrings) {
@@ -215,6 +217,10 @@ public class ConfigHandler {
     }
 
     // Shop
+    public int getShopBlockBuyPrice() {
+        return shopBlockBuyPrice;
+    }
+
     public int getMaxStock() {
         return maxStock;
     }

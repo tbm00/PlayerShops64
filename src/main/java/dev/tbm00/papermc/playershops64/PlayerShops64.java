@@ -1,5 +1,8 @@
 package dev.tbm00.papermc.playershops64;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -37,6 +40,15 @@ public class PlayerShops64 extends JavaPlugin {
                     pdf.getName() + " v" + pdf.getVersion() + " created by tbm00",
                     ChatColor.DARK_PURPLE + "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
             );
+
+            try {
+                getDataFolder().mkdirs();
+                File editLog = new File(getDataFolder(), "log.txt");
+                if (!editLog.exists()) editLog.createNewFile();
+                ShopUtils.setEditLogFile(editLog);
+            } catch (IOException e) {
+                StaticUtils.log(ChatColor.RED, "Failed to initialize log.txt: " + e.getMessage());
+            }
 
             configHandler = new ConfigHandler(this);
 

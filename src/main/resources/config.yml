@@ -27,6 +27,7 @@ lang:
   prefix: "&8[&fShop&8] &7"
 
 shop:
+  shopBlockBuyPrice: 500
   maxStock: 10000
   maxBalance: 100000000
   maxBuyPrice: 10000000

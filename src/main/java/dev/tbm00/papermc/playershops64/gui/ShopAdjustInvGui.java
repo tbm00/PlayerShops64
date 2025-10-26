@@ -46,8 +46,8 @@ public class ShopAdjustInvGui {
         
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
             return;
-        } String shopHint = shopUuid.toString().substring(0, 6);
-        StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+shopHint+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
+        }
+        StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
 
         label = "Adjust "+AdjustAttribute.toString(attribute);
         switch (attribute) {
@@ -67,7 +67,7 @@ public class ShopAdjustInvGui {
         setup();
         gui.disableAllInteractions();
         gui.setCloseGuiAction(event -> {
-            StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+shopHint+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
+            StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
             javaPlugin.getShopHandler().unlockShop(shopUuid, viewer.getUniqueId());
         });
 
@@ -209,7 +209,7 @@ public class ShopAdjustInvGui {
                 item.setType(Material.RED_BANNER);
                 gui.setItem(2, 4, ItemBuilder.from(item).asGuiItem(event -> {
                                                                                 event.setCancelled(true);
-                                                                                ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.REMOVE, quantity);
+                                                                                ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.REMOVE, quantity, true);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
                                                                                     Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
@@ -255,7 +255,7 @@ public class ShopAdjustInvGui {
                 item.setType(Material.YELLOW_BANNER);
                 gui.setItem(2, 5, ItemBuilder.from(item).asGuiItem(event -> {
                                                                                 event.setCancelled(true);
-                                                                                ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.SET, quantity);
+                                                                                ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.SET, quantity, true);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
                                                                                     Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
@@ -322,7 +322,7 @@ public class ShopAdjustInvGui {
                 item.setType(Material.GREEN_BANNER);
                 gui.setItem(2, 6, ItemBuilder.from(item).asGuiItem(event -> {
                                                                                 event.setCancelled(true);
-                                                                                ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.ADD, quantity);
+                                                                                ShopUtils.adjustBalance(viewer, shopUuid, AdjustType.ADD, quantity, true);
                                                                                 if (!closeGuiAfter) {
                                                                                     gui.setCloseGuiAction(null);
                                                                                     Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {

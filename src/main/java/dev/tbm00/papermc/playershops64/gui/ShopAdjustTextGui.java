@@ -371,16 +371,14 @@ public class ShopAdjustTextGui {
     private boolean tryLock(PlayerShops64 javaPlugin, UUID shopUuid, Player player, AdjustAttribute attribute) {
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) return false;
     
-        String shopHint = shopUuid.toString().substring(0, 6);
-        StaticUtils.log(ChatColor.YELLOW, player.getName() + " opened shop "+shopHint+"'s adjust text gui: "+AdjustAttribute.toString(attribute));
+        StaticUtils.log(ChatColor.YELLOW, player.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust text gui: "+AdjustAttribute.toString(attribute));
         return true;
     }
 
     private void unlock(PlayerShops64 javaPlugin, UUID shopUuid, Player player, AdjustAttribute attribute) {
         javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
 
-        String shopHint = shopUuid.toString().substring(0, 6);
-        StaticUtils.log(ChatColor.GREEN, player.getName() + " closed shop "+shopHint+"'s adjust text gui: "+AdjustAttribute.toString(attribute));
+        StaticUtils.log(ChatColor.GREEN, player.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust text gui: "+AdjustAttribute.toString(attribute));
     }
 
     private void handleIntAdjust(PlayerShops64 javaPlugin, Player player, boolean isAdmin, UUID shopUuid, boolean closeGuiAfter, AdjustAttribute attribute, String query) {
