@@ -24,6 +24,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.TileState;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -444,7 +445,12 @@ public class ShopUtils {
             shop.setBaseMaterial(material);
 
             Block block = javaPlugin.getServer().getWorld(shop.getWorld().getUID()).getBlockAt(shop.getLocation());
+            BlockData oldData = block.getBlockData();
+
             block.setType(material, false);
+            
+            BlockData newData = StaticUtils.applySameOrientation(oldData, block.getBlockData());
+            block.setBlockData(newData, false);
 
             BlockState state = block.getState();
             if (state instanceof TileState tileState) {

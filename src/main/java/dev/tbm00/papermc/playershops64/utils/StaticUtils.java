@@ -20,6 +20,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.Orientable;
+import org.bukkit.block.data.Rotatable;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -628,6 +632,22 @@ public class StaticUtils {
         if (amount!=null) wand.setAmount(amount);
 
         return wand;
+    }
+
+    public static BlockData applySameOrientation(BlockData from, BlockData to) {
+        // Facing blocks: observers, dispensers, droppers, stairs (also have other props), wall signs, etc.
+        if (from instanceof Directional f && to instanceof Directional t) {
+            t.setFacing(f.getFacing());
+        }
+        // Rotatable blocks: standing signs, item frames (entity), skulls, etc.
+        if (from instanceof Rotatable f && to instanceof Rotatable t) {
+            t.setRotation(f.getRotation());
+        }
+        // Axis-based blocks: logs, pillars, chains, basalt, etc.
+        if (from instanceof Orientable f && to instanceof Orientable t) {
+            t.setAxis(f.getAxis());
+        }
+        return to;
     }
 
     // Headcache

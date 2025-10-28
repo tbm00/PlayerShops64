@@ -15,7 +15,7 @@ public class DisplayPickup implements Listener {
     private static boolean isShopDisplay(Item it) {
         if (it == null || it.getPersistentDataContainer() == null) return false;
         String tag = it.getPersistentDataContainer().get(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING);
-        return "item".equals(tag); // your display items
+        return "item".equals(tag);
     }
 
     // Block players, mobs, any living entity
