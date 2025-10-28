@@ -87,7 +87,6 @@ public class ShopHandler {
             loaded++;
         }
 
-
         StaticUtils.log(ChatColor.GREEN, "ShopHandler loaded " + loaded + " shops, " +
                 "\nskippedNullShop: " + skippedNullShop +
                 ", skippedNullWorld:" + skippedNullWorld +
@@ -100,140 +99,6 @@ public class ShopHandler {
             visualTask = null;
         }
         displayManager.clearAll();
-    }
-
-    public DisplayManager getDisplayManager() {
-        return displayManager;
-    }
-
-    public Map<UUID, Shop> getShopView() {
-        Map<UUID, Shop> copy = new LinkedHashMap<>(shopMap.size());
-        for (var e : shopMap.entrySet()) copy.put(e.getKey(), copyOf(e.getValue()));
-        return Collections.unmodifiableMap(copy);
-    }
-
-    public Map<UUID, Shop> snapshotShopMap() {
-        return new LinkedHashMap<>(getShopView());
-    }
-
-    public Map<Material, ShopPriceQueue> snapshotMaterialPriceMap() {
-        Map<Material, ShopPriceQueue> copy = new HashMap<>(shopMaterialPriceMap.size());
-        for (Entry<Material, ShopPriceQueue> e : shopMaterialPriceMap.entrySet()) {
-            copy.put(e.getKey(), e.getValue() == null ? null : e.getValue().snapshot());
-        }
-        return copy;
-    }
-
-    public Shop getShop(UUID uuid) {
-        return copyOf(shopMap.get(uuid));
-    }
-
-    public Map<Material, ShopPriceQueue> getShopMaterialPriceMap() {
-        return Collections.unmodifiableMap(shopMaterialPriceMap);
-    }
-
-    public ShopPriceQueue getShopPriceQueue(Material material) {
-        return shopMaterialPriceMap.containsKey(material) ? shopMaterialPriceMap.get(material) : null;
-    }
-
-    public Set<UUID> getPlayersShops(UUID playerUuid) {
-        Set<UUID> s = shopOwnerMap.get(playerUuid);
-        return (s == null) ? java.util.Collections.emptySet() : new HashSet<>(s);
-    }
-
-    private void indexShop(Shop shop) {
-        if (shop==null) return;
-
-        if (shop.getOwnerUuid()!=null && shop.getItemStack()!=null) {
-            Set<UUID> playersShops = shopOwnerMap.computeIfAbsent(shop.getOwnerUuid(), k -> new java.util.HashSet<>());
-            playersShops.add(shop.getUuid());
-        }
-
-        if (shop.getWorld()!=null && shop.getLocation()!=null) {
-            UUID worldId = shop.getWorld().getUID();
-            Map<Long, UUID> byPos = shopLocationMap.computeIfAbsent(worldId, k -> new HashMap<>());
-            long key = packBlockPos(shop.getLocation().getBlockX(), shop.getLocation().getBlockY(), shop.getLocation().getBlockZ());
-
-            UUID old = byPos.put(key, shop.getUuid());
-            if (old != null && !old.equals(shop.getUuid())) {
-                StaticUtils.log(ChatColor.RED, "Seems there are two shops at same location: " + shop.getWorld().getName() +" @ " + shop.getLocation().getX() + ", " +shop.getLocation().getY()+ ", " + shop.getLocation().getZ() + "\n" +
-                                "Old shop: " + old + "\n",
-                                "New shop: " + shop.getUuid());
-            }
-        }
-
-        if (shop.getItemStack()!=null) {
-            //if (shop.getSellPrice()==null) return;
-
-            Material material = shop.getItemStack().getType();
-            if (material==null) return;
-
-            if (!shopMaterialPriceMap.containsKey(material) || shopMaterialPriceMap.get(material)==null) {
-                shopMaterialPriceMap.put(material, new ShopPriceQueue());
-            }
-
-            ShopPriceQueue queue = shopMaterialPriceMap.get(material);
-            BigDecimal sellPrice = (shop.getSellPrice()==null) ? BigDecimal.ZERO : shop.getSellPrice();
-
-            if (queue.contains(shop.getUuid())) queue.update(shop.getUuid(), sellPrice);
-            else queue.insert(shop.getUuid(), sellPrice);
-
-            shopMaterialPriceMap.put(material, queue);
-        }
-    }
-
-    private void deindexShop(Shop shop) {
-        if (shop==null) return;
-
-        if (shop.getOwnerUuid()!=null) {
-            Set<UUID> playersShops = shopOwnerMap.get(shop.getOwnerUuid());
-            if (playersShops != null) {
-                playersShops.remove(shop.getUuid());
-                if (playersShops.isEmpty()) {
-                    shopOwnerMap.remove(shop.getOwnerUuid());
-                }
-            }
-        }
-
-        if (shop.getWorld()!=null && shop.getLocation()!=null) {
-            UUID worldId = shop.getWorld().getUID();
-            Map<Long, UUID> byPos = shopLocationMap.get(worldId);
-            if (byPos != null) {
-                long key = packBlockPos(shop.getLocation().getBlockX(), shop.getLocation().getBlockY(), shop.getLocation().getBlockZ());
-                byPos.remove(key);
-                if (byPos.isEmpty()) shopLocationMap.remove(worldId);
-            }
-        }
-
-        if (shop.getItemStack()!=null) {
-            if (shop.getSellPrice()==null) return;
-
-            Material material = shop.getItemStack().getType();
-            if (material==null) return;
-
-            if (!shopMaterialPriceMap.containsKey(material) || shopMaterialPriceMap.get(material)==null) {
-                return;
-            }
-
-            ShopPriceQueue queue = shopMaterialPriceMap.get(material);
-            if (queue.contains(shop.getUuid())) {
-                queue.delete(shop.getUuid());
-                if (queue.isEmpty()) shopMaterialPriceMap.remove(material);
-            }
-        }
-    }
-
-    private Shop getIndexedShop(World world, int bx, int by, int bz) {
-        UUID shopId = getIndexedShopId(world, bx, by, bz);
-        Shop live = (shopId == null) ? null : shopMap.get(shopId);
-        return copyOf(live);
-    }
-
-    private UUID getIndexedShopId(World world, int bx, int by, int bz) {
-        if (world == null) return null;
-        Map<Long, UUID> byPos = shopLocationMap.get(world.getUID());
-        if (byPos == null) return null;
-        return byPos.get(packBlockPos(bx, by, bz));
     }
 
     public void upsertShopObject(Shop shop) {
@@ -295,6 +160,26 @@ public class ShopHandler {
         });
     }
 
+    public boolean tryLockShop(UUID shopUuid, Player player) {
+        StaticUtils.log(ChatColor.WHITE, player.getName() + " trying to lock shop: " + shopUuid.toString());
+        Shop shop = getShop(shopUuid);
+        if (shop==null) {
+            StaticUtils.log(ChatColor.YELLOW, player.getName() + " tried to tryLock a null shop!" +
+                                            "\nShop: " + shopUuid.toString());
+            StaticUtils.sendMessage(player, "&cShop object not found..!");
+            return false;
+        }
+
+        if (shop.getCurrentEditor() != null && !shop.getCurrentEditor().equals(player.getUniqueId())) {
+            StaticUtils.sendMessage(player, "&cThis shop is being used by " + javaPlugin.getServer().getOfflinePlayer(shop.getCurrentEditor()).getName());
+            return false;
+        }
+        
+        shop.setCurrentEditor(player.getUniqueId());
+        shopMap.put(shopUuid, shop);
+        return true;
+    }
+
     public void unlockShop(UUID shopUuid, UUID expectedEditor) {
         StaticUtils.log(ChatColor.WHITE, "Unlocking shop: " + shopUuid.toString());
         Shop shop = getShop(shopUuid);
@@ -318,26 +203,141 @@ public class ShopHandler {
             shop.setCurrentEditor(null);
             shopMap.put(shopUuid, shop);
         }
-    } 
+    }
 
-    public boolean tryLockShop(UUID shopUuid, Player player) {
-        StaticUtils.log(ChatColor.WHITE, player.getName() + " trying to lock shop: " + shopUuid.toString());
-        Shop shop = getShop(shopUuid);
-        if (shop==null) {
-            StaticUtils.log(ChatColor.YELLOW, player.getName() + " tried to tryLock a null shop!" +
-                                            "\nShop: " + shopUuid.toString());
-            StaticUtils.sendMessage(player, "&cShop object not found..!");
-            return false;
+    private void indexShop(Shop shop) {
+        if (shop==null) return;
+
+        if (shop.getOwnerUuid()!=null && shop.getItemStack()!=null) {
+            Set<UUID> playersShops = shopOwnerMap.computeIfAbsent(shop.getOwnerUuid(), k -> new java.util.HashSet<>());
+            playersShops.add(shop.getUuid());
         }
 
-        if (shop.getCurrentEditor() != null && !shop.getCurrentEditor().equals(player.getUniqueId())) {
-            StaticUtils.sendMessage(player, "&cThis shop is being used by " + javaPlugin.getServer().getOfflinePlayer(shop.getCurrentEditor()).getName());
-            return false;
+        if (shop.getWorld()!=null && shop.getLocation()!=null) {
+            UUID worldUuid = shop.getWorld().getUID();
+            Map<Long, UUID> byPos = shopLocationMap.computeIfAbsent(worldUuid, k -> new HashMap<>());
+            long key = packBlockPos(shop.getLocation().getBlockX(), shop.getLocation().getBlockY(), shop.getLocation().getBlockZ());
+
+            UUID old = byPos.put(key, shop.getUuid());
+            if (old != null && !old.equals(shop.getUuid())) {
+                StaticUtils.log(ChatColor.RED, "Seems there are two shops at same location: " + shop.getWorld().getName() +" @ " + shop.getLocation().getX() + ", " +shop.getLocation().getY()+ ", " + shop.getLocation().getZ() + "\n" +
+                                "Old shop: " + old + "\n",
+                                "New shop: " + shop.getUuid());
+            }
         }
-        
-        shop.setCurrentEditor(player.getUniqueId());
-        shopMap.put(shopUuid, shop);
-        return true;
+
+        if (shop.getItemStack()!=null) {
+            //if (shop.getSellPrice()==null) return;
+
+            Material material = shop.getItemStack().getType();
+            if (material==null) return;
+
+            if (!shopMaterialPriceMap.containsKey(material) || shopMaterialPriceMap.get(material)==null) {
+                shopMaterialPriceMap.put(material, new ShopPriceQueue());
+            }
+
+            ShopPriceQueue queue = shopMaterialPriceMap.get(material);
+            BigDecimal sellPrice = (shop.getSellPrice()==null) ? BigDecimal.ZERO : shop.getSellPrice();
+
+            if (queue.contains(shop.getUuid())) queue.update(shop.getUuid(), sellPrice);
+            else queue.insert(shop.getUuid(), sellPrice);
+
+            shopMaterialPriceMap.put(material, queue);
+        }
+    }
+
+    private void deindexShop(Shop shop) {
+        if (shop==null) return;
+
+        if (shop.getOwnerUuid()!=null) {
+            Set<UUID> playersShops = shopOwnerMap.get(shop.getOwnerUuid());
+            if (playersShops != null) {
+                playersShops.remove(shop.getUuid());
+                if (playersShops.isEmpty()) {
+                    shopOwnerMap.remove(shop.getOwnerUuid());
+                }
+            }
+        }
+
+        if (shop.getWorld()!=null && shop.getLocation()!=null) {
+            UUID worldUuid = shop.getWorld().getUID();
+            Map<Long, UUID> byPos = shopLocationMap.get(worldUuid);
+            if (byPos != null) {
+                long key = packBlockPos(shop.getLocation().getBlockX(), shop.getLocation().getBlockY(), shop.getLocation().getBlockZ());
+                byPos.remove(key);
+                if (byPos.isEmpty()) shopLocationMap.remove(worldUuid);
+            }
+        }
+
+        if (shop.getItemStack()!=null) {
+            if (shop.getSellPrice()==null) return;
+
+            Material material = shop.getItemStack().getType();
+            if (material==null) return;
+
+            if (!shopMaterialPriceMap.containsKey(material) || shopMaterialPriceMap.get(material)==null) {
+                return;
+            }
+
+            ShopPriceQueue queue = shopMaterialPriceMap.get(material);
+            if (queue.contains(shop.getUuid())) {
+                queue.delete(shop.getUuid());
+                if (queue.isEmpty()) shopMaterialPriceMap.remove(material);
+            }
+        }
+    }
+
+    public Shop getShop(UUID uuid) {
+        return copyOf(shopMap.get(uuid));
+    }
+
+    public Map<UUID, Shop> getShopView() {
+        Map<UUID, Shop> copy = new LinkedHashMap<>(shopMap.size());
+        for (var e : shopMap.entrySet()) copy.put(e.getKey(), copyOf(e.getValue()));
+        return Collections.unmodifiableMap(copy);
+    }
+
+    public Map<UUID, Shop> snapshotShopMap() {
+        return new LinkedHashMap<>(getShopView());
+    }
+
+
+    public Map<Material, ShopPriceQueue> snapshotMaterialPriceMap() {
+        Map<Material, ShopPriceQueue> copy = new HashMap<>(shopMaterialPriceMap.size());
+        for (Entry<Material, ShopPriceQueue> e : shopMaterialPriceMap.entrySet()) {
+            copy.put(e.getKey(), e.getValue() == null ? null : e.getValue().snapshot());
+        }
+        return copy;
+    }
+
+    public Map<Material, ShopPriceQueue> getShopMaterialPriceMap() {
+        return Collections.unmodifiableMap(shopMaterialPriceMap);
+    }
+
+    public ShopPriceQueue getShopPriceQueue(Material material) {
+        return shopMaterialPriceMap.containsKey(material) ? shopMaterialPriceMap.get(material) : null;
+    }
+
+    public Set<UUID> getPlayersShops(UUID playerUuid) {
+        Set<UUID> s = shopOwnerMap.get(playerUuid);
+        return (s == null) ? java.util.Collections.emptySet() : new HashSet<>(s);
+    }
+
+    public DisplayManager getDisplayManager() {
+        return displayManager;
+    }
+
+    private Shop getIndexedShop(World world, int bx, int by, int bz) {
+        UUID shopUuid = getIndexedshopUuid(world, bx, by, bz);
+        Shop live = (shopUuid == null) ? null : shopMap.get(shopUuid);
+        return copyOf(live);
+    }
+
+    private UUID getIndexedshopUuid(World world, int bx, int by, int bz) {
+        if (world == null) return null;
+        Map<Long, UUID> byPos = shopLocationMap.get(world.getUID());
+        if (byPos == null) return null;
+        return byPos.get(packBlockPos(bx, by, bz));
     }
 
     public Shop getShopInFocus(Player player) {
@@ -401,7 +401,6 @@ public class ShopHandler {
     private Shop copyOf(Shop s) {
         if (s == null) return null;
 
-        // Clone mutable fields (Location, ItemStack, Date); keep immutable/shared-safe ones (UUID, BigDecimal, World).
         return new Shop(
             s.getUuid(),
             s.getOwnerUuid(),

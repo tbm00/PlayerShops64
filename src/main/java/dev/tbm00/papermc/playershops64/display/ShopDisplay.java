@@ -29,7 +29,7 @@ import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ShopDisplay {
     private final PlayerShops64 javaPlugin;
-    private final UUID shopId;
+    private final UUID shopUuid;
 
     private Item itemDisplay;
     private ItemDisplay glassDisplay;
@@ -42,10 +42,10 @@ public class ShopDisplay {
     private final List<UUID> tracked = new ArrayList<>();
     private String lastText = "";
 
-    public ShopDisplay(PlayerShops64 javaPlugin, UUID shopId) {
+    public ShopDisplay(PlayerShops64 javaPlugin, UUID shopUuid) {
         this.javaPlugin = javaPlugin;
-        this.shopId = shopId;
-        this.displayHeight = javaPlugin.getShopHandler().getShop(shopId).getDisplayHeight() / 10f;
+        this.shopUuid = shopUuid;
+        this.displayHeight = javaPlugin.getShopHandler().getShop(shopUuid).getDisplayHeight() / 10f;
         this.holoColor = javaPlugin.getConfigHandler().getDisplayHoloColor();
     }
 
@@ -68,7 +68,7 @@ public class ShopDisplay {
     }
 
     public void update(World world, String text) {
-        Shop shop = javaPlugin.getShopHandler().getShop(shopId);
+        Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
         if (world == null || shop == null || shop.getLocation() == null) return;
 
         Location base = shop.getLocation().clone();
@@ -210,11 +210,13 @@ public class ShopDisplay {
 
     /** Basic visibility heuristic to cull by distance/world. */
     public boolean shouldSee(Player player, int viewDistance) {
-        Shop shop = javaPlugin.getShopHandler().getShop(shopId);
+        Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+
         if (player == null || shop == null || shop.getLocation() == null || shop.getWorld() == null) return false;
         if (!player.getWorld().equals(shop.getWorld())) return false;
+
         return shop.getLocation().distance(player.getLocation()) <= viewDistance;
     }
 
-    //public Shop getShop() { return javaPlugin.getShopHandler().getShop(shopId); }
+    //public Shop getShop() { return javaPlugin.getShopHandler().getShop(shopUuid); }
 }

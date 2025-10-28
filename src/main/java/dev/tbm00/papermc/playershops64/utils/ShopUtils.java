@@ -1128,7 +1128,12 @@ public class ShopUtils {
 
     public static String formatHologramText(Shop shop) {
         ItemStack item = shop.getItemStack();
-        String name = (item==null) ? "&c(null item)" : StaticUtils.getItemName(item);
+
+        if (item==null) {
+            return "&cEmpty PlayerShop\n&7Owner: &e" + shop.getOwnerName();
+        }
+
+        String name = StaticUtils.getItemName(item);
         String stackSize = (!((1<=shop.getStackSize())&&(shop.getStackSize()<=64))) ? "error" : shop.getStackSize() + "";
         String buy = (shop.getBuyPrice()==null) ? "disabled" : StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue());
         String sell = (shop.getSellPrice()==null) ? "disabled" : StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue());

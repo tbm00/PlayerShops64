@@ -17,7 +17,7 @@ import dev.tbm00.papermc.playershops64.listener.DisplayPickup;
 import dev.tbm00.papermc.playershops64.listener.PlayerConnection;
 import dev.tbm00.papermc.playershops64.listener.PlayerMovement;
 import dev.tbm00.papermc.playershops64.listener.PlayerWand;
-import dev.tbm00.papermc.playershops64.listener.ServerStartup;
+//import dev.tbm00.papermc.playershops64.listener.ServerStartup;
 import dev.tbm00.papermc.playershops64.listener.ShopBaseBlock;
 
 public class PlayerShops64 extends JavaPlugin {
@@ -58,7 +58,7 @@ public class PlayerShops64 extends JavaPlugin {
             shopHandler = new ShopHandler(this, mysqlConnection);
 
             // Register Listeners
-            getServer().getPluginManager().registerEvents(new ServerStartup(this), this);
+            // getServer().getPluginManager().registerEvents(new ServerStartup(this), this);
             getServer().getPluginManager().registerEvents(new PlayerConnection(this), this);
             getServer().getPluginManager().registerEvents(new PlayerMovement(), this);
             getServer().getPluginManager().registerEvents(new PlayerWand(this), this);
@@ -156,7 +156,6 @@ public class PlayerShops64 extends JavaPlugin {
         }
         StaticUtils.log(ChatColor.YELLOW, "Deleted " + count + " stale display entities.");
     }*/
-
 
     /**
      * Disables the plugin. (never gets used in my codebase)

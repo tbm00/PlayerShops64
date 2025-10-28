@@ -5,7 +5,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
@@ -19,23 +18,18 @@ public class DisplayManager {
         StaticUtils.log(ChatColor.GREEN, "DisplayManager initialized.");
     }
 
-    public ShopDisplay getOrCreate(UUID shopId) {
-        if (shopId == null) return null;
-        return displays.computeIfAbsent(shopId, id -> new ShopDisplay(javaPlugin, shopId));
+    public ShopDisplay getOrCreate(UUID shopUuid) {
+        if (shopUuid == null) return null;
+        return displays.computeIfAbsent(shopUuid, id -> new ShopDisplay(javaPlugin, shopUuid));
     }
 
-    public ShopDisplay get(UUID shopId) {
-        return displays.get(shopId);
+    public ShopDisplay get(UUID shopUuid) {
+        return displays.get(shopUuid);
     }
 
-    public boolean shouldSee(UUID shopId, Player player, int viewDistance) {
-        ShopDisplay d = displays.get(shopId);
-        return d != null && d.shouldSee(player, viewDistance);
-    }
-
-    public void delete(UUID shopId) {
-        ShopDisplay d = displays.remove(shopId);
-        if (d != null) d.clear();
+    public void delete(UUID shopUuid) {
+        ShopDisplay shopDisplay = displays.remove(shopUuid);
+        if (shopDisplay != null) shopDisplay.clear();
     }
 
     public void clearAll() {

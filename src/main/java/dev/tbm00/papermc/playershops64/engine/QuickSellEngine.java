@@ -35,7 +35,7 @@ public final class QuickSellEngine {
         public BigDecimal totalMoney = BigDecimal.ZERO;
         public int totalItems = 0;
 
-        public Set<UUID> distinctShopIds() {
+        public Set<UUID> distinctshopUuids() {
             Set<UUID> s = new HashSet<>();
             for (SellPlanEntry e : entries) s.add(e.shopUuid);
             return s;
@@ -175,7 +175,7 @@ public final class QuickSellEngine {
 
     public void runConfirmedPlans() {
         // 1) lock all shops in stable order to prevent deadlocks
-        List<UUID> lockOrder = new ArrayList<>(plans.sellPlan.distinctShopIds());
+        List<UUID> lockOrder = new ArrayList<>(plans.sellPlan.distinctshopUuids());
         Collections.sort(lockOrder);
         List<UUID> acquired = new ArrayList<>();
 
