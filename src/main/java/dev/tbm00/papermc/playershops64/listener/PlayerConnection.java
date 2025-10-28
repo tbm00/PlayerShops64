@@ -9,12 +9,13 @@ import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
+import dev.tbm00.papermc.playershops64.display.VisualTask;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
-
 
 public class PlayerConnection implements Listener {
     PlayerShops64 javaPlugin;
@@ -49,5 +50,17 @@ public class PlayerConnection implements Listener {
             SkullMeta updatedMeta = (SkullMeta) head.getItemMeta();
             StaticUtils.headMetaCache.put(uuid, Pair.of(updatedMeta, updateTime));
         }, 20L);
+    }
+
+    @EventHandler
+    public void onPlayerLeave(PlayerQuitEvent event) {
+        VisualTask task = javaPlugin.getShopHandler().visualTask;
+
+        if (task!=null) {
+            UUID playerUuid = event.getPlayer().getUniqueId();
+            task.prevFocusedShop.remove(playerUuid);
+            task.prevLoadedBases.remove(playerUuid);
+            javaPlugin.getShopHandler().getDisplayManager().purgeViewer(playerUuid);
+        }
     }
 }

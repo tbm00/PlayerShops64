@@ -13,6 +13,7 @@ import dev.tbm00.papermc.playershops64.command.*;
 import dev.tbm00.papermc.playershops64.data.ConfigHandler;
 import dev.tbm00.papermc.playershops64.data.MySQLConnection;
 import dev.tbm00.papermc.playershops64.hook.VaultHook;
+import dev.tbm00.papermc.playershops64.listener.ChunkActivity;
 import dev.tbm00.papermc.playershops64.listener.DisplayPickup;
 import dev.tbm00.papermc.playershops64.listener.PlayerConnection;
 import dev.tbm00.papermc.playershops64.listener.PlayerMovement;
@@ -59,12 +60,13 @@ public class PlayerShops64 extends JavaPlugin {
 
             // Register Listeners
             // getServer().getPluginManager().registerEvents(new ServerStartup(this), this);
+            getServer().getPluginManager().registerEvents(new ChunkActivity(this), this);
             getServer().getPluginManager().registerEvents(new PlayerConnection(this), this);
             getServer().getPluginManager().registerEvents(new PlayerMovement(), this);
             getServer().getPluginManager().registerEvents(new PlayerWand(this), this);
             getServer().getPluginManager().registerEvents(new ShopBaseBlock(this), this);
             getServer().getPluginManager().registerEvents(new DisplayPickup(), this);
-
+            
             // Register Commands
             getCommand("testshop").setExecutor(new ShopCmd(this));
             getCommand("testshopadmin").setExecutor(new AdminCmd(this));

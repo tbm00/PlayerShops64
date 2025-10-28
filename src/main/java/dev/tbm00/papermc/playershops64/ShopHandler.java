@@ -29,7 +29,6 @@ import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.display.DisplayManager;
 import dev.tbm00.papermc.playershops64.display.ShopDisplay;
 import dev.tbm00.papermc.playershops64.display.VisualTask;
-import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ShopHandler {
@@ -39,10 +38,12 @@ public class ShopHandler {
     private final Map<UUID, Shop> shopMap = new LinkedHashMap<>();
     private final Map<UUID, Map<Long, UUID>> shopLocationMap = new HashMap<>(); 
                // Map<WorldUID, Map<PackedBlockPos, ShopUUID>>
+    private final Map<UUID, Map<Long, Set<UUID>>> shopChunkMap = new HashMap<>();
+                // Map<WorldUID, Map<ChunkKey, Set<ShopUUID>>>
     private final Map<Material, ShopPriceQueue> shopMaterialPriceMap = new HashMap<>();
     private final Map<UUID, Set<UUID>> shopOwnerMap = new HashMap<>();
 
-    private VisualTask visualTask;
+    public VisualTask visualTask;
 
     public ShopHandler(PlayerShops64 javaPlugin, MySQLConnection db) {
         this.javaPlugin = javaPlugin;
@@ -98,7 +99,7 @@ public class ShopHandler {
             visualTask.cancel();
             visualTask = null;
         }
-        displayManager.clearAll();
+        displayManager.deleteAll();
     }
 
     public void upsertShopObject(Shop shop) {
@@ -120,7 +121,7 @@ public class ShopHandler {
 
         // instantly refresh this shop's display
         ShopDisplay shopDisplay = displayManager.getOrCreate(shop.getUuid());
-        if (shopDisplay != null) shopDisplay.update(shop.getWorld(), ShopUtils.formatHologramText(shop));
+        if (shopDisplay != null) shopDisplay.update();
 
         // run DB operations async
         javaPlugin.getServer().getScheduler().runTaskAsynchronously(javaPlugin, () -> {
@@ -215,6 +216,7 @@ public class ShopHandler {
 
         if (shop.getWorld()!=null && shop.getLocation()!=null) {
             UUID worldUuid = shop.getWorld().getUID();
+
             Map<Long, UUID> byPos = shopLocationMap.computeIfAbsent(worldUuid, k -> new HashMap<>());
             long key = packBlockPos(shop.getLocation().getBlockX(), shop.getLocation().getBlockY(), shop.getLocation().getBlockZ());
 
@@ -224,6 +226,10 @@ public class ShopHandler {
                                 "Old shop: " + old + "\n",
                                 "New shop: " + shop.getUuid());
             }
+
+            long chunkKey = packChunkFromBlock(shop.getLocation().getBlockX(), shop.getLocation().getBlockZ());
+            Map<Long, Set<UUID>> byChunk = shopChunkMap.computeIfAbsent(worldUuid, k -> new HashMap<>());
+            byChunk.computeIfAbsent(chunkKey, k -> new HashSet<>()).add(shop.getUuid());
         }
 
         if (shop.getItemStack()!=null) {
@@ -261,11 +267,23 @@ public class ShopHandler {
 
         if (shop.getWorld()!=null && shop.getLocation()!=null) {
             UUID worldUuid = shop.getWorld().getUID();
+
             Map<Long, UUID> byPos = shopLocationMap.get(worldUuid);
             if (byPos != null) {
                 long key = packBlockPos(shop.getLocation().getBlockX(), shop.getLocation().getBlockY(), shop.getLocation().getBlockZ());
                 byPos.remove(key);
                 if (byPos.isEmpty()) shopLocationMap.remove(worldUuid);
+            }
+
+            Map<Long, Set<UUID>> byChunk = shopChunkMap.get(worldUuid);
+            if (byChunk != null) {
+                long chunkKey = packChunkFromBlock(shop.getLocation().getBlockX(), shop.getLocation().getBlockZ());
+                Set<UUID> s = byChunk.get(chunkKey);
+                if (s != null) {
+                    s.remove(shop.getUuid());
+                    if (s.isEmpty()) byChunk.remove(chunkKey);
+                }
+                if (byChunk.isEmpty()) shopChunkMap.remove(worldUuid);
             }
         }
 
@@ -287,6 +305,10 @@ public class ShopHandler {
         }
     }
 
+    public DisplayManager getDisplayManager() {
+        return displayManager;
+    }
+
     public Shop getShop(UUID uuid) {
         return copyOf(shopMap.get(uuid));
     }
@@ -295,6 +317,10 @@ public class ShopHandler {
         Map<UUID, Shop> copy = new LinkedHashMap<>(shopMap.size());
         for (var e : shopMap.entrySet()) copy.put(e.getKey(), copyOf(e.getValue()));
         return Collections.unmodifiableMap(copy);
+    }
+
+    public boolean isShopMapEmpty() {
+        return shopMap.isEmpty();
     }
 
     public Map<UUID, Shop> snapshotShopMap() {
@@ -323,8 +349,14 @@ public class ShopHandler {
         return (s == null) ? java.util.Collections.emptySet() : new HashSet<>(s);
     }
 
-    public DisplayManager getDisplayManager() {
-        return displayManager;
+    public Set<UUID> getShopsInChunk(World world, int cx, int cz) {
+        if (world == null) return java.util.Collections.emptySet();
+
+        Map<Long, Set<UUID>> byChunk = shopChunkMap.get(world.getUID());
+        if (byChunk == null) return java.util.Collections.emptySet();
+
+        Set<UUID> s = byChunk.get(packChunk(cx, cz));
+        return (s == null) ? java.util.Collections.emptySet() : new HashSet<>(s);
     }
 
     private Shop getIndexedShop(World world, int bx, int by, int bz) {
@@ -396,6 +428,14 @@ public class ShopHandler {
     private long packBlockPos(int x, int y, int z) {
         // Same idea as Mojang’s BlockPos long packing
         return ((x & 0x3FFFFFFL) << 38) | ((z & 0x3FFFFFFL) << 12) | (y & 0xFFFL);
+    }
+
+    private static long packChunk(int cx, int cz) {
+        return ((long) (cx) & 0xffffffffL) << 32 | ((long) cz & 0xffffffffL);
+    }
+
+    private static long packChunkFromBlock(int bx, int bz) {
+        return packChunk(bx >> 4, bz >> 4);
     }
 
     private Shop copyOf(Shop s) {

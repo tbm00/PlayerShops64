@@ -89,7 +89,7 @@ public class MySQLConnection {
           + "  `inf_money` TINYINT(1) NOT NULL DEFAULT 0,"
           + "  `inf_stock` TINYINT(1) NOT NULL DEFAULT 0,"
           + "  `description` VARCHAR(256) NULL,"
-          + "  `display_height` INT NULL DEFAULT "+javaPlugin.getConfigHandler().getDisplayDefaultHeight()+","
+          + "  `display_height` INT NULL DEFAULT 0,"
           + "  `base_material` VARCHAR(256) NULL,"
           + "  `assistants` LONGTEXT NULL,"
           + "  PRIMARY KEY (`uuid`),"
@@ -117,7 +117,7 @@ public class MySQLConnection {
                         stmt.executeUpdate(
                                 "ALTER TABLE `"+StaticUtils.TBL_SHOPS+"` " +
                                 "ADD COLUMN IF NOT EXISTS `description` VARCHAR(256) NULL AFTER `inf_stock`, " +
-                                "ADD COLUMN IF NOT EXISTS `display_height` INT NOT NULL DEFAULT "+javaPlugin.getConfigHandler().getDisplayDefaultHeight()+" AFTER `description`, " +
+                                "ADD COLUMN IF NOT EXISTS `display_height` INT NOT NULL DEFAULT 0 AFTER `description`, " +
                                 "ADD COLUMN IF NOT EXISTS `base_material` VARCHAR(256) NULL AFTER `display_height`, " +
                                 "ADD COLUMN IF NOT EXISTS `assistants` LONGTEXT NULL AFTER `base_material`"
                             );

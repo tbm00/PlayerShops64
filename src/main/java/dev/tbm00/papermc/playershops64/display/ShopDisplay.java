@@ -1,7 +1,7 @@
 package dev.tbm00.papermc.playershops64.display;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import org.joml.Matrix4f;
@@ -25,6 +25,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
+import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ShopDisplay {
@@ -34,13 +35,17 @@ public class ShopDisplay {
     private Item itemDisplay;
     private ItemDisplay glassDisplay;
     private TextDisplay textDisplay;
+
     private float displayHeight;
     private String holoColor;
     private static double OFFX = 0.5, OFFY = 1.5, OFFZ = 0.5;
-    private static float GLASS_SCALE = (float) 0.675; 
+    private static float GLASS_SCALE = (float) 0.675;
 
-    private final List<UUID> tracked = new ArrayList<>();
-    private String lastText = "";
+    private String lastTextShown = "";
+    private ItemStack lastItemShown; 
+
+    private final Set<UUID> baseShownTo = new HashSet<>();
+    private final Set<UUID> textShownTo = new HashSet<>();
 
     public ShopDisplay(PlayerShops64 javaPlugin, UUID shopUuid) {
         this.javaPlugin = javaPlugin;
@@ -54,26 +59,24 @@ public class ShopDisplay {
             if (itemDisplay != null && itemDisplay.isValid()) itemDisplay.remove();
             if (glassDisplay != null && glassDisplay.isValid()) glassDisplay.remove();
             if (textDisplay != null && textDisplay.isValid()) textDisplay.remove();
-            tracked.clear();
+            lastTextShown = "";
+            baseShownTo.clear();
+            textShownTo.clear();
         };
 
-        // If plugin is disabled OR we are on the main thread, run immediately (no scheduler).
-        if (!javaPlugin.isEnabled() || Bukkit.isPrimaryThread()) {
-            task.run();
-            //StaticUtils.log(ChatColor.YELLOW, "Display cleared via main thread");
-        } else {
-            Bukkit.getScheduler().runTask(javaPlugin, task);
-            //StaticUtils.log(ChatColor.YELLOW, "Display cleared via scheduler");
-        }
+        if (!javaPlugin.isEnabled() || Bukkit.isPrimaryThread()) task.run();
+        else Bukkit.getScheduler().runTask(javaPlugin, task);
     }
 
-    public void update(World world, String text) {
+    public void update() {
         Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
-        if (world == null || shop == null || shop.getLocation() == null) return;
+        if (shop == null) return;
+        World world = shop.getWorld();
+        if (world == null || shop.getLocation() == null) return;
 
         Location base = shop.getLocation().clone();
         displayHeight = shop.getDisplayHeight() / 10f;
-        updateText(world, base, text);
+        updateText(world, base, ShopUtils.formatHologramText(shop));
         updateGlass(world, base);
         updateItem(world, base, shop);
     }
@@ -87,9 +90,9 @@ public class ShopDisplay {
             if (!nearby.getPersistentDataContainer().has(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING)) continue;
             if (!"item".equals(nearby.getPersistentDataContainer().get(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING))) continue;
             nearby.remove();
-            tracked.remove(nearby.getUniqueId());
         }*/
 
+        boolean respawned = false;
         if (itemDisplay == null || !itemDisplay.isValid() || itemDisplay.isDead()) {
             itemDisplay = world.dropItem(loc, item, ent -> {
                 ent.setVelocity(new Vector(0, 0, 0));       // no initial fling
@@ -103,49 +106,70 @@ public class ShopDisplay {
                 ent.setCanMobPickup(false);                  // Paper API
                 ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "item");
             });
-            tracked.add(itemDisplay.getUniqueId());
+            respawned = true;
         } else {
-            // keep the same stack & pin position
-            itemDisplay.setItemStack(item);
-            itemDisplay.setVelocity(new Vector(0, 0, 0));
-            itemDisplay.teleportAsync(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+            if (!sameDisplayItem(lastItemShown, item)) {
+                itemDisplay.remove();
+
+                itemDisplay = world.dropItem(loc, item, ent -> {
+                    ent.setVelocity(new Vector(0, 0, 0));
+                    ent.setGravity(false);
+                    ent.setCustomNameVisible(false);
+                    ent.setUnlimitedLifetime(true);
+                    ent.setPersistent(false);
+                    ent.setInvulnerable(true);
+                    ent.setPickupDelay(Integer.MAX_VALUE);
+                    ent.setCanPlayerPickup(false);
+                    ent.setCanMobPickup(false);
+                    ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "item");
+                });
+                respawned = true;
+            } else {
+                itemDisplay.setItemStack(item);
+                itemDisplay.setVelocity(new Vector(0, 0, 0));
+            }
         }
+
+        itemDisplay.teleportAsync(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+        if (respawned) baseShownTo.clear();
+        lastItemShown = item;
     }
 
     private void updateGlass(World world, Location base) {
         Location loc = base.clone().add(OFFX, OFFY+displayHeight, OFFZ);
 
+        boolean respawned = false;
         if (glassDisplay == null || !glassDisplay.isValid() || glassDisplay.isDead()) {
             for (ItemDisplay nearby : world.getNearbyEntitiesByType(ItemDisplay.class, loc, 1.0)) {
                 if (!nearby.getPersistentDataContainer().has(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING)) continue;
                 if (!"glass".equals(nearby.getPersistentDataContainer().get(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING))) continue;
                 nearby.remove();
-                tracked.remove(nearby.getUniqueId());
             }
             glassDisplay = world.spawn(loc, ItemDisplay.class, ent -> {
                 ent.setItemStack(new ItemStack(Material.GLASS));
                 ent.setGravity(false);
                 ent.setPersistent(false);
                 ent.setNoPhysics(true);
-                ent.setViewRange(0.2f);
+                ent.setViewRange((float) javaPlugin.getConfigHandler().getDisplayViewDistance());
                 ent.setTransformationMatrix(new Matrix4f().scale(GLASS_SCALE));
                 ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "glass");
-                if (!tracked.contains(ent.getUniqueId())) tracked.add(ent.getUniqueId());
             });
-        } else {
-            glassDisplay.teleportAsync(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+            respawned = true;
         }
+
+        glassDisplay.teleportAsync(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+        if (respawned) baseShownTo.clear();
     }
 
-    private void updateText(World world, Location base, String text) {
+    private void updateText(World world, Location base, String newText) {
         Location loc = base.clone().add(OFFX, OFFY+displayHeight+0.45, OFFZ);
+        boolean respawned = false;
 
         if (textDisplay == null || !textDisplay.isValid() || textDisplay.isDead()) {
             for (TextDisplay nearby : world.getNearbyEntitiesByType(TextDisplay.class, loc, 1.0)) {
                 if (!nearby.getPersistentDataContainer().has(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING)) continue;
                 if (!"holo".equals(nearby.getPersistentDataContainer().get(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING))) continue;
                 nearby.remove();
-                tracked.remove(nearby.getUniqueId());
             }
             textDisplay = world.spawn(loc, TextDisplay.class, ent -> {
                 ent.setBillboard(Display.Billboard.VERTICAL);
@@ -153,24 +177,85 @@ public class ShopDisplay {
                 ent.setBackgroundColor(parseColor(holoColor));
                 ent.setShadowed(false);
                 ent.setVisibleByDefault(false); // shown when focused
-                ent.setPersistent(false);
+                ent.setPersistent(true);        // false caused issues after chunk unloads
                 ent.setNoPhysics(true);
                 ent.setGravity(false);
-                ent.setViewRange(0.2f);
+                ent.setViewRange((float) javaPlugin.getConfigHandler().getDisplayViewDistance());
                 ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "holo");
-                if (!tracked.contains(ent.getUniqueId())) tracked.add(ent.getUniqueId());
             });
+            respawned = true;
         }
 
-        if (!text.equals(lastText) && textDisplay != null) {
-            Component comp = LegacyComponentSerializer.legacyAmpersand().deserialize(text);
-            textDisplay.text(comp);
-            lastText = text;
+        if (textDisplay!=null) {
+            if (respawned || !newText.equals(lastTextShown)) {
+                Component comp = LegacyComponentSerializer.legacyAmpersand().deserialize(newText);
+                textDisplay.text(comp);
+                lastTextShown = newText;
+            }
         }
-        if (textDisplay != null) {
-            textDisplay.teleportAsync(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+
+        textDisplay.teleportAsync(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+        if (respawned) textShownTo.clear(); 
+    }
+
+    public void show(Player player, boolean showTextToo) {
+        if (player == null || !player.isOnline()) return;
+
+        UUID playerUuid = player.getUniqueId();
+        if (!baseShownTo.contains(playerUuid)) {
+            if (itemDisplay != null && itemDisplay.isValid()) player.showEntity(javaPlugin, itemDisplay);
+            if (glassDisplay != null && glassDisplay.isValid()) player.showEntity(javaPlugin, glassDisplay);
+            baseShownTo.add(playerUuid);
+        }
+
+        if (showTextToo) showText(player);
+    }
+
+    public void showText(Player player) {
+        if (player == null || !player.isOnline()) return;
+
+        UUID playerUuid = player.getUniqueId();
+        if (!textShownTo.contains(playerUuid)) {
+            if (textDisplay != null && textDisplay.isValid()) {
+                player.showEntity(javaPlugin, textDisplay);
+                textShownTo.add(playerUuid);
+            }
         }
     }
+
+    public void hide(Player player, boolean hideTextToo) {
+        if (player == null) return;
+
+        UUID playerUuid = player.getUniqueId();
+        if (baseShownTo.remove(playerUuid)) {
+            if (itemDisplay != null && itemDisplay.isValid()) player.hideEntity(javaPlugin, itemDisplay);
+            if (glassDisplay != null && glassDisplay.isValid()) player.hideEntity(javaPlugin, glassDisplay);
+        }
+        if (hideTextToo) hideText(player);
+    }
+
+    public void hideText(Player player) {
+        if (player == null) return;
+
+        UUID playerUuid = player.getUniqueId();
+        if (textShownTo.remove(playerUuid)) {
+            if (textDisplay != null && textDisplay.isValid()) player.hideEntity(javaPlugin, textDisplay);
+        }
+    }
+
+    public void purgeViewer(UUID playerUuid) {
+        baseShownTo.remove(playerUuid);
+        textShownTo.remove(playerUuid);
+    }
+
+    /*public boolean shouldSee(Player player, int viewDistance) {
+        Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+
+        if (player == null || shop == null || shop.getLocation() == null || shop.getWorld() == null) return false;
+        if (!player.getWorld().equals(shop.getWorld())) return false;
+
+        return shop.getLocation().distance(player.getLocation()) <= viewDistance;
+    }*/
 
     private static Color parseColor(String csv) {
         try {
@@ -190,33 +275,9 @@ public class ShopDisplay {
         return Math.max(0, Math.min(v, 255));
     }
 
-    /** Per-player show/hide: text only toggles on focus; item/glass always shown. */
-    public void show(Player player, boolean focused) {
-        if (itemDisplay != null && itemDisplay.isValid()) player.showEntity(javaPlugin, itemDisplay);
-        if (glassDisplay != null && glassDisplay.isValid()) player.showEntity(javaPlugin, glassDisplay);
-        if (textDisplay != null && textDisplay.isValid()) {
-            if (focused) player.showEntity(javaPlugin, textDisplay);
-            else player.hideEntity(javaPlugin, textDisplay);
-        }
+    private static boolean sameDisplayItem(ItemStack a, ItemStack b) {
+        if (a == b) return true;
+        if (a == null || b == null) return false;
+        return a.isSimilar(b);
     }
-
-    public void hide(Player player, boolean hideAll) {
-        if (textDisplay != null && textDisplay.isValid()) player.hideEntity(javaPlugin, textDisplay);
-        if (hideAll) {
-            if (itemDisplay != null && itemDisplay.isValid()) player.hideEntity(javaPlugin, itemDisplay);
-            if (glassDisplay != null && glassDisplay.isValid()) player.hideEntity(javaPlugin, glassDisplay);
-        }
-    }
-
-    /** Basic visibility heuristic to cull by distance/world. */
-    public boolean shouldSee(Player player, int viewDistance) {
-        Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
-
-        if (player == null || shop == null || shop.getLocation() == null || shop.getWorld() == null) return false;
-        if (!player.getWorld().equals(shop.getWorld())) return false;
-
-        return shop.getLocation().distance(player.getLocation()) <= viewDistance;
-    }
-
-    //public Shop getShop() { return javaPlugin.getShopHandler().getShop(shopUuid); }
 }

@@ -40,9 +40,8 @@ shop:
 
 display:
   tickCycle: 5 # ticks
-  viewDistance: 16 # blocks
+  viewDistance: 12 # blocks
   focusDistance: 5 # blocks
-  displayHeight: 0.2
   holoColor: "60,0,0,0" # ARGB(%,R,G,B)
 
 gui:

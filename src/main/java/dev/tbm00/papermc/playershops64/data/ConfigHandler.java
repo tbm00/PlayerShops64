@@ -26,7 +26,6 @@ public class ConfigHandler {
     private int displayTickCycle = 5;
     private int displayViewDistance = 16;
     private int displayFocusDistance = 5;
-    private double displayDisplayHeight = 0.0;
     private String displayHoloColor = "60,0,0,0";
 
     private int shopBlockBuyPrice = 500;
@@ -94,7 +93,6 @@ public class ConfigHandler {
             displayTickCycle = display.getInt("tickCycle", 5);
             displayViewDistance = display.getInt("viewDistance", 16);
             displayFocusDistance = display.getInt("focusDistance", 5);
-            displayDisplayHeight = display.getDouble("displayHeight", 0.0);
             displayHoloColor = display.getString("holoColor", "60,0,0,0");
         }
 
@@ -252,10 +250,6 @@ public class ConfigHandler {
 
     public int getDisplayFocusDistance() {
         return displayFocusDistance;
-    }
-
-    public double getDisplayDefaultHeight() {
-        return displayDisplayHeight;
     }
 
     public String getDisplayHoloColor() {

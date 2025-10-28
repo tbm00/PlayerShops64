@@ -1,9 +1,13 @@
 package dev.tbm00.papermc.playershops64.display;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -11,7 +15,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.ShopHandler;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
-import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class VisualTask extends BukkitRunnable {
@@ -19,67 +22,85 @@ public class VisualTask extends BukkitRunnable {
     private final ShopHandler shopHandler;
 
     private int viewDistance;
-    private int focusDistance;
+    private int viewDistanceSquared;
+
+    public final Map<UUID, UUID> prevFocusedShop = new HashMap<>();
+    public final Map<UUID, Set<UUID>> prevLoadedBases = new HashMap<>();
+    public final Map<UUID, Set<UUID>> workingBases = new HashMap<>();
 
     public VisualTask(PlayerShops64 javaPlugin, ShopHandler shopHandler) {
         this.javaPlugin = javaPlugin;
         this.shopHandler = shopHandler;
         this.viewDistance = javaPlugin.getConfigHandler().getDisplayViewDistance();
-        this.focusDistance = javaPlugin.getConfigHandler().getDisplayFocusDistance();
+        this.viewDistanceSquared = viewDistance * viewDistance;
         StaticUtils.log(ChatColor.GREEN, "VisualTask initialized.");
     }
 
     @Override
     public void run() {
-        //StaticUtils.log(ChatColor.YELLOW, "VisualTask.run(): start");
-        Map<UUID, Shop> shops = shopHandler.getShopView();
-        if (shops == null || shops.isEmpty()) {
-            //StaticUtils.log(ChatColor.YELLOW, "VisualTask.run(): shop map empty");
-            return;
-        }
+        if (shopHandler.isShopMapEmpty()) return;
 
-        for (Shop shop : shops.values()) {
-            // Guards
-            if (shop == null || shop.getLocation() == null || shop.getWorld() == null) {
-                //StaticUtils.log(ChatColor.YELLOW, "VisualTask.run(): shop, location, or world is null");
-                continue;
-            }
-            World world = shop.getWorld();
-            if (!world.isChunkLoaded(shop.getLocation().getBlockX() >> 4, shop.getLocation().getBlockZ() >> 4)) {
-                //StaticUtils.log(ChatColor.YELLOW, "VisualTask.run(): EXIT - chunk not loaded");
-                continue;
-            }
+        for (Player player : javaPlugin.getServer().getOnlinePlayers()) {
+            World world = player.getWorld();
+            Location center = player.getLocation();
+            DisplayManager displayManager = javaPlugin.getShopHandler().getDisplayManager();
+            UUID playerUuid = player.getUniqueId();
+            Set<UUID> prevBases = prevLoadedBases.computeIfAbsent(playerUuid, k -> new HashSet<>());
+            Set<UUID> currBases = workingBases.computeIfAbsent(playerUuid, k -> new HashSet<>());
+            currBases.clear();
+        
+            // Load - nearby shop bases
+            int cx = center.getBlockX() >> 4, cz = center.getBlockZ() >> 4;
+            int blockRadius = Math.max(16, viewDistance);
+            int chunkRadius = Math.max(1, (blockRadius >> 4) + 1);
+            for (int dx = -chunkRadius; dx <= chunkRadius; dx++) {
+                for (int dz = -chunkRadius; dz <= chunkRadius; dz++) {
+                    int x = cx + dx, z = cz + dz;
+                    if (!world.isChunkLoaded(x, z)) continue;
 
-            // Get/build display
-            UUID shopUuid = shop.getUuid();
-            ShopDisplay shopDisplay = shopHandler.getDisplayManager().getOrCreate(shopUuid);
-            if (shopDisplay == null) {
-                StaticUtils.log(ChatColor.YELLOW, "VisualTask.run(): EXIT - shopDisplay null");
-                continue;
-            }
+                    for (UUID shopUuid : javaPlugin.getShopHandler().getShopsInChunk(world, x, z)) {
+                        Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+                        if (shop == null || shop.getLocation() == null) continue;
 
-            // Build text
-            String text = ShopUtils.formatHologramText(shop);
-
-            // Update entities
-            shopDisplay.update(world, text);
-
-            // Per-player show/hide
-            //StaticUtils.log(ChatColor.YELLOW, "VisualTask.run().forEachPlayer(): ");
-            for (Player player : javaPlugin.getServer().getOnlinePlayers()) {
-                if (!player.isOnline()) continue;
-                //StaticUtils.log(ChatColor.YELLOW, "VisualTask.run().forEachPlayer(): "+player.getName());
-
-                boolean inRange = shopDisplay.shouldSee(player, viewDistance);
-                if (!inRange) {
-                    //StaticUtils.log(ChatColor.YELLOW, "VisualTask.run().forEachPlayer(): "+player.getName()+" not in range -> hide");
-                    shopDisplay.hide(player, true);
-                    continue;
+                        if (shop.getLocation().distanceSquared(center) <= (viewDistanceSquared)) {
+                            displayManager.ensureBaseLoadedFor(player, shop);
+                            currBases.add(shopUuid);
+                        }
+                    }
                 }
-                boolean focused = shopHandler.isLookingAtShop(player, shop, focusDistance);
-                shopDisplay.show(player, focused);
-                //StaticUtils.log(ChatColor.YELLOW, "VisualTask.run().forEachPlayer(): "+player.getName()+" in range -> show, focused: "+focused);
             }
+
+            // Unload - previously loaded bases that are no longer nearby
+            for (UUID shopUuid : prevBases) {
+                if (currBases.contains(shopUuid)) continue;
+
+                Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+                if (shop == null || shop.getLocation() == null) continue;
+
+                displayManager.ensureUnloadedFor(player, shop);
+            }
+
+            // Refresh - previously loaded bases
+            prevBases.clear();
+            prevBases.addAll(currBases);
+
+            // Load - focused shop text
+            Shop focusedShop = javaPlugin.getShopHandler().getShopInFocus(player);
+            UUID focusedUuid = (focusedShop == null) ? null : focusedShop.getUuid();
+            if (focusedShop != null) {
+                displayManager.ensureLoadedFor(player, focusedShop, true);
+            }
+
+            // Unload - previously focused shop text
+            UUID prevUuid = prevFocusedShop.get(player.getUniqueId());
+            if (prevUuid!=null && (focusedUuid==null || !prevUuid.equals(focusedUuid))) {
+                Shop prevShop = javaPlugin.getShopHandler().getShop(prevUuid);
+                ShopDisplay prevDisplay = (prevShop == null) ? null : javaPlugin.getShopHandler().getDisplayManager().get(prevUuid);
+                if (prevDisplay != null) prevDisplay.hideText(player);
+            }
+
+            // Refresh - previously focused shop text
+            prevFocusedShop.put(player.getUniqueId(), focusedUuid);
         }
     }
 }
