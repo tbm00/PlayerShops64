@@ -63,7 +63,7 @@ public class VisualTask extends BukkitRunnable {
                         if (shop == null || shop.getLocation() == null) continue;
 
                         if (shop.getLocation().distanceSquared(center) <= (viewDistanceSquared)) {
-                            displayManager.ensureBaseLoadedFor(player, shop);
+                            displayManager.ensureLoadedFor(player, shop, false);
                             currBases.add(shopUuid);
                         }
                     }

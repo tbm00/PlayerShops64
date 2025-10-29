@@ -22,7 +22,7 @@ import org.bukkit.util.Vector;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-
+import net.kyori.adventure.util.TriState;
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.utils.ShopUtils;
@@ -52,6 +52,7 @@ public class ShopDisplay {
         this.shopUuid = shopUuid;
         this.displayHeight = javaPlugin.getShopHandler().getShop(shopUuid).getDisplayHeight() / 10f;
         this.holoColor = javaPlugin.getConfigHandler().getDisplayHoloColor();
+        update();
     }
 
     public void clear() {
@@ -104,6 +105,7 @@ public class ShopDisplay {
                 ent.setPickupDelay(Integer.MAX_VALUE);       // Vanilla fallback
                 ent.setCanPlayerPickup(false);               // Paper API
                 ent.setCanMobPickup(false);                  // Paper API
+                ent.setFrictionState(TriState.TRUE);
                 ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "item");
             });
             respawned = true;
@@ -121,6 +123,7 @@ public class ShopDisplay {
                     ent.setPickupDelay(Integer.MAX_VALUE);
                     ent.setCanPlayerPickup(false);
                     ent.setCanMobPickup(false);
+                    ent.setFrictionState(TriState.TRUE);
                     ent.getPersistentDataContainer().set(StaticUtils.DISPLAY_KEY, PersistentDataType.STRING, "item");
                 });
                 respawned = true;

@@ -55,26 +55,8 @@ public class DisplayManager {
         if (!player.getWorld().equals(shop.getWorld())) return;
         if (!shop.getWorld().isChunkLoaded(shop.getLocation().getBlockX() >> 4, shop.getLocation().getBlockZ() >> 4)) return;
 
-        ShopDisplay shopDisplay = upsertDisplay(shop);
+        ShopDisplay shopDisplay = getOrCreate(shop.getUuid());
         shopDisplay.show(player, focused);
-    }
-
-    public void ensureBaseLoadedFor(Player player, Shop shop) {
-        if (player == null || shop == null) return;
-        if (!player.getWorld().equals(shop.getWorld())) return;
-        if (!shop.getWorld().isChunkLoaded(shop.getLocation().getBlockX() >> 4, shop.getLocation().getBlockZ() >> 4)) return;
-
-        ShopDisplay shopDisplay = upsertDisplay(shop);
-        shopDisplay.show(player, false);
-    }
-
-    public void ensureTextLoadedFor(Player player, Shop shop) {
-        if (player == null || shop == null) return;
-        if (!player.getWorld().equals(shop.getWorld())) return;
-        if (!shop.getWorld().isChunkLoaded(shop.getLocation().getBlockX() >> 4, shop.getLocation().getBlockZ() >> 4)) return;
-
-        ShopDisplay shopDisplay = upsertDisplay(shop);
-        shopDisplay.showText(player);
     }
 
     public void ensureUnloadedFor(Player player, Shop shop) {
