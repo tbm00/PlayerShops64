@@ -439,6 +439,37 @@ public class StaticUtils {
         return remaining == 0;
     }
 
+    /**
+     * Removes exactly {@code amount} items from the player's MAIN HAND stack.
+     * Returns true iff the full amount was removed. Nothing is removed if the
+     * hand is null/air or doesn't have enough items.
+     */
+    public static boolean removeFromHand(Player player, int amount) {
+        if (amount <= 0) return true;
+        if (player == null) return false;
+
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, "Cannot removeFromHand() for " + player.getName() + " because it was called off the main thread..!");
+            return false;
+        }
+
+        PlayerInventory inv = player.getInventory();
+        ItemStack hand = inv.getItemInMainHand();
+        if (hand == null || hand.getType().isAir()) return false;
+
+        int have = hand.getAmount();
+        if (have < amount) return false; // all-or-nothing
+
+        int newAmt = have - amount;
+        if (newAmt <= 0) {
+            inv.setItemInMainHand(new ItemStack(Material.AIR));
+        } else {
+            hand.setAmount(newAmt);
+            inv.setItemInMainHand(hand);
+        }
+        return true;
+    }
+
     public static boolean addToInventoryOrDrop(Player player, ItemStack item) {
         if (player == null || item == null || item.getType().isAir()) return false;
         return addToInventoryOrDrop(player, item, item.getAmount());

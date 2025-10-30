@@ -4,15 +4,19 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.TileState;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockIgniteEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -57,13 +61,6 @@ public class ShopBaseBlock implements Listener {
             return;
         }
 
-        // Apply PDC key to new block's tileState
-        BlockState blockState = block.getState();
-        if (blockState instanceof TileState tileState) {
-            tileState.getPersistentDataContainer().set(StaticUtils.SHOP_KEY, PersistentDataType.STRING, "true");
-            tileState.update(true, false); // apply to world
-        }
-
         Player owner = event.getPlayer();
         World world = block.getWorld();
 
@@ -84,7 +81,7 @@ public class ShopBaseBlock implements Listener {
         Player player = event.getPlayer();
         Shop shop = javaPlugin.getShopHandler().getShopAtBlock(block.getLocation());
         if (shop == null) {
-            StaticUtils.sendMessage(player, "&cShop data not found for this block. Try relogging or contact staff.");
+            StaticUtils.sendMessage(player, "&cError: Shop data not found for this block..!");
             return;
         }
 
@@ -132,11 +129,66 @@ public class ShopBaseBlock implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onBreak(BlockBreakEvent event) {
-        Block block = event.getBlock();
-        if (isProtectedShopBlock(block)) {
+    public void onPistonExtend(BlockPistonExtendEvent event) {
+        Block piston = event.getBlock();
+        BlockFace dir = event.getDirection();
+
+        Block head = piston.getRelative(dir);
+        if (isProtectedShopBlock(head)) {
             event.setCancelled(true);
+            return;
         }
+
+        for (Block moved : event.getBlocks()) {
+            Block destination = moved.getRelative(dir);
+            if (isProtectedShopBlock(moved) || isProtectedShopBlock(destination)) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPistonRetract(BlockPistonRetractEvent event) {
+        BlockFace dir = event.getDirection();
+        BlockFace pullToward = dir.getOppositeFace();
+
+        Block head = event.getBlock().getRelative(dir);
+        if (isProtectedShopBlock(head)) {
+            event.setCancelled(true);
+            return;
+        }
+
+        for (Block moved : event.getBlocks()) {
+            Block destination = moved.getRelative(pullToward);
+            if (isProtectedShopBlock(moved) || isProtectedShopBlock(destination)) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityChangeBlock(EntityChangeBlockEvent event) {
+        if (isProtectedShopBlock(event.getBlock())) event.setCancelled(true);
+        
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockIgnite(BlockIgniteEvent event) {
+        if (isProtectedShopBlock(event.getBlock())) event.setCancelled(true);
+        
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockBurn(BlockBurnEvent event) {
+        if (isProtectedShopBlock(event.getBlock())) event.setCancelled(true);
+    
+}
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBreak(BlockBreakEvent event) {
+        if (isProtectedShopBlock(event.getBlock())) event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -150,8 +202,6 @@ public class ShopBaseBlock implements Listener {
     }
 
     private boolean isProtectedShopBlock(Block b) {
-        BlockState blockState = b.getState();
-        if (!(blockState instanceof TileState tileState)) return false;
-        return tileState.getPersistentDataContainer().has(StaticUtils.SHOP_KEY, PersistentDataType.STRING);
+        return javaPlugin.getShopHandler().hasShopAtBlock(b.getLocation());
     }
 }

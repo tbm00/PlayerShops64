@@ -32,7 +32,7 @@ public class Shop {
     private boolean infiniteMoney; // only enabled by admins
     private boolean infiniteStock; // only enabled by admins
     private String description; // null if not set
-    private int displayHeight; // -5 thru 5, 0 default
+    private int displayHeight; // -8 thru 8, 0 default
     private Material baseMaterial; // default lectern (will have a predefined set to select from via gui)
     private Set<UUID> assistants; // list of player uuids, should never be null (default to empty)
 
@@ -149,7 +149,7 @@ public class Shop {
     }
 
     public int getDisplayHeight() {
-        if (displayHeight < -5 || displayHeight > 5) {
+        if (displayHeight < -8 || displayHeight > 8) {
             displayHeight = 0;
             return displayHeight;
         }
@@ -158,7 +158,7 @@ public class Shop {
     }
 
     public Material getBaseMaterial() {
-        if (baseMaterial == null) baseMaterial = Material.LECTERN;
+        if (baseMaterial == null) baseMaterial = Material.AIR;
         return baseMaterial;
     }
 
@@ -258,10 +258,10 @@ public class Shop {
     }
 
     public void setDisplayHeight(int displayHeight) {
-        if (displayHeight < -5) {
-            displayHeight = -5;
-        } else if (displayHeight > 5) {
-            displayHeight = 5;
+        if (displayHeight < -8) {
+            displayHeight = -8;
+        } else if (displayHeight > 8) {
+            displayHeight = 8;
         }
         this.displayHeight = displayHeight;
     }

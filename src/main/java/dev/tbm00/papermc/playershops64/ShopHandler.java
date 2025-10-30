@@ -29,6 +29,7 @@ import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.display.DisplayManager;
 import dev.tbm00.papermc.playershops64.display.ShopDisplay;
 import dev.tbm00.papermc.playershops64.display.VisualTask;
+import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ShopHandler {
@@ -92,6 +93,35 @@ public class ShopHandler {
                 "\nskippedNullShop: " + skippedNullShop +
                 ", skippedNullWorld:" + skippedNullWorld +
                 ", skippedNullLocation: " + skippedNullLoc);
+    }
+
+    public void validateShops() {
+        StaticUtils.log(ChatColor.YELLOW, "ShopHandler validating shops...");
+        int valid = 0, missingBaseBlockFixed = 0, missingBaseNoItemDeleted = 0;
+
+        for (Map.Entry<UUID, Shop> entry : getShopView().entrySet()) {
+            Shop shop = entry.getValue();
+            if (!ShopUtils.hasBaseBlock(shop)) {
+                if (shop.getItemStack()==null) {
+                    ShopUtils.deleteShop(shop.getUuid(), null);
+                    missingBaseNoItemDeleted++;
+                    continue;
+                } else {
+                    if (shop.getBaseMaterial().equals(Material.AIR)) 
+                        ShopUtils.setBaseMaterial(shop.getUuid(), Material.LECTERN);
+                    else ShopUtils.setBaseMaterial(shop.getUuid(), shop.getBaseMaterial());
+                    missingBaseBlockFixed++;
+                }
+            }
+
+            //ShopUtils.ensureProperDisplayHeight(shop);
+
+            valid++;
+        }
+
+        StaticUtils.log(ChatColor.GREEN, "ShopHandler validated " + valid + " shops, " +
+                "\nmissingBaseBlockFixed: " + missingBaseBlockFixed +
+                ", missingBaseNoItemDeleted:" + missingBaseNoItemDeleted);
     }
 
     public void shutdown() {
@@ -313,20 +343,19 @@ public class ShopHandler {
         return copyOf(shopMap.get(uuid));
     }
 
+    public boolean isShopMapEmpty() {
+        return shopMap.isEmpty();
+    }
+
     public Map<UUID, Shop> getShopView() {
         Map<UUID, Shop> copy = new LinkedHashMap<>(shopMap.size());
         for (var e : shopMap.entrySet()) copy.put(e.getKey(), copyOf(e.getValue()));
         return Collections.unmodifiableMap(copy);
     }
 
-    public boolean isShopMapEmpty() {
-        return shopMap.isEmpty();
-    }
-
     public Map<UUID, Shop> snapshotShopMap() {
         return new LinkedHashMap<>(getShopView());
     }
-
 
     public Map<Material, ShopPriceQueue> snapshotMaterialPriceMap() {
         Map<Material, ShopPriceQueue> copy = new HashMap<>(shopMaterialPriceMap.size());

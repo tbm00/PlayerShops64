@@ -122,7 +122,8 @@ public class ShopManageGui {
                 lore.add("&6Click to set this shop's sell price");
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&4Sell Price: &f$" + StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue())));
             } else { 
-                lore.add("&6Click to re-enable selling & set this shop's sell price");
+                lore.add("&6Click to re-enable selling");
+                lore.add("&6& set this shop's sell price");
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&4Sell Price: &cDISABLED"));
             }
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
@@ -160,7 +161,8 @@ public class ShopManageGui {
                 lore.add("&6Click to set this shop's buy price");
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&2Buy Price: &f$" + StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue())));
             } else { 
-                lore.add("&6Click to re-enable buying & set this shop's buy price");
+                lore.add("&6Click to re-enable buying");
+                lore.add("&6& set this shop's buy price");
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&2Buy Price: &cDISABLED"));
             }
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());

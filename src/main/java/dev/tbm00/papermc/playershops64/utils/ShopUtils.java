@@ -1,16 +1,7 @@
 package dev.tbm00.papermc.playershops64.utils;
 
-import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -22,13 +13,10 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.TileState;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.enums.AdjustType;
@@ -66,7 +54,7 @@ public class ShopUtils {
                             null);
 
         javaPlugin.getShopHandler().upsertShopObject(shop);
-        ShopUtils.logEdit(owner.getName() + " created shop " + ShopUtils.getShopHint(shopUuid) + " in " + world.getName()+ " @ " + (int)location.getX() + "," + (int)location.getY() + "," + (int)location.getZ());
+        Logger.logEdit(owner.getName() + " created shop " + ShopUtils.getShopHint(shopUuid) + " in " + world.getName()+ " @ " + (int)location.getX() + "," + (int)location.getY() + "," + (int)location.getZ());
         return shopUuid;
     }
 
@@ -97,7 +85,7 @@ public class ShopUtils {
             }
 
             if (shop.getMoneyStock().compareTo(BigDecimal.ZERO) == 1) {
-                javaPlugin.getVaultHook().giveMoney(player, shop.getMoneyStock().doubleValue());
+                javaPlugin.getVaultHook().giveMoney(javaPlugin.getServer().getOfflinePlayer(shop.getOwnerUuid()), shop.getMoneyStock().doubleValue());
             }
 
             // delete shop
@@ -110,9 +98,34 @@ public class ShopUtils {
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
-    }
+    } 
 
-    public static void setShopItem(Player player, UUID shopUuid) {
+    public static void deleteShop(UUID shopUuid, Block block) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, "Plugin tried to delete shop " + shopUuid + " off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> deleteShop(shopUuid, block));
+            return;
+        }
+        
+        Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+        if (shop == null) {
+            return;
+        }
+
+        if (shop.getItemStock()>0) {
+            return;
+        }
+
+        if (shop.getMoneyStock().compareTo(BigDecimal.ZERO) == 1) {
+            javaPlugin.getVaultHook().giveMoney(javaPlugin.getServer().getOfflinePlayer(shop.getOwnerUuid()), shop.getMoneyStock().doubleValue());
+        }
+
+        // delete shop
+        javaPlugin.getShopHandler().deleteShopObject(shop.getUuid());
+        if (block==null) {
+            javaPlugin.getServer().getWorld(shop.getWorld().getUID()).getBlockAt(shop.getLocation()).setType(Material.AIR, false);
+        } else block.setType(Material.AIR, false);
+    } public static void setShopItem(Player player, UUID shopUuid) {
         if (!Bukkit.isPrimaryThread()) {
             StaticUtils.log(ChatColor.RED, player.getName() + " tried to set shop " + shopUuid + "'s item off the main thread -- trying again during next tick on main thread!");
             javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> setShopItem(player, shopUuid));
@@ -157,7 +170,7 @@ public class ShopUtils {
 
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aShop's sale item set to &e" + StaticUtils.getItemName(one));
-            ShopUtils.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s sale item to "+StaticUtils.getItemName(one)+" ("+StaticUtils.formatTitleCase(one.getType().toString())+")");
+            Logger.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s sale item to "+StaticUtils.getItemName(one)+" ("+StaticUtils.formatTitleCase(one.getType().toString())+")");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -194,7 +207,7 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aShop item set cleared!");
-            ShopUtils.logEdit(player.getName()+" cleared shop "+ShopUtils.getShopHint(shopUuid)+"'s sale item");
+            Logger.logEdit(player.getName()+" cleared shop "+ShopUtils.getShopHint(shopUuid)+"'s sale item");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -232,10 +245,10 @@ public class ShopUtils {
             javaPlugin.getShopHandler().upsertShopObject(shop);
             if (newPrice!=null) {
                 StaticUtils.sendMessage(player, "&aSet buy price to $" + StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue()) + "!");
-                ShopUtils.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s buy price to $"+shop.getBuyPrice().doubleValue());
+                Logger.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s buy price to $"+shop.getBuyPrice().doubleValue());
             } else {
                 StaticUtils.sendMessage(player, "&aDisabled buying from this shop!");
-                ShopUtils.logEdit(player.getName()+" disabled buying from shop "+ShopUtils.getShopHint(shopUuid));
+                Logger.logEdit(player.getName()+" disabled buying from shop "+ShopUtils.getShopHint(shopUuid));
             }
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
@@ -274,10 +287,10 @@ public class ShopUtils {
             javaPlugin.getShopHandler().upsertShopObject(shop);
             if (newPrice!=null) {
                 StaticUtils.sendMessage(player, "&aSet sell price to $" + StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue()) + "!");
-                ShopUtils.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s sell price to $"+shop.getSellPrice().doubleValue());
+                Logger.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s sell price to $"+shop.getSellPrice().doubleValue());
             } else {
                 StaticUtils.sendMessage(player, "&aDisabled selling to this shop!");
-                ShopUtils.logEdit(player.getName()+" disabled selling to shop "+ShopUtils.getShopHint(shopUuid));
+                Logger.logEdit(player.getName()+" disabled selling to shop "+ShopUtils.getShopHint(shopUuid));
             }
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
@@ -309,7 +322,7 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aSet display height to " + shop.getDisplayHeight() + "!");
-            ShopUtils.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s display height to "+shop.getDisplayHeight());
+            Logger.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s display height to "+shop.getDisplayHeight());
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -345,7 +358,7 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aSet description to '" + shop.getDescription() + "'!");
-            ShopUtils.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s description to '"+shop.getDescription()+"'");
+            Logger.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s description to '"+shop.getDescription()+"'");
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -387,7 +400,7 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aAdded '" + playerName + "' to shop's assistants!");
-            ShopUtils.logEdit(player.getName()+" added assistant "+playerName+" to shop "+ShopUtils.getShopHint(shopUuid));
+            Logger.logEdit(player.getName()+" added assistant "+playerName+" to shop "+ShopUtils.getShopHint(shopUuid));
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -417,7 +430,7 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aRemoved '" + javaPlugin.getServer().getOfflinePlayer(playerUuid).getName() + "' from shop's assistants!");
-            ShopUtils.logEdit(player.getName()+" removed assistant "+ javaPlugin.getServer().getOfflinePlayer(playerUuid).getName() + " from shop " + ShopUtils.getShopHint(shopUuid));
+            Logger.logEdit(player.getName()+" removed assistant "+ javaPlugin.getServer().getOfflinePlayer(playerUuid).getName() + " from shop " + ShopUtils.getShopHint(shopUuid));
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -452,21 +465,37 @@ public class ShopUtils {
             BlockData newData = StaticUtils.applySameOrientation(oldData, block.getBlockData());
             block.setBlockData(newData, false);
 
-            BlockState state = block.getState();
-            if (state instanceof TileState tileState) {
-                tileState.getPersistentDataContainer().set(StaticUtils.SHOP_KEY, PersistentDataType.STRING, "true");
-                tileState.update(true, false); // apply to world
-            } else {
-                StaticUtils.log(ChatColor.RED, "Shop's new base block's state was not a TileState, so it doesn't have the PDC key!");
-            }
-
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aSet base block material to " + material.toString() + "!");
-            ShopUtils.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s base block to "+material.toString());
+            Logger.logEdit(player.getName()+" set shop "+ShopUtils.getShopHint(shopUuid)+"'s base block to "+material.toString());
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
+    } public static void setBaseMaterial(UUID shopUuid, Material material) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, "Plugin tried to set shop " + shopUuid + "'s base material off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> setBaseMaterial(shopUuid, material));
+            return;
+        }
+
+        Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+        if (shop == null) {
+            return;
+        }
+
+        shop.setBaseMaterial(material);
+
+        Block block = javaPlugin.getServer().getWorld(shop.getWorld().getUID()).getBlockAt(shop.getLocation());
+        BlockData oldData = block.getBlockData();
+
+        block.setType(material, false);
+        
+        BlockData newData = StaticUtils.applySameOrientation(oldData, block.getBlockData());
+        block.setBlockData(newData, false);
+
+        // apply updates
+        javaPlugin.getShopHandler().upsertShopObject(shop);
     }
 
     public static double adjustBalance(Player player, UUID shopUuid, AdjustType adjustType, double requestedAmount, boolean logToPlayer) {
@@ -532,7 +561,7 @@ public class ShopUtils {
                     // apply updates
                     javaPlugin.getShopHandler().upsertShopObject(shop);
                     if (logToPlayer) StaticUtils.sendMessage(player, "&aAdded $" + StaticUtils.formatDoubleUS(workingAmount) + " to the shop's balance! Updated balance: $" + StaticUtils.formatDoubleUS(newBalance));
-                    ShopUtils.logEdit(player.getName()+" added $" +workingAmount+ " to shop "+ShopUtils.getShopHint(shopUuid)+"'s balance! Updated balance: $"+newBalance);
+                    Logger.logEdit(player.getName()+" added $" +workingAmount+ " to shop "+ShopUtils.getShopHint(shopUuid)+"'s balance! Updated balance: $"+newBalance);
                     return workingAmount;
                 }
                 case REMOVE: {
@@ -562,7 +591,7 @@ public class ShopUtils {
                     // apply updates
                     javaPlugin.getShopHandler().upsertShopObject(shop);
                     if (logToPlayer) StaticUtils.sendMessage(player, "&aRemoved $" + StaticUtils.formatDoubleUS(workingAmount) + " from the shop's balance! Updated balance: $" + StaticUtils.formatDoubleUS(newBalance));
-                    ShopUtils.logEdit(player.getName()+" removed $" + workingAmount + " from shop "+ShopUtils.getShopHint(shopUuid)+"'s balance! Updated balance: $" + newBalance);
+                    Logger.logEdit(player.getName()+" removed $" + workingAmount + " from shop "+ShopUtils.getShopHint(shopUuid)+"'s balance! Updated balance: $" + newBalance);
                     return workingAmount;
                 }
                 case SET: {
@@ -595,7 +624,7 @@ public class ShopUtils {
                         // apply updates
                         javaPlugin.getShopHandler().upsertShopObject(shop);
                         if (logToPlayer) StaticUtils.sendMessage(player, "&aAdded $" + StaticUtils.formatDoubleUS(workingAmount) + " to the shop's balance! Updated balance: $" + StaticUtils.formatDoubleUS(newBalance));
-                        ShopUtils.logEdit(player.getName()+" added $" + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s balance! Updated balance: $" + newBalance);
+                        Logger.logEdit(player.getName()+" added $" + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s balance! Updated balance: $" + newBalance);
                         return workingAmount;
                     } else { // negative: shop -> player
                         double needed = -delta;
@@ -620,7 +649,7 @@ public class ShopUtils {
                         // apply updates
                         javaPlugin.getShopHandler().upsertShopObject(shop);
                         if (logToPlayer) StaticUtils.sendMessage(player, "&aRemoved $" + StaticUtils.formatDoubleUS(workingAmount) + " from the shop's balance! Updated balance: $" + StaticUtils.formatDoubleUS(newBalance));
-                        ShopUtils.logEdit(player.getName()+" removed $" + workingAmount + " from shop "+ShopUtils.getShopHint(shopUuid)+"'s balance! Updated balance: $" + newBalance);
+                        Logger.logEdit(player.getName()+" removed $" + workingAmount + " from shop "+ShopUtils.getShopHint(shopUuid)+"'s balance! Updated balance: $" + newBalance);
                         return workingAmount;
                     }
                 }
@@ -701,7 +730,7 @@ public class ShopUtils {
                     // apply updates
                     javaPlugin.getShopHandler().upsertShopObject(shop);
                     StaticUtils.sendMessage(player, "&aAdded " + StaticUtils.formatIntUS(workingAmount) + " to the shop's stock! Updated stock: " + StaticUtils.formatIntUS(newStock));
-                    ShopUtils.logEdit(player.getName()+" added " + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + newStock);
+                    Logger.logEdit(player.getName()+" added " + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + newStock);
                     break;
                 }
                 case REMOVE: {
@@ -731,7 +760,7 @@ public class ShopUtils {
                     // apply updates
                     javaPlugin.getShopHandler().upsertShopObject(shop);
                     StaticUtils.sendMessage(player, "&aRemoved " + StaticUtils.formatIntUS(workingAmount) + " from the shop's stock! Updated stock: " + StaticUtils.formatIntUS(newStock));
-                    ShopUtils.logEdit(player.getName()+" removed " + workingAmount + " from shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + newStock);
+                    Logger.logEdit(player.getName()+" removed " + workingAmount + " from shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + newStock);
 
                     break;
                 }
@@ -770,7 +799,7 @@ public class ShopUtils {
                         // apply updates
                         javaPlugin.getShopHandler().upsertShopObject(shop);
                         StaticUtils.sendMessage(player, "&aAdded " + StaticUtils.formatIntUS(workingAmount) + " to the shop's stock! Updated stock: " + StaticUtils.formatIntUS(newStock));
-                        ShopUtils.logEdit(player.getName()+" added " + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + newStock);
+                        Logger.logEdit(player.getName()+" added " + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + newStock);
                     } else { // negative: shop -> player
                         if (shopStock <= 0) {
                             StaticUtils.sendMessage(player, "&cThe shop doesn't have any stock to withdraw!");
@@ -794,7 +823,7 @@ public class ShopUtils {
                         // apply updates
                         javaPlugin.getShopHandler().upsertShopObject(shop);
                         StaticUtils.sendMessage(player, "&aRemoved " + StaticUtils.formatIntUS(workingAmount) + " from the shop's stock! Updated stock: " + StaticUtils.formatIntUS(newStock));
-                        ShopUtils.logEdit(player.getName()+" removed " + workingAmount + " from shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + newStock);
+                        Logger.logEdit(player.getName()+" removed " + workingAmount + " from shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + newStock);
                     }
                     break;
                 }
@@ -910,7 +939,7 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&fSold " + StaticUtils.formatIntUS(workingAmount) + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
-            ShopUtils.logEdit(player.getName()+" sold "+workingAmount+" x "+StaticUtils.getItemName(saleItem)+" ("+StaticUtils.formatTitleCase(saleItem.getType().toString())+")"+" to "+shop.getOwnerName()+"'s shop ("+ShopUtils.getShopHint(shopUuid)+") for $"+totalPrice.doubleValue()+". Shop's updated stock: "+shop.getItemStock() + ", Shop's updated balance: $"+shop.getMoneyStock().doubleValue());
+            Logger.logEdit(player.getName()+" sold "+workingAmount+" x "+StaticUtils.getItemName(saleItem)+" ("+StaticUtils.formatTitleCase(saleItem.getType().toString())+")"+" to "+shop.getOwnerName()+"'s shop ("+ShopUtils.getShopHint(shopUuid)+") for $"+totalPrice.doubleValue()+". Shop's updated stock: "+shop.getItemStock() + ", Shop's updated balance: $"+shop.getMoneyStock().doubleValue());
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -1024,7 +1053,7 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&fBought " + StaticUtils.formatIntUS(workingAmount) + " x " + StaticUtils.getItemName(saleItem) + "&r for &a$" + StaticUtils.formatDoubleUS(totalPrice.doubleValue()) + "&f.");
-            ShopUtils.logEdit(player.getName()+" bought "+workingAmount+" x "+StaticUtils.getItemName(saleItem)+" ("+StaticUtils.formatTitleCase(saleItem.getType().toString())+")"+" from "+shop.getOwnerName()+"'s shop ("+ShopUtils.getShopHint(shopUuid)+") for $"+totalPrice.doubleValue()+". Shop's updated stock: "+shop.getItemStock() + ", Shop's updated balance: $"+shop.getMoneyStock().doubleValue());
+            Logger.logEdit(player.getName()+" bought "+workingAmount+" x "+StaticUtils.getItemName(saleItem)+" ("+StaticUtils.formatTitleCase(saleItem.getType().toString())+")"+" from "+shop.getOwnerName()+"'s shop ("+ShopUtils.getShopHint(shopUuid)+") for $"+totalPrice.doubleValue()+". Shop's updated stock: "+shop.getItemStock() + ", Shop's updated balance: $"+shop.getMoneyStock().doubleValue());
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -1071,65 +1100,26 @@ public class ShopUtils {
             
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
-            ShopUtils.logEdit(player.getName()+" added " + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + shop.getItemStock());
+            Logger.logEdit(player.getName()+" added " + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + shop.getItemStock());
             return workingAmount;
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
     }
 
-
     // One offs
-    private static Path editLogPath;
-    private static final Object EDIT_LOG_LOCK = new Object();
-    private static final DateTimeFormatter EDIT_LOG_TS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    public static void logEdit(String... strings) {
-        if (strings == null || strings.length == 0) return;
-
-        if (editLogPath == null) {
-            for (String s : strings) {
-                StaticUtils.log(ChatColor.YELLOW, "[edit-log] " + s);
-            }
-            return;
-        }
-
-        final String ts = LocalDateTime.now(ZoneId.systemDefault()).format(EDIT_LOG_TS);
-        final StringBuilder chunk = new StringBuilder();
-        for (String s : strings) {
-            if (s == null) continue;
-            chunk.append('[').append(ts).append("] ").append(s).append(System.lineSeparator());
-        }
-        if (chunk.length() == 0) return;
-
-        // Do file IO off the main thread
-        Bukkit.getScheduler().runTaskAsynchronously(javaPlugin, () -> {
-            try {
-                byte[] bytes = chunk.toString().getBytes(StandardCharsets.UTF_8);
-                synchronized (EDIT_LOG_LOCK) {
-                    Files.write(
-                        editLogPath,
-                        bytes,
-                        StandardOpenOption.CREATE,
-                        StandardOpenOption.WRITE,
-                        StandardOpenOption.APPEND
-                    );
-                }
-            } catch (IOException e) {
-                StaticUtils.log(ChatColor.RED, "Failed to write to edit log: " + e.getMessage());
-            }
-        });
-    }
-    public static void setEditLogFile(File file) {
-        if (file != null) {
-            editLogPath = file.toPath();
-        }
-    }
-
     public static void teleportPlayerToShop(Player player, Shop shop) {
         double x=shop.getLocation().getX(), y=shop.getLocation().getY(), z=shop.getLocation().getZ();
         String world=shop.getWorld().getName();
 
         StaticUtils.teleportPlayer(player, world, x, y+1, z);
+    }
+
+    public static boolean hasBaseBlock(Shop shop) {
+        Block block = shop.getWorld().getBlockAt(shop.getLocation());
+
+        if (block!=null && !block.getType().equals(Material.AIR)) return true;
+        else return false;
     }
 
     public static String formatHologramText(Shop shop) {

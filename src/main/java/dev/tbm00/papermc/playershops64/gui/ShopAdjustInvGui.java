@@ -366,8 +366,8 @@ public class ShopAdjustInvGui {
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 32, 6, 8);
                 addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 64, 6, 9);
             } else if (attribute.equals(AdjustAttribute.DISPLAY_HEIGHT)) {
-                if (quantity>-5) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 5, 3);
-                if (quantity<5) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 1, 5, 7);
+                if (quantity>-8) addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 5, 3);
+                if (quantity<8) addQuantityButton(item, meta, lore, Material.WARPED_BUTTON, label, 1, 5, 7);
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
                 addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -1, 4, 3, 1);
                 addQuantityButton(item, meta, lore, Material.CRIMSON_BUTTON, label, -10, 4, 2, 2);

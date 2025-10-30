@@ -27,7 +27,7 @@ public class ListMaterialsGui {
     private final UUID shopUuid;
     private final PaginatedGui gui;
     private final Material currentMaterial;
-    private final String label = "Base Block Material ";
+    private final String label = "Base Block Material";
     
     public ListMaterialsGui(PlayerShops64 javaPlugin, Player viewer, UUID shopUuid, boolean isAdmin) {
         this.javaPlugin = javaPlugin;
@@ -85,9 +85,40 @@ public class ListMaterialsGui {
                                                                         }));
         }
     
+        // Clear Material Button
+        if (currentMaterial.equals(Material.AIR)) {
+            lore.clear();
+            lore.add("&8-----------------------");
+            if (ShopUtils.hasBaseBlock(javaPlugin.getShopHandler().getShop(shopUuid))) lore.add("&7Currently using custom block");
+            else lore.add("&fPlace a custom base block!!!");
+            meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dCustom Base Block"));
+            item.setItemMeta(meta);
+            item.setType(Material.BARRIER);
+            gui.setItem(6, 1, ItemBuilder.from(item).asGuiItem(event -> {
+                                                                            event.setCancelled(true);
+                                                                        }));
+        } else {
+            lore.clear();
+            lore.add("&8-----------------------");
+            lore.add("&6Click to clear the base block");
+            lore.add("");
+            lore.add("&7Once cleared, you can set a");
+            lore.add("&7custom base block");
+            meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dCustom Base Block"));
+            item.setItemMeta(meta);
+            item.setType(Material.BARRIER);
+            gui.setItem(6, 1, ItemBuilder.from(item).asGuiItem(event -> {
+                                                                            event.setCancelled(true);
+                                                                            ShopUtils.setBaseMaterial(viewer, shopUuid, Material.AIR);
+                                                                            gui.setCloseGuiAction(null);
+                                                                            new ListMaterialsGui(javaPlugin, viewer, shopUuid, isAdmin);
+                                                                        }));
+        }
+
         lore.clear();
-        gui.setItem(6, 1, ItemBuilder.from(Material.BLACK_STAINED_GLASS_PANE).setName(" ").asGuiItem(event -> event.setCancelled(true)));
-        gui.setItem(6, 2, ItemBuilder.from(Material.BLACK_STAINED_GLASS_PANE).setName(" ").asGuiItem(event -> event.setCancelled(true)));
+
         gui.setItem(6, 2, ItemBuilder.from(Material.BLACK_STAINED_GLASS_PANE).setName(" ").asGuiItem(event -> event.setCancelled(true)));
         gui.setItem(6, 3, ItemBuilder.from(Material.BLACK_STAINED_GLASS_PANE).setName(" ").asGuiItem(event -> event.setCancelled(true)));
         if (gui.getPagesNum()>=2) GuiUtils.setGuiItemPageBack(gui, item, meta, lore, label, 4);
@@ -110,10 +141,10 @@ public class ListMaterialsGui {
             meta.addEnchant(Enchantment.LURE, 1, true);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             lore.add("&8-----------------------");
-            lore.add("&eCurrently set to "+material.toString());
+            lore.add("&eCurrently set to "+StaticUtils.formatTitleCase(material.toString()));
         } else {
             lore.add("&8-----------------------");
-            lore.add("&6Click to change base to " + material.toString());
+            lore.add("&6Click to change base to " + StaticUtils.formatTitleCase(material.toString()));
         }
 
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());

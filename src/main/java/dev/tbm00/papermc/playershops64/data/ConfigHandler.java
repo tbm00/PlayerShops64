@@ -3,9 +3,7 @@ package dev.tbm00.papermc.playershops64.data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -33,7 +31,7 @@ public class ConfigHandler {
     private int maxBalance = 100000000;
     private int maxBuyPrice = 10000000;
     private int maxSellPrice = 10000000;
-    private Set<Material> baseBlockMaterials = new HashSet<>();
+    private List<Material> baseBlockMaterials = new ArrayList<>();
 
     private List<GuiSearchCategory> searchCategories = new ArrayList<>();
     
@@ -235,7 +233,7 @@ public class ConfigHandler {
         return maxSellPrice;
     }
     
-    public Set<Material> getBaseBlockMaterials() {
+    public List<Material> getBaseBlockMaterials() {
         return baseBlockMaterials;
     }
 

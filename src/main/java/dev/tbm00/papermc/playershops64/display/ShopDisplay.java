@@ -32,7 +32,7 @@ public class ShopDisplay {
     private final PlayerShops64 javaPlugin;
     private final UUID shopUuid;
 
-    private Item itemDisplay;
+    public Item itemDisplay;
     private ItemDisplay glassDisplay;
     private TextDisplay textDisplay;
 
@@ -50,7 +50,7 @@ public class ShopDisplay {
     public ShopDisplay(PlayerShops64 javaPlugin, UUID shopUuid) {
         this.javaPlugin = javaPlugin;
         this.shopUuid = shopUuid;
-        this.displayHeight = javaPlugin.getShopHandler().getShop(shopUuid).getDisplayHeight() / 10f;
+        this.displayHeight = javaPlugin.getShopHandler().getShop(shopUuid).getDisplayHeight() / 20f;
         this.holoColor = javaPlugin.getConfigHandler().getDisplayHoloColor();
         update();
     }
@@ -76,7 +76,7 @@ public class ShopDisplay {
         if (world == null || shop.getLocation() == null) return;
 
         Location base = shop.getLocation().clone();
-        displayHeight = shop.getDisplayHeight() / 10f;
+        displayHeight = shop.getDisplayHeight() / 20f;
         updateText(world, base, ShopUtils.formatHologramText(shop));
         updateGlass(world, base);
         updateItem(world, base, shop);

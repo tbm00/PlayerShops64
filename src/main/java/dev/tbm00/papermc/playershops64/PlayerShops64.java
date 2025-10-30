@@ -36,6 +36,7 @@ public class PlayerShops64 extends JavaPlugin {
             StaticUtils.init(this);
             ShopUtils.init(this);
             GuiUtils.init(this);
+            Logger.init(this);
             StaticUtils.log(ChatColor.LIGHT_PURPLE,
                     ChatColor.DARK_PURPLE + "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
                     pdf.getName() + " v" + pdf.getVersion() + " created by tbm00",
@@ -46,7 +47,7 @@ public class PlayerShops64 extends JavaPlugin {
                 getDataFolder().mkdirs();
                 File editLog = new File(getDataFolder(), "log.txt");
                 if (!editLog.exists()) editLog.createNewFile();
-                ShopUtils.setEditLogFile(editLog);
+                Logger.setEditLogFile(editLog);
             } catch (IOException e) {
                 StaticUtils.log(ChatColor.RED, "Failed to initialize log.txt: " + e.getMessage());
             }
@@ -57,6 +58,7 @@ public class PlayerShops64 extends JavaPlugin {
             if (!setupHooks()) disablePlugin();
 
             shopHandler = new ShopHandler(this, mysqlConnection);
+            shopHandler.validateShops();
 
             // Register Listeners
             // getServer().getPluginManager().registerEvents(new ServerStartup(this), this);
