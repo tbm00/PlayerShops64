@@ -184,7 +184,7 @@ public class ShopBaseBlock implements Listener {
     public void onBlockBurn(BlockBurnEvent event) {
         if (isProtectedShopBlock(event.getBlock())) event.setCancelled(true);
     
-}
+    }
 
     @EventHandler(ignoreCancelled = true)
     public void onBreak(BlockBreakEvent event) {

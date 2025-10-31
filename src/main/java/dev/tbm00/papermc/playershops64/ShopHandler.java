@@ -56,6 +56,14 @@ public class ShopHandler {
         this.visualTask.runTaskTimer(javaPlugin, 20L, Math.max(1L, javaPlugin.getConfigHandler().getDisplayTickCycle()));
         StaticUtils.log(ChatColor.GREEN, "ShopHandler initialized.");
         loadShops();
+
+        Bukkit.getScheduler().runTaskTimer(javaPlugin, () -> {
+            for (ShopDisplay shopDisplay : displayManager.getAll().values()) {
+                if (shopDisplay.isVisibleToAnyone()) {
+                    shopDisplay.animate();
+                }
+            }
+        }, 1L, 1L);
     }
 
     public void loadShops() {
