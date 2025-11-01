@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -73,10 +74,12 @@ public class ShopCmd implements TabExecutor {
                 return handleSellGuiCmd(player);
             case "depositgui":
                 return handleDepositGuiCmd(player);
-            case "depositmoney":
+            case "deposit":
                 return handleDepositCmd(player, args);
-            case "withdrawmoney":
+            case "withdraw":
                 return handleWithdrawCmd(player, args);
+            case "assistant":
+                return handleAssistantCmd(player, args);
             default: {
                 return handleSearchCmd(player, args);
             }
@@ -84,16 +87,13 @@ public class ShopCmd implements TabExecutor {
     }
     
     private boolean handleHelpCmd(Player player) {
-        player.sendMessage(ChatColor.DARK_PURPLE + "--- " + ChatColor.LIGHT_PURPLE + "Player Shop Commands" + ChatColor.DARK_PURPLE + " ---\n"
-            + ChatColor.WHITE + "/testshop" + ChatColor.GRAY + " Base player command\n"
-        );
-
         player.sendMessage(ChatColor.DARK_PURPLE + "--- " + ChatColor.LIGHT_PURPLE + "Shop Owner Commands" + ChatColor.DARK_PURPLE + " ---\n"
             + ChatColor.WHITE + "/shop buy <amount>" + ChatColor.GRAY + " Buy shop creation item(s)\n"
             + ChatColor.WHITE + "/shop manage" + ChatColor.GRAY + " View and manage all your shops\n"
-            + ChatColor.WHITE + "/shop depositGui" + ChatColor.GRAY + " Open a GUI and deposit items into your shops\n"
-            + ChatColor.WHITE + "/shop depositMoney all/view max/<amount>" + ChatColor.GRAY + " Deposit money into your shops\n"
-            + ChatColor.WHITE + "/shop withdrawMoney all/view max/<amount>" + ChatColor.GRAY + " Withdraw money from your shops\n"
+            + ChatColor.WHITE + "/shop assistant add/remove all/view <player>" + ChatColor.GRAY + " Add/remove assistants to your shops\n"
+            + ChatColor.WHITE + "/shop withdraw all/view max/<amount>" + ChatColor.GRAY + " Withdraw money from your shops\n"
+            + ChatColor.WHITE + "/shop deposit all/view max/<amount>" + ChatColor.GRAY + " Deposit money into your shops\n"
+            + ChatColor.WHITE + "/depositGui" + ChatColor.GRAY + " Open a GUI to deposit items into your shops\n"
         );
         player.sendMessage(ChatColor.DARK_AQUA + "--- " + ChatColor.AQUA + "Shopper Commands" + ChatColor.DARK_AQUA + " ---\n"
             + ChatColor.WHITE + "/shop" + ChatColor.GRAY + " Open shop category GUI\n"
@@ -101,7 +101,7 @@ public class ShopCmd implements TabExecutor {
             + ChatColor.WHITE + "/shop hand" + ChatColor.GRAY + " Find all <item in hand> shops\n"
             + ChatColor.WHITE + "/shop <item>" + ChatColor.GRAY + " Find all <item> shops\n"
             + ChatColor.WHITE + "/shop <player>" + ChatColor.GRAY + " Find all <player>'s shops\n"
-            + ChatColor.WHITE + "/sellgui" + ChatColor.GRAY + " Open a GUI and sell items to the best priced avaliable shops"
+            + ChatColor.WHITE + "/sellGui" + ChatColor.GRAY + " Open a GUI to sell items to the best-priced avaliable shops"
         );
         return true;
     }
@@ -181,7 +181,7 @@ public class ShopCmd implements TabExecutor {
      */
     private boolean handleDepositCmd(Player player, String[] args) {
         if (args.length<3) {
-            StaticUtils.sendMessage(player, "&f/shop depositMoney view/all max/<amount> &7Deposit money into your shops");
+            StaticUtils.sendMessage(player, "&f/shop deposit view/all max/<amount> &7Deposit money into your shops");
             return true;
         }
 
@@ -234,7 +234,7 @@ public class ShopCmd implements TabExecutor {
                     return true;
                 }
 
-                if (shop.getOwnerUuid()==null || !shop.getOwnerUuid().equals(playerUuid)) {
+                if (!shop.isAssistant(playerUuid) && (shop.getOwnerUuid()==null || !shop.getOwnerUuid().equals(playerUuid))) {
                     StaticUtils.sendMessage(player, "&cError: This shop is not yours!");
                     return true;
                 }
@@ -263,7 +263,7 @@ public class ShopCmd implements TabExecutor {
      */
     private boolean handleWithdrawCmd(Player player, String[] args) {
         if (args.length<3) {
-            StaticUtils.sendMessage(player, "&f/shop withdrawMoney view/all max/<amount> &7Withdraw money from your shops");
+            StaticUtils.sendMessage(player, "&f/shop withdraw view/all max/<amount> &7Withdraw money from your shops");
             return true;
         }
 
@@ -316,7 +316,7 @@ public class ShopCmd implements TabExecutor {
                     return true;
                 }
 
-                if (shop.getOwnerUuid()==null || !shop.getOwnerUuid().equals(playerUuid)) {
+                if (!shop.isAssistant(playerUuid) && (shop.getOwnerUuid()==null || !shop.getOwnerUuid().equals(playerUuid))) {
                     StaticUtils.sendMessage(player, "&cError: This shop is not yours!");
                     return true;
                 }
@@ -350,6 +350,94 @@ public class ShopCmd implements TabExecutor {
     }
 
     /**
+     * Handles the sub command for withdrawing money from shops.
+     * 
+     * @param player the command sender
+     * @param args the arguments passed to the command
+     * @return true if command was processed successfully
+     */
+    private boolean handleAssistantCmd(Player player, String[] args) {
+        if (args.length<3) {
+            StaticUtils.sendMessage(player, "&f/shop assistant add/remove all/view <player> &7Add/remove assistants to your shops");
+            return true;
+        }
+
+        UUID callerUuid = player.getUniqueId();
+
+        String arg2 = args[1].toLowerCase(), arg3 = args[2].toLowerCase(), arg4 = args[3];
+
+        boolean add;
+        switch (arg2) {
+            case "add":
+                add = true;
+                break;
+            case "remove":
+                add = false;
+                break;
+            default: {
+                StaticUtils.sendMessage(player, "&cError: Unknown argument: " + arg2);
+                return true;
+            }
+        }
+
+        OfflinePlayer argPlayer = javaPlugin.getServer().getOfflinePlayer(arg4);
+        if (argPlayer==null || argPlayer.getUniqueId()==null) {
+            StaticUtils.sendMessage(player, "&cError: Couldn't find player: " + arg4);
+            return true;
+        }
+
+        switch (arg3) {
+            case "all": {
+                List<UUID> ownedShops = new ArrayList<>(javaPlugin.getShopHandler().getPlayersShops(callerUuid));
+                if (ownedShops.size()<1) {
+                    StaticUtils.sendMessage(player, "&cError: Couldn't find any of your DisplayShops!");
+                    return true;
+                }
+
+                int i = 0;
+                if (add) {
+                    for (UUID shopUuid : ownedShops) {
+                        ShopUtils.addAssistant(player, shopUuid, argPlayer.getName(), false);
+                        i++;
+                    }
+                    StaticUtils.sendMessage(player, "&aAdded assistant " + argPlayer.getName() + " to " + i + " of your shops!");
+                } else {
+                    for (UUID shopUuid : ownedShops) {
+                        ShopUtils.removeAssistant(player, shopUuid, argPlayer.getUniqueId(), false);
+                        i++;
+                    }
+                    StaticUtils.sendMessage(player, "&aRemoved assistant " + argPlayer.getName() + " from " + i + " of your shops!");
+                }
+                return true;
+            }
+            case "view": {
+                Shop shop = javaPlugin.getShopHandler().getShopInFocus(player);
+                if (shop==null) {
+                    StaticUtils.sendMessage(player, "&cError: No shop in your view!");
+                    return true;
+                }
+
+                if (shop.getOwnerUuid()==null || !shop.getOwnerUuid().equals(callerUuid)) {
+                    StaticUtils.sendMessage(player, "&cError: This shop is not yours!");
+                    return true;
+                }
+
+                if (add) {
+                    ShopUtils.addAssistant(player, shop.getUuid(), argPlayer.getName(), false);
+                    StaticUtils.sendMessage(player, "&aAdded assistant " + argPlayer.getName() + " to your shop!");
+                } else {
+                    ShopUtils.removeAssistant(player, shop.getUuid(), argPlayer.getUniqueId(), false);
+                    StaticUtils.sendMessage(player, "&aRemoved assistant " + argPlayer.getName() + " from your shop!");
+                }
+            }
+            default: {
+                StaticUtils.sendMessage(player, "&cError: Unknown argument: " + arg2);
+                return true;
+            }
+        }
+    }
+
+    /**
      * Handles tab completion for the /testshop command.
      */
     @Override
@@ -357,7 +445,7 @@ public class ShopCmd implements TabExecutor {
         List<String> list = new ArrayList<>();
         if (args.length == 1) {
             list.clear();
-            String[] subCmds = new String[]{"help","buy","manage","depositGui","depositMoney","withdrawMoney","all","hand","<item>","<player>","sellGui",};
+            String[] subCmds = new String[]{"help","buy","manage","depositGui","deposit","withdraw","all","hand","<item>","<player>","sellGui","assistant"};
 
             for (String n : subCmds) {
                 if (n!=null && n.startsWith(args[0])) 
@@ -372,22 +460,35 @@ public class ShopCmd implements TabExecutor {
                     list.add(mat.name().toLowerCase());
             }
         } else if (args.length == 2) {
-            if (args[0].equalsIgnoreCase("depositMoney")) {
+            if (args[0].equalsIgnoreCase("deposit")) {
                 if ("view".startsWith(args[1])) list.add("view");
                 if ("all".startsWith(args[1])) list.add("all");
-            } else if (args[0].equalsIgnoreCase("withdrawMoney")) {
+            } else if (args[0].equalsIgnoreCase("withdraw")) {
                 if ("view".startsWith(args[1])) list.add("view");
                 if ("all".startsWith(args[1])) list.add("all");
             } else if (args[0].equalsIgnoreCase("buy")) {
                 if ("<amount>".startsWith(args[1])) list.add("<amount>");
+            } else if (args[0].equalsIgnoreCase("assistant")) {
+                if ("add".startsWith(args[1])) list.add("add");
+                if ("remove".startsWith(args[1])) list.add("remove");
             }
         } else if (args.length == 3) {
-            if (args[0].equalsIgnoreCase("depositMoney")) {
+            if (args[0].equalsIgnoreCase("deposit")) {
                 if ("max".startsWith(args[2])) list.add("max");
                 if ("<amount>".startsWith(args[2])) list.add("<amount>");
-            } else if (args[0].equalsIgnoreCase("withdrawMoney")) {
+            } else if (args[0].equalsIgnoreCase("withdraw")) {
                 if ("max".startsWith(args[2])) list.add("max");
                 if ("<amount>".startsWith(args[2])) list.add("<amount>");
+            } else if (args[0].equalsIgnoreCase("assistant")) {
+                if ("view".startsWith(args[2])) list.add("view");
+                if ("all".startsWith(args[2])) list.add("all");
+            }
+        } else if (args.length == 4) {
+            if (args[0].equalsIgnoreCase("assistant")) {
+                Bukkit.getOnlinePlayers().forEach(player -> {
+                    if (player.getName().startsWith(args[3]))
+                        list.add(player.getName());
+                });
             }
         }
         return list;

@@ -140,7 +140,7 @@ public class ListAssistantsGui {
         gui.addItem(ItemBuilder.from(headItem).asGuiItem(event -> {
                                                             event.setCancelled(true);
                                                             if (isOwner) {
-                                                                ShopUtils.removeAssistant(viewer, shopUuid, playerUuid);
+                                                                ShopUtils.removeAssistant(viewer, shopUuid, playerUuid, true);
                                                                 gui.setCloseGuiAction(null);
                                                                 new ListAssistantsGui(javaPlugin, viewer, shopUuid, isAdmin);
                                                             }

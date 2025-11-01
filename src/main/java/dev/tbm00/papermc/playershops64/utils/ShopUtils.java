@@ -98,9 +98,7 @@ public class ShopUtils {
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
-    } 
-
-    public static void deleteShop(UUID shopUuid, Block block) {
+    } public static void deleteShop(UUID shopUuid, Block block) {
         if (!Bukkit.isPrimaryThread()) {
             StaticUtils.log(ChatColor.RED, "Plugin tried to delete shop " + shopUuid + " off the main thread -- trying again during next tick on main thread!");
             javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> deleteShop(shopUuid, block));
@@ -125,7 +123,9 @@ public class ShopUtils {
         if (block==null) {
             javaPlugin.getServer().getWorld(shop.getWorld().getUID()).getBlockAt(shop.getLocation()).setType(Material.AIR, false);
         } else block.setType(Material.AIR, false);
-    } public static void setShopItem(Player player, UUID shopUuid) {
+    } 
+    
+    public static void setShopItem(Player player, UUID shopUuid) {
         if (!Bukkit.isPrimaryThread()) {
             StaticUtils.log(ChatColor.RED, player.getName() + " tried to set shop " + shopUuid + "'s item off the main thread -- trying again during next tick on main thread!");
             javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> setShopItem(player, shopUuid));
@@ -364,22 +364,22 @@ public class ShopUtils {
         }
     }
 
-    public static void addAssistant(Player player, UUID shopUuid, String playerName) {
+    public static void addAssistant(Player player, UUID shopUuid, String playerName, boolean msgPlayer) {
         if (!Bukkit.isPrimaryThread()) {
             StaticUtils.log(ChatColor.RED, player.getName() + " tried to add assistant to shop " + shopUuid + "'s off the main thread -- trying again during next tick on main thread!");
-            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> addAssistant(player, shopUuid, playerName));
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> addAssistant(player, shopUuid, playerName, msgPlayer));
             return;
         }
 
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
-            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            if (msgPlayer) StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
             return;
         }
 
         try {
             Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
             if (shop == null) {
-                StaticUtils.sendMessage(player, "&cShop not found..!");
+                if (msgPlayer) StaticUtils.sendMessage(player, "&cShop not found..!");
                 return;
             }
 
@@ -387,11 +387,11 @@ public class ShopUtils {
             try {
                 addUuid = javaPlugin.getServer().getOfflinePlayer(playerName).getUniqueId();
             } catch (Exception e) {
-                StaticUtils.sendMessage(player, "&cCould not find player from input: '"+playerName+"'");
+                if (msgPlayer) StaticUtils.sendMessage(player, "&cCould not find player from input: '"+playerName+"'");
                 return;
             }
             if (addUuid==null) {
-                StaticUtils.sendMessage(player, "&cCould not find player from input: '"+playerName+"'");
+                if (msgPlayer) StaticUtils.sendMessage(player, "&cCould not find player from input: '"+playerName+"'");
                 return;
             }
 
@@ -399,29 +399,29 @@ public class ShopUtils {
 
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
-            StaticUtils.sendMessage(player, "&aAdded '" + playerName + "' to shop's assistants!");
+            if (msgPlayer) StaticUtils.sendMessage(player, "&aAdded '" + playerName + "' to shop's assistants!");
             Logger.logEdit(player.getName()+" added assistant "+playerName+" to shop "+ShopUtils.getShopHint(shopUuid));
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
     }
 
-    public static void removeAssistant(Player player, UUID shopUuid, UUID playerUuid) {
+    public static void removeAssistant(Player player, UUID shopUuid, UUID playerUuid, boolean msgPlayer) {
         if (!Bukkit.isPrimaryThread()) {
             StaticUtils.log(ChatColor.RED, player.getName() + " tried to remove assistant to shop " + shopUuid + "'s off the main thread -- trying again during next tick on main thread!");
-            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> removeAssistant(player, shopUuid, playerUuid));
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> removeAssistant(player, shopUuid, playerUuid, msgPlayer));
             return;
         }
 
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
-            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            if (msgPlayer) StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
             return;
         }
 
         try {
             Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
             if (shop == null) {
-                StaticUtils.sendMessage(player, "&cShop not found..!");
+                if (msgPlayer) StaticUtils.sendMessage(player, "&cShop not found..!");
                 return;
             }
 
@@ -429,7 +429,7 @@ public class ShopUtils {
 
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
-            StaticUtils.sendMessage(player, "&aRemoved '" + javaPlugin.getServer().getOfflinePlayer(playerUuid).getName() + "' from shop's assistants!");
+            if (msgPlayer) StaticUtils.sendMessage(player, "&aRemoved '" + javaPlugin.getServer().getOfflinePlayer(playerUuid).getName() + "' from shop's assistants!");
             Logger.logEdit(player.getName()+" removed assistant "+ javaPlugin.getServer().getOfflinePlayer(playerUuid).getName() + " from shop " + ShopUtils.getShopHint(shopUuid));
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());

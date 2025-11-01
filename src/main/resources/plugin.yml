@@ -10,10 +10,16 @@ commands:
     description: Base player command for PlayerShops64
   testshopadmin:
     description: Base admin command for PlayerShops64
+  testsellgui:
+    description: Open a GUI to sell items to the best-priced avaliable shops
+  testdepositgui:
+    description: Open a GUI to deposit items into your shops
+  testexchangesellwand:
+    description: Exchange Zach_FR's sellwand for PlayerShops64 sellwand
 permissions:
   playershops64.player:
-    description: Ability to use player commands
+    description: Ability to use player commands & features
     default: true
   playershops64.admin:
-    description: Ability to use admin commands
+    description: Ability to use admin commands & features
     default: op

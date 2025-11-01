@@ -29,6 +29,7 @@ public class ShopManageGui {
     private final UUID shopUuid;
     private final Shop shop;
     private final String label = "Shop Management";
+    private final boolean isOwner;
     
     public ShopManageGui(PlayerShops64 javaPlugin, Player viewer, boolean isAdmin, UUID shopUuid) {
         this.javaPlugin = javaPlugin;
@@ -37,6 +38,15 @@ public class ShopManageGui {
         this.shopUuid = shopUuid;
         this.shop = javaPlugin.getShopHandler().getShop(shopUuid);
         this.gui = new Gui(6, label);
+
+        if (shop.getOwnerUuid().equals(viewer.getUniqueId())) {
+            isOwner = true;
+        } else if (shop.isAssistant(viewer.getUniqueId())) {
+            isOwner = false;
+        } else {
+            isOwner = false;
+            return;
+        }
 
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
             return;
@@ -325,7 +335,7 @@ public class ShopManageGui {
                                                                         }));
         }
 
-        {
+        if (isOwner || isAdmin) {
             // Destroy Shop
             lore.clear();
             lore.add("&8-----------------------");

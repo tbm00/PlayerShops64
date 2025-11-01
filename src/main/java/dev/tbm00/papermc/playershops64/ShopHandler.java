@@ -247,7 +247,7 @@ public class ShopHandler {
     private void indexShop(Shop shop) {
         if (shop==null) return;
 
-        if (shop.getOwnerUuid()!=null && shop.getItemStack()!=null) {
+        if (shop.getOwnerUuid()!=null) {
             Set<UUID> playersShops = shopOwnerMap.computeIfAbsent(shop.getOwnerUuid(), k -> new java.util.HashSet<>());
             playersShops.add(shop.getUuid());
         }

@@ -7,6 +7,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -40,7 +41,7 @@ public class ShopBaseBlock implements Listener {
         this.javaPlugin = javaPlugin;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onShopBaseBlockPlace(BlockPlaceEvent event) {
         Block block = event.getBlockPlaced();
         if (!block.getType().equals(Material.LECTERN)) return;

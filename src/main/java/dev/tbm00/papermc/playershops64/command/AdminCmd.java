@@ -41,8 +41,8 @@ public class AdminCmd implements TabExecutor {
             StaticUtils.sendMessage(sender, "&cNo permission!");
             return true;
         } else if (args.length == 0) {
-            StaticUtils.sendMessage(sender, "&cNo argument provided!");
-            return true;
+            Player player = (Player) sender;
+            return handleMenuCmd(player);
         }
 
         Player player = (Player) sender;
@@ -56,16 +56,17 @@ public class AdminCmd implements TabExecutor {
             case "give":
                 return handleGiveCmd(player, args);
             default: {
-                StaticUtils.sendMessage(sender, "&cNo applicable argument provided!");
-                return true;
+                return handleSearchCmd(player, args);
             }
         }
     }
     
     private boolean handleHelpCmd(Player player) {
         player.sendMessage(ChatColor.DARK_PURPLE + "--- " + ChatColor.LIGHT_PURPLE + "Admin Shop Commands" + ChatColor.DARK_PURPLE + " ---\n"
-            + ChatColor.WHITE + "/testshopadmin" + ChatColor.GRAY + " Base admin command\n"
+            + ChatColor.WHITE + "/shopadmin give <player> <item> [amount]" + ChatColor.GRAY + " Give shop or wand item to a player\n"
+            + ChatColor.WHITE + "/shopadmin <player>" + ChatColor.GRAY + " Find & manage all <player>'s shops\n"
         );
+
         return true;
     }
 
@@ -74,10 +75,15 @@ public class AdminCmd implements TabExecutor {
         return true;
     }
 
+    private boolean handleSearchCmd(Player player, String[] args) {
+        GuiUtils.openGuiSearchResults(player, args, true);
+        return true;
+    }
+
     private boolean handleGiveCmd(CommandSender sender, String[] args) {
         String argument = args.length >= 2 ? args[1] : null; // should be player
         String argument2 = args.length >= 3 ? args[2] : null; // should be item type
-        String argument3 = args.length >= 4 ? args[3] : null; // should be amount
+        String argument3 = args.length >= 4 ? args[3] : "1"; // should be amount
 
         int amount = 1;
         Integer j = Integer.parseInt(argument3);
@@ -131,32 +137,29 @@ public class AdminCmd implements TabExecutor {
         List<String> list = new ArrayList<>();
         if (args.length == 1) {
             list.clear();
-            String[] subCmds = new String[]{"<item>","<player>","transfer","pos1","pos2","copy","paste"};
+            String[] subCmds = new String[]{"give","<player>"};
             for (String n : subCmds) {
                 if (n!=null && n.startsWith(args[0])) 
                     list.add(n);
             }
             Bukkit.getOnlinePlayers().forEach(player -> {
-                if (player.getName().startsWith(args[0])&&args[0].length()>0)
+                if (player.getName().startsWith(args[0]))
                     list.add(player.getName());
             });
-            for (Material mat : Material.values()) {
-                if (mat.name().toLowerCase().startsWith(args[0].toLowerCase())&&args[0].length()>1)
-                    list.add(mat.name().toLowerCase());
-            }
         } else if (args.length == 2) {
-            if (args[0].equals("transfer")) {
+            if (args[0].equals("give")) {
                 Bukkit.getOnlinePlayers().forEach(player -> {
                     if (player.getName().startsWith(args[1]))
                         list.add(player.getName());
                 });
             }
         } else if (args.length == 3) {
-            if (args[0].equals("transfer")) {
-                Bukkit.getOnlinePlayers().forEach(player -> {
-                    if (player.getName().startsWith(args[1]))
-                        list.add(player.getName());
-                });
+            if (args[0].equals("give")) {
+                String[] subCmds = new String[]{"SHOP_BLOCK","SELL_WAND","DEPOSIT_WAND"};
+                for (String n : subCmds) {
+                    if (n!=null && n.startsWith(args[0])) 
+                        list.add(n);
+                }
             }
         }
         return list;
