@@ -18,10 +18,10 @@ import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ExchangeWandCmd implements TabExecutor {
-    private final PlayerShops64 javaPlugin;
+    //private final PlayerShops64 javaPlugin;
 
     public ExchangeWandCmd(PlayerShops64 javaPlugin) {
-        this.javaPlugin = javaPlugin;
+        //this.javaPlugin = javaPlugin;
     }
 
     /**

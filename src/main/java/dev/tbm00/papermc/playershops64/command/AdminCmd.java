@@ -7,7 +7,6 @@ import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -98,7 +97,7 @@ public class AdminCmd implements TabExecutor {
         if (argument2==null || argument2.isBlank()) {
             sender.sendMessage(ChatColor.RED + "Can't give nothing!");
             return false;
-        } argument2.replace("_","");
+        } argument2 = argument2.replace("_","");
 
         if (argument2.equalsIgnoreCase("SELLWAND")) {
             StaticUtils.sendMessage(player, "&aReceived " + amount + " sell wand!");
@@ -139,25 +138,25 @@ public class AdminCmd implements TabExecutor {
             list.clear();
             String[] subCmds = new String[]{"give","<player>"};
             for (String n : subCmds) {
-                if (n!=null && n.startsWith(args[0])) 
+                if (n!=null && n.startsWith(args[0].toLowerCase())) 
                     list.add(n);
             }
             Bukkit.getOnlinePlayers().forEach(player -> {
-                if (player.getName().startsWith(args[0]))
+                if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())&&args[0].length()>0)
                     list.add(player.getName());
             });
         } else if (args.length == 2) {
-            if (args[0].equals("give")) {
+            if (args[0].equalsIgnoreCase("give")) {
                 Bukkit.getOnlinePlayers().forEach(player -> {
-                    if (player.getName().startsWith(args[1]))
+                    if (player.getName().toLowerCase().startsWith(args[1].toLowerCase()))
                         list.add(player.getName());
                 });
             }
         } else if (args.length == 3) {
-            if (args[0].equals("give")) {
+            if (args[0].equalsIgnoreCase("give")) {
                 String[] subCmds = new String[]{"SHOP_BLOCK","SELL_WAND","DEPOSIT_WAND"};
                 for (String n : subCmds) {
-                    if (n!=null && n.startsWith(args[0])) 
+                    if (n!=null && n.startsWith(args[2].toUpperCase())) 
                         list.add(n);
                 }
             }

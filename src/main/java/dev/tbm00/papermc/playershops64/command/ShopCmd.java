@@ -452,7 +452,7 @@ public class ShopCmd implements TabExecutor {
                     list.add(n);
             }
             Bukkit.getOnlinePlayers().forEach(player -> {
-                if (player.getName().startsWith(args[0])&&args[0].length()>0)
+                if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())&&args[0].length()>0)
                     list.add(player.getName());
             });
             for (Material mat : Material.values()) {
@@ -486,7 +486,7 @@ public class ShopCmd implements TabExecutor {
         } else if (args.length == 4) {
             if (args[0].equalsIgnoreCase("assistant")) {
                 Bukkit.getOnlinePlayers().forEach(player -> {
-                    if (player.getName().startsWith(args[3]))
+                    if (player.getName().toLowerCase().startsWith(args[3]))
                         list.add(player.getName());
                 });
             }
