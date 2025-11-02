@@ -106,7 +106,7 @@ public class GuiUtils {
     public static void handleClickShop(InventoryClickEvent event, Player sender, Shop shop, boolean isAdmin) {
         event.setCancelled(true);
         
-        if (event.isShiftClick() && (isAdmin || sender.getUniqueId().equals(shop.getOwnerUuid()))) {
+        if (event.isShiftClick() && (isAdmin || sender.getUniqueId().equals(shop.getOwnerUuid()) || shop.isAssistant(sender.getUniqueId()))) {
             new ShopManageGui(javaPlugin, sender, isAdmin, shop.getUuid());
         } else ShopUtils.teleportPlayerToShop(sender, shop);
     }

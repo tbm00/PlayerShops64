@@ -373,7 +373,7 @@ public class ListShopsGui {
         shopLore = ShopUtils.formatSaleItemLoreText(shop, true);
         shopLore.add("&8-----------------------");
         shopLore.add("&6Click to TP to this shop");
-        if (isAdmin || (ownerUuid!=null && viewer.getUniqueId().equals(ownerUuid)))
+        if (isAdmin || (ownerUuid!=null && viewer.getUniqueId().equals(ownerUuid)) || shop.isAssistant(viewer.getUniqueId()))
             shopLore.add("&eShift-click to edit this shop");
 
         shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());

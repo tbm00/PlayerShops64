@@ -1126,7 +1126,8 @@ public class ShopUtils {
         ItemStack item = shop.getItemStack();
 
         if (item==null) {
-            return "&cEmpty PlayerShop\n&7Owner: &e" + shop.getOwnerName();
+            if (shop.getOwnerName()==null || shop.getOwnerUuid()==null) return "&cEmpty PlayerShop";
+            else return "&cEmpty PlayerShop\n&7Owner: &e" + shop.getOwnerName();
         }
 
         String name = StaticUtils.getItemName(item);
@@ -1155,7 +1156,7 @@ public class ShopUtils {
         if (shop.getBuyPrice()!=null) returnText += "\n&7Buy for &a$" + buy;
         if (shop.getSellPrice()!=null) returnText += "\n&7Sell for &c$" + sell;
         returnText += "\n&7Stock: &e" + stock + "&7, Balance: &e$" + balance;
-        returnText += "\n&7Owner: &e" + owner;
+        if (shop.getOwnerName()!=null) returnText += "\n&7Owner: &e" + owner;
 
         return returnText;
     }

@@ -113,8 +113,8 @@ public class ShopDAO {
             PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, shop.getUuid().toString());
-            ps.setString(2, shop.getOwnerUuid().toString());
-            ps.setString(3, shop.getOwnerName());
+            bindStringOrNull(ps, 2, shop.getOwnerUuid() != null ? shop.getOwnerUuid().toString() : null);
+            bindStringOrNull(ps, 3, shop.getOwnerName());
             ps.setString(4, shop.getWorld().getName());
             ps.setString(5, serializeLocation(shop.getLocation()));
             ps.setString(6, ItemSerializer.itemStackToBase64(shop.getItemStack()));
@@ -160,7 +160,9 @@ public class ShopDAO {
      */
     private Shop mapResultSetToShop(ResultSet rs) throws SQLException {
         UUID uuid = UUID.fromString(rs.getString("uuid"));
-        UUID ownerUuid = UUID.fromString(rs.getString("owner_uuid"));
+        String ownerUuidStr = rs.getString("owner_uuid");
+        UUID ownerUuid = null;
+        if (ownerUuidStr != null && !ownerUuidStr.isBlank()) ownerUuid = UUID.fromString(ownerUuidStr);
         String ownerName = rs.getString("owner_name");
         String worldName = rs.getString("world");
         World world = (worldName == null) ? null : Bukkit.getWorld(worldName);

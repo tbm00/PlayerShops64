@@ -18,8 +18,8 @@ import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 public class Shop {
     // on SQL
     private UUID uuid; // generated when the shop is created (shop base block is placed)
-    private UUID ownerUuid; // minecraft player's uuid
-    private String ownerName; // minecraft player's username
+    private UUID ownerUuid; // minecraft player's uuid, can be null
+    private String ownerName; // minecraft player's username, can be null
     private World world; // stored in SQL as String (using world.getName())
     private Location location; // stored in SQL as String (using "x,y,z" formatting)
     private ItemStack itemStack; // serialized and stored in SQL as Base64

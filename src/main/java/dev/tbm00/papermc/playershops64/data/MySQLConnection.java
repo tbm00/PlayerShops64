@@ -75,8 +75,8 @@ public class MySQLConnection {
     private void initializeDatabase() {
         final String shopTable = "CREATE TABLE IF NOT EXISTS "+StaticUtils.TBL_SHOPS+" ("
           + "  `uuid` CHAR(36) NOT NULL,"
-          + "  `owner_uuid` CHAR(36) NOT NULL,"
-          + "  `owner_name` VARCHAR(32) NOT NULL,"
+          + "  `owner_uuid` CHAR(36) NULL,"
+          + "  `owner_name` VARCHAR(32) NULL,"
           + "  `world` VARCHAR(64) NOT NULL,"
           + "  `location` VARCHAR(64) NOT NULL,"
           + "  `itemstack_b64` LONGTEXT NULL,"
@@ -121,6 +121,14 @@ public class MySQLConnection {
                                 "ADD COLUMN IF NOT EXISTS `base_material` VARCHAR(256) NULL AFTER `display_height`, " +
                                 "ADD COLUMN IF NOT EXISTS `assistants` LONGTEXT NULL AFTER `base_material`"
                             );
+                        stmt.executeUpdate(
+                            "ALTER TABLE `"+StaticUtils.TBL_SHOPS+"` " +
+                            "MODIFY COLUMN `owner_uuid` CHAR(36) NULL;"
+                        );
+                        stmt.executeUpdate(
+                            "ALTER TABLE `"+StaticUtils.TBL_SHOPS+"` " +
+                            "MODIFY COLUMN `owner_name` VARCHAR(32) NULL;"
+                        );
                         StaticUtils.log(ChatColor.YELLOW, "Updated table '"+tbl+"'.");
                         break;
                     }
