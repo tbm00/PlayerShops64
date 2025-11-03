@@ -9,8 +9,10 @@ import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.ChatColor;
 
@@ -250,10 +252,11 @@ public class ListShopsGui {
         String itemName = (meta.hasItemName()) ? meta.getItemName() : "";
         String desc = shop.getDescription();
 
-        String query_ = query.replace(" ", "_");
-        String queryS = query.replace("_", " ");
+        String q = StaticUtils.normalizeText(query);
+        String query_ = q.replace(" ", "_");
+        String queryS = q.replace("_", " ");
 
-        if (checkString(query, shop, materialName, meta, displayName, itemName, desc)) return true;
+        //if (checkString(q, shop, materialName, meta, displayName, itemName, desc)) return true;
         if (checkString(query_, shop, materialName, meta, displayName, itemName, desc)) return true;
         if (checkString(queryS, shop, materialName, meta, displayName, itemName, desc)) return true;
 
@@ -268,6 +271,39 @@ public class ListShopsGui {
         if (shop.getOwnerName()!=null && StringUtils.containsIgnoreCase(shop.getOwnerName(), testQuery)) {
             return true; // if ownerName contains testQuery
         }
+        
+        if (meta != null) {
+            StringBuilder extra = new StringBuilder();
+
+            // Lore
+            if (meta.hasLore() && meta.getLore() != null) {
+                for (String line : meta.getLore()) {
+                    if (line != null) extra.append(' ').append(ChatColor.stripColor(line));
+                }
+            }
+
+            // Regular enchants
+            for (Map.Entry<Enchantment,Integer> e : meta.getEnchants().entrySet()) {
+                String key = e.getKey().getKey().getKey();
+                extra.append(' ').append(key); // enchant
+                extra.append(' ').append(e.getValue()); // level
+            }
+
+            // Stored enchants (enchanted books)
+            if (meta instanceof EnchantmentStorageMeta) {
+                for (Map.Entry<Enchantment,Integer> e : ((EnchantmentStorageMeta) meta).getStoredEnchants().entrySet()) {
+                    String key = e.getKey().getKey().getKey();
+                    extra.append(' ').append(key); // enchant
+                    extra.append(' ').append(e.getValue()); // level
+                }
+            }
+
+            String haystack = ChatColor.stripColor(extra.toString());
+            if (StringUtils.containsIgnoreCase(haystack, testQuery)) {
+                return true;
+            }
+        }
+
         return false;
     }
 

@@ -42,10 +42,12 @@ public class GuiUtils {
         String targetName = args[0];
         String targetUUID = null;
 
-        if (!args[0].isBlank()) {
+        if (!targetName.isBlank()) {
             try {
-                OfflinePlayer target = javaPlugin.getServer().getOfflinePlayer(targetName);
-                if (target.hasPlayedBefore()) targetUUID = target.getUniqueId().toString();
+                if (!javaPlugin.getConfigHandler().getIgnoredPlayerSearches().contains(targetName.toLowerCase())) {
+                    OfflinePlayer target = javaPlugin.getServer().getOfflinePlayer(targetName);
+                    if (target.hasPlayedBefore()) targetUUID = target.getUniqueId().toString();
+                }
             } catch (Exception e) {
                 StaticUtils.log(ChatColor.RED, "Caught exception getting offline player while searching shops: " + e.getMessage());
             }

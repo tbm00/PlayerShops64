@@ -2,6 +2,7 @@ package dev.tbm00.papermc.playershops64.utils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.Normalizer;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -61,6 +63,9 @@ public class StaticUtils {
     public static NamespacedKey SHOP_KEY;
     public static NamespacedKey DESPOIT_WAND_KEY;
     public static NamespacedKey SELL_WAND_KEY;
+
+    private static final Pattern INVISIBLES = Pattern.compile("[\\u00AD\\u00A0\\u200B\\u200C\\u200D\\u2060]");
+    private static final Pattern WHITESPACE_RUN = Pattern.compile("[\\s_]+");
 
     public static final Set<Material> CONTAINER_MATERIALS = EnumSet.of(
         Material.CHEST,
@@ -148,6 +153,20 @@ public class StaticUtils {
     public static String formatDoubleUS(int amount) {
         return formatDoubleUS((double) amount);
     }
+
+    public static String normalizeText(String s) {
+        if (s == null) return "";
+        // strip color first if it might have colors
+        s = ChatColor.stripColor(s);
+        // remove common invisible/separator chars that break exact matches
+        s = INVISIBLES.matcher(s).replaceAll("");
+        // normalize accents/compatibility forms
+        s = Normalizer.normalize(s, Normalizer.Form.NFKD)
+                    .replaceAll("\\p{M}+", ""); // strip combining marks
+        // unify underscores/spaces to single space
+        s = WHITESPACE_RUN.matcher(s).replaceAll(" ");
+        return s.toLowerCase(Locale.ROOT).trim();
+    }  
 
     /**
      * Formats String to title case (replaces `_` with ` `)

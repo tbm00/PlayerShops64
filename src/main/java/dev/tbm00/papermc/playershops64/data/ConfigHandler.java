@@ -3,7 +3,9 @@ package dev.tbm00.papermc.playershops64.data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -33,6 +35,8 @@ public class ConfigHandler {
     private int maxSellPrice = 10000000;
     private List<Material> baseBlockMaterials = new ArrayList<>();
 
+    private Set<String> ignoredPlayerSearches = new HashSet<>();
+
     private List<GuiSearchCategory> searchCategories = new ArrayList<>();
     
 
@@ -50,6 +54,7 @@ public class ConfigHandler {
             if (!loadLanguageSection()) passed = false;
             if (!loadShopSection()) passed = false;
             if (!loadDisplaySection()) passed = false;
+            if (!loadSearchSection()) passed = false;
             if (!loadGuiSection()) passed = false;
             
             if (passed)
@@ -121,6 +126,22 @@ public class ConfigHandler {
     }
 
     /**
+     * Loads the "shop" section of the configuration.
+     */
+    private boolean loadSearchSection() {
+        ConfigurationSection search = javaPlugin.getConfig().getConfigurationSection("search");
+        if (search != null) {
+
+            List<String> playerStrings = search.getStringList("ignoredPlayers");
+            for (String string : playerStrings) {
+                ignoredPlayerSearches.add(string.toLowerCase());
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Loads the "gui" section of the configuration.
      */
     private boolean loadGuiSection() {
@@ -154,7 +175,6 @@ public class ConfigHandler {
                 StaticUtils.log(ChatColor.RED, "Invalid category slot key '" + slotKey + "'. Must be an integer 0-44. Skipping.");
                 continue;
             }
-
             
             String name = catSec.getString("name", "&cUnnamed Category");
             String lore = catSec.getString("lore", "");
@@ -235,6 +255,10 @@ public class ConfigHandler {
     
     public List<Material> getBaseBlockMaterials() {
         return baseBlockMaterials;
+    }
+
+    public Set<String> getIgnoredPlayerSearches() {
+        return ignoredPlayerSearches;
     }
 
     // Display
