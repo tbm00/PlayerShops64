@@ -90,8 +90,7 @@ public class ExchangeWandCmd implements TabExecutor {
                 int newAmt = stack.getAmount() - take;
                 if (newAmt <= 0) inv.setItem(i, null);
                 else stack.setAmount(newAmt);
-
-                inv.setStorageContents(storage);
+                
                 return true;
             }
         }
@@ -137,7 +136,6 @@ public class ExchangeWandCmd implements TabExecutor {
                     if (newAmt <= 0) inv.setItem(i, null);
                     else stack.setAmount(newAmt);
 
-                    inv.setStorageContents(storage);
                     removedCount++;
                     if (removedCount>=oldTempWandCount) return true;
                 }
