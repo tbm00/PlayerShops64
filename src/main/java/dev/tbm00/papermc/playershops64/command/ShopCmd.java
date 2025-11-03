@@ -445,7 +445,7 @@ public class ShopCmd implements TabExecutor {
         List<String> list = new ArrayList<>();
         if (args.length == 1) {
             list.clear();
-            String[] subCmds = new String[]{"help","buy","manage","depositGui","deposit","withdraw","all","hand","<item>","<player>","sellGui","assistant"};
+            String[] subCmds = new String[]{"help","buy","manage","deposit","withdraw","all","hand","<item>","<player>","assistant"};
 
             for (String n : subCmds) {
                 if (n!=null && n.startsWith(args[0])) 
