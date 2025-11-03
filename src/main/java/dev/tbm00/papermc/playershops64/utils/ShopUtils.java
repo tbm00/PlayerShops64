@@ -1139,10 +1139,10 @@ public class ShopUtils {
 
         String name = StaticUtils.getItemName(item);
         String stackSize = (!((1<=shop.getStackSize())&&(shop.getStackSize()<=64))) ? "error" : shop.getStackSize() + "";
-        String buy = (shop.getBuyPrice()==null) ? "disabled" : StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue());
-        String sell = (shop.getSellPrice()==null) ? "disabled" : StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue());
+        String buy = (shop.getBuyPrice()==null) ? "disabled" : StaticUtils.formatIntUS(shop.getBuyPrice().doubleValue());
+        String sell = (shop.getSellPrice()==null) ? "disabled" : StaticUtils.formatIntUS(shop.getSellPrice().doubleValue());
         String stock = (shop.hasInfiniteStock()) ? "∞" : shop.getItemStock() + "";
-        String balance = (shop.hasInfiniteMoney()) ? "∞" : (shop.getMoneyStock()==null) ? "null" : StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue());
+        String balance = (shop.hasInfiniteMoney()) ? "∞" : (shop.getMoneyStock()==null) ? "null" : StaticUtils.formatIntUS(shop.getMoneyStock().doubleValue());
         String owner = (shop.getOwnerName()==null) ? "null" : shop.getOwnerName();
 
         String loreLine = null;
@@ -1199,22 +1199,22 @@ public class ShopUtils {
             lore.add("&7" + shop.getDescription());
 
         if (buyPrice==null) priceLine = "&7B: &4(disabled) ";
-        else priceLine = "&7B: &a$" + StaticUtils.formatDoubleUS(buyPrice) + " ";
+        else priceLine = "&7B: &a$" + StaticUtils.formatIntUS(buyPrice) + " ";
 
         if (sellPrice==null) priceLine += "&7S: &4(disabled) ";
-        else priceLine += "&7S: &c$" + StaticUtils.formatDoubleUS(sellPrice);
+        else priceLine += "&7S: &c$" + StaticUtils.formatIntUS(sellPrice);
         lore.add(priceLine);
 
 
         String sizeLine = "";
-        if (includeStackSize) sizeLine += "&7Stack Size: &e" + shop.getStackSize() + " ";
-        if (stock<0) sizeLine += "&7Stock: &e∞";
+        //if (includeStackSize) sizeLine += "&7Stack Size: &e" + shop.getStackSize() + " ";
+        if (shop.hasInfiniteStock()) sizeLine += "&7Stock: &e∞";
         else sizeLine += "&7Stock: &e" + stock;
         lore.add(sizeLine);
 
         if (shop.hasInfiniteMoney()) lore.add("&7Balance: &e$&e∞");
         else if (balance==null) lore.add("&7Balance: &e(null)");
-        else lore.add("&7Balance: &e$" + StaticUtils.formatDoubleUS(balance));
+        else lore.add("&7Balance: &e$" + StaticUtils.formatIntUS(balance));
 
         if (ownerUuid!=null && (!shop.hasInfiniteMoney() && !shop.hasInfiniteStock()))
             lore.add("&7Owner: &f" + shop.getOwnerName());

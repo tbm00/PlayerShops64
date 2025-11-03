@@ -278,6 +278,8 @@ public class ListShopsGui {
         Double balance = (shop.getMoneyStock()==null) ? null : shop.getMoneyStock().doubleValue();
         int stock = shop.getItemStock(), stackSize = shop.getStackSize();
 
+        if (shop.hasInfiniteMoney() || shop.hasInfiniteStock()) return true;
+
         if (balance==null) return false;
 
         if (buyPrice==null && sellPrice==null) return false; // if buy-from & sell-to are both disabled
