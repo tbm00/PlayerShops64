@@ -32,10 +32,11 @@ public class ListCategoriesGui {
         this.gui = new Gui(6, label);
 
         if (isAdmin) gui.updateTitle(label + " (ADMIN)");
+
         setupFooter();
         fillCategories();
+
         gui.disableAllInteractions();
-        
         gui.open(viewer);
     }
 

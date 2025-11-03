@@ -618,6 +618,11 @@ public class StaticUtils {
 
         meta.getPersistentDataContainer().set(StaticUtils.SHOP_KEY, PersistentDataType.STRING, "true");
         meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aPlayerShop"));
+        List<String> lore = new ArrayList<>();
+        lore.add("&7&oPlace to create a empty shop");
+        meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+        meta.addEnchant(Enchantment.LURE, 1, true);
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
         lectern.setItemMeta(meta);
         if (amount!=null) lectern.setAmount(amount);

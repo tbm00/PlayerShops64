@@ -9,6 +9,7 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import dev.tbm00.papermc.playershops64.utils.*;
+import xzot1k.plugins.ds.DisplayShops;
 import dev.tbm00.papermc.playershops64.command.*;
 import dev.tbm00.papermc.playershops64.data.ConfigHandler;
 import dev.tbm00.papermc.playershops64.data.MySQLConnection;
@@ -25,6 +26,7 @@ public class PlayerShops64 extends JavaPlugin {
     private MySQLConnection mysqlConnection;
     private VaultHook vaultHook;
     private ShopHandler shopHandler;
+    public DisplayShops dsHook;
 
     @Override
     public void onEnable() {
@@ -95,6 +97,9 @@ public class PlayerShops64 extends JavaPlugin {
      * Disables the plugin if any required hook fails.
      */
     private boolean setupHooks() {
+        if (!setupDisplayShops()) {
+            StaticUtils.log(ChatColor.RED, "DisplayShops hook failed!");
+        }
         if (!setupVault()) {
             StaticUtils.log(ChatColor.RED, "Vault hook failed -- disabling plugin!");
             return false;
@@ -102,6 +107,20 @@ public class PlayerShops64 extends JavaPlugin {
             StaticUtils.log(ChatColor.RED, "Floodgate hook failed -- disabling plugin!");
             return false;
         }
+        return true;
+    }
+
+    /**
+     * Attempts to hook into the DisplayShops plugin.
+     *
+     * @return true if the hook was successful, false otherwise.
+     */
+    private boolean setupDisplayShops() {
+        if (!isPluginAvailable("DisplayShops")) return false;
+
+        dsHook = (DisplayShops) getServer().getPluginManager().getPlugin("DisplayShops");
+        
+        StaticUtils.log(ChatColor.GREEN, "DisplayShops hooked.");
         return true;
     }
 

@@ -3,6 +3,9 @@ package dev.tbm00.papermc.playershops64.gui;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.UUID;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -61,7 +64,8 @@ public class DepositGui {
                 }
                 for (ShopPriceNode node : queue) {
                     if (currentInvAmount<=0) continue invItemFor;
-                    if (!javaPlugin.getShopHandler().getShop(node.getUuid()).getOwnerUuid().equals(player.getUniqueId())) continue;
+                    UUID ownerUuid = javaPlugin.getShopHandler().getShop(node.getUuid()).getOwnerUuid();
+                    if (ownerUuid==null || !ownerUuid.equals(player.getUniqueId())) continue;
                     if (javaPlugin.getShopHandler().getShop(node.getUuid()).getItemStack().isSimilar(invItem)) {
                         int result = ShopUtils.quickDepositToShop(player, node.getUuid(), currentInvAmount);
 

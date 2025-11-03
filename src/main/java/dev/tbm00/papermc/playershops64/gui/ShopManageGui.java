@@ -39,9 +39,9 @@ public class ShopManageGui {
         this.shop = javaPlugin.getShopHandler().getShop(shopUuid);
         this.gui = new Gui(6, label);
 
-        if (shop.getOwnerUuid().equals(viewer.getUniqueId())) {
+        if (shop.getOwnerUuid()!=null && shop.getOwnerUuid().equals(viewer.getUniqueId())) {
             isOwner = true;
-        } else if (shop.isAssistant(viewer.getUniqueId())) {
+        } else if (shop.isAssistant(viewer.getUniqueId()) || isAdmin) {
             isOwner = false;
         } else {
             isOwner = false;

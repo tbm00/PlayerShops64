@@ -37,10 +37,11 @@ public class ListQueriesGui {
         label = StaticUtils.CATEGORY_GUI_TITLE + " > " + category.getName();
         if (isAdmin) gui.updateTitle(label + " (ADMIN)");
         else gui.updateTitle(label);
-        setupFooter();
+        
         fillQueries();
-        gui.disableAllInteractions();
+        setupFooter();
 
+        gui.disableAllInteractions();
         gui.open(viewer);
     }
 

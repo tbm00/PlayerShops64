@@ -46,8 +46,7 @@ public class ShopAdjustInvGui {
         
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
             return;
-        }
-        StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
+        } StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
 
         label = "Adjust "+AdjustAttribute.toString(attribute);
         switch (attribute) {

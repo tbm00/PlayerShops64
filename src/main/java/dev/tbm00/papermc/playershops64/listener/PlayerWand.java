@@ -98,7 +98,7 @@ public class PlayerWand implements Listener {
                     if (currentInvAmount <= 0) break;
 
                     Shop shop = javaPlugin.getShopHandler().getShop(node.getUuid());
-                    if (!shop.getOwnerUuid().equals(player.getUniqueId())) continue;
+                    if (shop.getOwnerUuid()!=null && !shop.getOwnerUuid().equals(player.getUniqueId())) continue;
                     if (!shop.getItemStack().isSimilar(invItem)) continue;
 
                     int deposited = ShopUtils.quickDepositToShop(player, node.getUuid(), currentInvAmount);

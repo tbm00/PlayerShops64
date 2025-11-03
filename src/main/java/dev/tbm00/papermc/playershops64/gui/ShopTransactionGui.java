@@ -43,10 +43,14 @@ public class ShopTransactionGui {
         this.gui = new Gui(6, label);
         this.closeGuiAfter = closeGuiAfter;
 
-        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
+        if (shop.getItemStack()==null) {
+            StaticUtils.sendMessage(viewer, "&cError: This shop does not have a sale item set!");
             return;
         }
-        StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s transcation gui: " + this.quantity);
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
+            return;
+        } StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s transcation gui: " + this.quantity);
 
         label = "Shop Transaction: " + StaticUtils.formatIntUS(this.quantity);
         gui.updateTitle(label);

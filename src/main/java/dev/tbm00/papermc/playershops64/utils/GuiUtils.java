@@ -96,17 +96,19 @@ public class GuiUtils {
         new SearchGui(javaPlugin, (Player) event.getWhoClicked(), isAdmin);
     }
 
-    public static void handleClickPage(InventoryClickEvent event, PaginatedGui gui, boolean next, String label) {
+    public static void handleClickPage(InventoryClickEvent event, PaginatedGui gui, boolean next, String label, boolean isAdmin) {
         event.setCancelled(true);
         if (next) gui.next();
         else gui.previous();
-        gui.updateTitle(label + gui.getCurrentPageNum() + "/" + gui.getPagesNum());
+
+        if (isAdmin) gui.updateTitle(label + " (ADMIN) - " + gui.getCurrentPageNum() + "/" + gui.getPagesNum());
+        else gui.updateTitle(label + " - " + gui.getCurrentPageNum() + "/" + gui.getPagesNum());
     }
 
     public static void handleClickShop(InventoryClickEvent event, Player sender, Shop shop, boolean isAdmin) {
         event.setCancelled(true);
         
-        if (event.isShiftClick() && (isAdmin || sender.getUniqueId().equals(shop.getOwnerUuid()) || shop.isAssistant(sender.getUniqueId()))) {
+        if (event.isShiftClick() && (isAdmin || (shop.getOwnerUuid()!=null && sender.getUniqueId().equals(shop.getOwnerUuid())) || shop.isAssistant(sender.getUniqueId()))) {
             new ShopManageGui(javaPlugin, sender, isAdmin, shop.getUuid());
         } else ShopUtils.teleportPlayerToShop(sender, shop);
     }
@@ -202,25 +204,25 @@ public class GuiUtils {
         lore.clear();
     }
 
-    public static void setGuiItemPageBack(PaginatedGui gui, ItemStack item, ItemMeta meta, List<String> lore, String label, int column) {
+    public static void setGuiItemPageBack(PaginatedGui gui, ItemStack item, ItemMeta meta, List<String> lore, String label, int column, boolean isAdmin) {
         lore.add("&8-----------------------");
         lore.add("&6Click to go to the previous page");
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
         meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&fPrevious Page"));
         item.setItemMeta(meta);
         item.setType(Material.STONE_BUTTON);
-        gui.setItem(6, column, ItemBuilder.from(item).asGuiItem(event -> handleClickPage(event, gui, false, label)));
+        gui.setItem(6, column, ItemBuilder.from(item).asGuiItem(event -> handleClickPage(event, gui, false, label, isAdmin)));
         lore.clear();
     }
 
-    public static void setGuiItemPageNext(PaginatedGui gui, ItemStack item, ItemMeta meta, List<String> lore, String label, int column) {
+    public static void setGuiItemPageNext(PaginatedGui gui, ItemStack item, ItemMeta meta, List<String> lore, String label, int column, boolean isAdmin) {
         lore.add("&8-----------------------");
         lore.add("&6Click to go to the next page");
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
         meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&fNext Page"));
         item.setItemMeta(meta);
         item.setType(Material.STONE_BUTTON);
-        gui.setItem(6, 6, ItemBuilder.from(item).asGuiItem(event -> handleClickPage(event, gui, true, label)));
+        gui.setItem(6, 6, ItemBuilder.from(item).asGuiItem(event -> handleClickPage(event, gui, true, label, isAdmin)));
         lore.clear();
     }
 

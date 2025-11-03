@@ -44,8 +44,13 @@ public class ExchangeWandCmd implements TabExecutor {
         }
 
         Player player = (Player) sender;
-        if (!removeOldSellwand(player)) {
-            StaticUtils.sendMessage(sender, "&cError: Couldn't find an old infinite sell wand in your inventory!");
+        boolean removed = false;
+
+        if (removeOldInfSellwand(player)) removed = true;
+        if (!removed && removeMultiSellwands(player)) removed = true;
+
+        if (removed==false) {
+            StaticUtils.sendMessage(sender, "&cError: Couldn't find an old infinite sellwand (or 3 finite sell wands) in your inventory!");
             return true;
         }
 
@@ -55,7 +60,7 @@ public class ExchangeWandCmd implements TabExecutor {
     }
 
 
-    private boolean removeOldSellwand(Player player) {
+    private boolean removeOldInfSellwand(Player player) {
         PlayerInventory inv = player.getInventory();
         ItemStack[] storage = inv.getStorageContents();
 
@@ -91,6 +96,87 @@ public class ExchangeWandCmd implements TabExecutor {
             }
         }
         return false;
+    }
+
+    private boolean removeMultiSellwands(Player player) {
+        PlayerInventory inv = player.getInventory();
+        ItemStack[] storage = inv.getStorageContents();
+
+        int removedCount=0;
+        int oldTempWandCount = countOldTempWands(storage);
+        if (oldTempWandCount>=3) {
+            for (int i = 0; i < storage.length; i++) {
+                if (removedCount>=oldTempWandCount) return true;
+
+                ItemStack stack = storage[i];
+                if (stack == null) continue;
+                if (!stack.getType().equals(Material.SPYGLASS)) continue;
+
+                ItemMeta meta = stack.getItemMeta();
+                if (meta==null || !meta.hasLore()) continue;
+                
+                List<String> lore = meta.getLore();
+                if (lore==null || lore.isEmpty()) continue;
+                
+                boolean isOldWand = false;
+                boolean isInfinite = false;
+                for (String line : lore) {
+                    if (line.contains("uses")) {
+                        isOldWand = true;
+                    }
+                    if (line.contains("∞")) {
+                        isInfinite = true;
+                    }
+                }
+
+                if (isOldWand && !isInfinite) {
+                    int take = Math.min(stack.getAmount(), 1);
+                    if (take!=1) continue;
+
+                    int newAmt = stack.getAmount() - take;
+                    if (newAmt <= 0) inv.setItem(i, null);
+                    else stack.setAmount(newAmt);
+
+                    inv.setStorageContents(storage);
+                    removedCount++;
+                    if (removedCount>=oldTempWandCount) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private int countOldTempWands(ItemStack[] storage) {
+        int oldTempWandCount = 0;
+
+        for (int i = 0; i < storage.length; i++) {
+            ItemStack stack = storage[i];
+            if (stack == null) continue;
+            if (!stack.getType().equals(Material.SPYGLASS)) continue;
+
+            ItemMeta meta = stack.getItemMeta();
+            if (meta==null || !meta.hasLore()) continue;
+            
+            List<String> lore = meta.getLore();
+            if (lore==null || lore.isEmpty()) continue;
+            
+            boolean isOldWand = false;
+            boolean isInfinite = false;
+            for (String line : lore) {
+                if (line.contains("uses")) {
+                    isOldWand = true;
+                }
+                if (line.contains("∞")) {
+                    isInfinite = true;
+                }
+            }
+
+            if (isOldWand && !isInfinite) {
+                oldTempWandCount++;
+            }
+        }
+
+        return oldTempWandCount;
     }
 
     /**

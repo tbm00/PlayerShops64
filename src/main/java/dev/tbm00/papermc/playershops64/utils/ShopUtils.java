@@ -58,6 +58,13 @@ public class ShopUtils {
         return shopUuid;
     }
 
+    public static void createShop(Shop shop) {
+        javaPlugin.getShopHandler().upsertShopObject(shop);
+        String logString = "Plugin created shop " + ShopUtils.getShopHint(shop.getUuid()) + " in " + shop.getWorld().getName()+ " @ " + (int)shop.getLocation().getX() + "," + (int)shop.getLocation().getY() + "," + (int)shop.getLocation().getZ();
+        Logger.logEdit(logString);
+        StaticUtils.log(ChatColor.GREEN, logString);
+    }
+
     // Shop Edits
     public static void deleteShop(Player player, UUID shopUuid, Block block) {
         if (!Bukkit.isPrimaryThread()) {
@@ -84,7 +91,7 @@ public class ShopUtils {
                 return;
             }
 
-            if (shop.getMoneyStock().compareTo(BigDecimal.ZERO) == 1) {
+            if (shop.getMoneyStock().compareTo(BigDecimal.ZERO) == 1 && shop.getOwnerUuid()!=null) {
                 javaPlugin.getVaultHook().giveMoney(javaPlugin.getServer().getOfflinePlayer(shop.getOwnerUuid()), shop.getMoneyStock().doubleValue());
             }
 
@@ -114,7 +121,7 @@ public class ShopUtils {
             return;
         }
 
-        if (shop.getMoneyStock().compareTo(BigDecimal.ZERO) == 1) {
+        if (shop.getMoneyStock().compareTo(BigDecimal.ZERO) == 1 && shop.getOwnerUuid()!=null) {
             javaPlugin.getVaultHook().giveMoney(javaPlugin.getServer().getOfflinePlayer(shop.getOwnerUuid()), shop.getMoneyStock().doubleValue());
         }
 
@@ -854,7 +861,7 @@ public class ShopUtils {
                 return;
             }
 
-            if (shop.getOwnerUuid().equals(player.getUniqueId())) {
+            if (shop.getOwnerUuid()!=null && shop.getOwnerUuid().equals(player.getUniqueId())) {
                 StaticUtils.sendMessage(player, "&cYou cannot sell to your own shop!");
                 return;
             }
@@ -964,7 +971,7 @@ public class ShopUtils {
                 return;
             }
 
-            if (shop.getOwnerUuid().equals(player.getUniqueId())) {
+            if (shop.getOwnerUuid()!=null && shop.getOwnerUuid().equals(player.getUniqueId())) {
                 StaticUtils.sendMessage(player, "&cYou cannot buy from your own shop!");
                 return;
             }
@@ -1075,7 +1082,7 @@ public class ShopUtils {
                 return 0;
             }
 
-            if (!shop.getOwnerUuid().equals(player.getUniqueId())) {
+            if (shop.getOwnerUuid()!=null && !shop.getOwnerUuid().equals(player.getUniqueId())) {
                 return 0;
             }
 

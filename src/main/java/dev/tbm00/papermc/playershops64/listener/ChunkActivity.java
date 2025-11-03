@@ -33,7 +33,10 @@ public class ChunkActivity implements Listener {
         for (UUID shopUuid : shopUuids) {
             Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
             if (shop == null) continue;
-            javaPlugin.getShopHandler().getDisplayManager().upsertDisplay(shop);
+
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> {
+                javaPlugin.getShopHandler().getDisplayManager().upsertDisplay(shop);
+            });
         }
     }
 

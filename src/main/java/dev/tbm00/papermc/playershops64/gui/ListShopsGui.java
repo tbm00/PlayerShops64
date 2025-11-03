@@ -33,7 +33,7 @@ public class ListShopsGui {
     private final SortType sortType;
     private final QueryType queryType;
     private final String query;
-    private String label = "List Shops";
+    private String label = "List Shops - ";
 
     private List<Map.Entry<UUID, Shop>> shops;
     
@@ -46,6 +46,10 @@ public class ListShopsGui {
         this.queryType = queryType;
         this.query = query;
         this.gui = new PaginatedGui(6, 45, label);
+        
+        preProcessShops();
+        sortShops(this.shops, sortType);
+        fillShops();
 
         switch (queryType) {
             case NO_QUERY:
@@ -62,12 +66,10 @@ public class ListShopsGui {
                 break;
         } if (isAdmin) gui.updateTitle(label + " (ADMIN) - " + gui.getCurrentPageNum() + "/" + gui.getPagesNum());
         else gui.updateTitle(label + " - " + gui.getCurrentPageNum() + "/" + gui.getPagesNum());
-        setupFooter();
-        preProcessShops();
-        sortShops(this.shops, sortType);
-        fillShops();
-        gui.disableAllInteractions();
 
+        setupFooter();
+
+        gui.disableAllInteractions();
         gui.open(viewer);
     }
 
@@ -79,7 +81,7 @@ public class ListShopsGui {
             ItemStack shopItem = shop.getItemStack();
             
             if (shopItem == null) {
-                if (isAdmin || (queryType.equals(QueryType.PLAYER_UUID) && UUID.fromString(query).equals(shop.getOwnerUuid())) ) {
+                if (isAdmin || (queryType.equals(QueryType.PLAYER_UUID) && shop.getOwnerUuid()!=null && UUID.fromString(query).equals(shop.getOwnerUuid())) ) {
                     shopItem = new ItemStack(Material.BARRIER);
                 } else {
                     iter.remove();
@@ -259,12 +261,12 @@ public class ListShopsGui {
     }
 
     private boolean checkString(String testQuery, Shop shop, String materialName, ItemMeta meta, String displayName, String itemName, String desc) {
-        if (materialName!=null && StringUtils.containsIgnoreCase(materialName, query)) return true; // if material contains query
-        if (displayName!=null && StringUtils.containsIgnoreCase(displayName, query)) return true; // if displayName contains query
-        if (itemName!=null && StringUtils.containsIgnoreCase(itemName, query)) return true; // if itemName contains query
-        if (desc!=null && StringUtils.containsIgnoreCase(desc, query)) return true; // if description contains query
-        if (shop.getOwnerUuid()!=null && shop.getOwnerName()!=null && StringUtils.containsIgnoreCase(shop.getOwnerName(), query)) {
-            return true; // if ownerName contains query
+        if (materialName!=null && StringUtils.containsIgnoreCase(materialName, testQuery)) return true; // if material contains testQuery
+        if (displayName!=null && StringUtils.containsIgnoreCase(displayName, testQuery)) return true; // if displayName contains testQuery
+        if (itemName!=null && StringUtils.containsIgnoreCase(itemName, testQuery)) return true; // if itemName contains testQuery
+        if (desc!=null && StringUtils.containsIgnoreCase(desc, testQuery)) return true; // if description contains testQuery
+        if (shop.getOwnerName()!=null && StringUtils.containsIgnoreCase(shop.getOwnerName(), testQuery)) {
+            return true; // if ownerName contains testQuery
         }
         return false;
     }
@@ -344,11 +346,11 @@ public class ListShopsGui {
         gui.setItem(6, 4, ItemBuilder.from(Material.BLACK_STAINED_GLASS_PANE).setName(" ").asGuiItem(event -> event.setCancelled(true)));
 
         // Previous Page or Empty
-        if (gui.getPagesNum()>=2) GuiUtils.setGuiItemPageBack(gui, item, meta, lore, label, 5);
+        if (gui.getPagesNum()>=2) GuiUtils.setGuiItemPageBack(gui, item, meta, lore, label, 5, isAdmin);
         else gui.setItem(6, 5, ItemBuilder.from(Material.BLACK_STAINED_GLASS_PANE).setName(" ").asGuiItem(event -> event.setCancelled(true)));
 
         // Next Page or Empty
-        if (gui.getPagesNum()>=2)  GuiUtils.setGuiItemPageNext(gui, item, meta, lore, label, 6);
+        if (gui.getPagesNum()>=2)  GuiUtils.setGuiItemPageNext(gui, item, meta, lore, label, 6, isAdmin);
         else gui.setItem(6, 6, ItemBuilder.from(Material.BLACK_STAINED_GLASS_PANE).setName(" ").asGuiItem(event -> event.setCancelled(true)));
 
         // Sort

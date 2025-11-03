@@ -5,6 +5,7 @@ author: tbm00
 main: dev.tbm00.papermc.playershops64.PlayerShops64
 api-version: 1.21.4
 depend: [Vault]
+softdepend: [DisplayShops]
 commands:
   testshop:
     description: Base player command for PlayerShops64

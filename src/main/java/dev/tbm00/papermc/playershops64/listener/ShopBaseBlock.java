@@ -86,7 +86,7 @@ public class ShopBaseBlock implements Listener {
             return;
         }
 
-        boolean isManager = player.getUniqueId().equals(shop.getOwnerUuid()) || shop.isAssistant(player.getUniqueId());
+        boolean isManager = (shop.getOwnerUuid()!=null && player.getUniqueId().equals(shop.getOwnerUuid())) || shop.isAssistant(player.getUniqueId());
         boolean isSneaking = player.isSneaking();
         Action action = event.getAction();
 
