@@ -36,7 +36,7 @@ public class ShopCmd implements TabExecutor {
     }
 
     /**
-     * Handles the /testshop command.
+     * Handles the /shop command.
      * 
      * @param player the command sender
      * @param consoleCommand the command being executed
@@ -438,7 +438,7 @@ public class ShopCmd implements TabExecutor {
     }
 
     /**
-     * Handles tab completion for the /testshop command.
+     * Handles tab completion for the /shop command.
      */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {

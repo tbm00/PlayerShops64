@@ -38,7 +38,7 @@ public class AdminCmd implements TabExecutor {
     }
 
     /**
-     * Handles the /testshopadmin command.
+     * Handles the /shopadmin command.
      * 
      * @param player the command sender
      * @param consoleCommand the command being executed
@@ -312,7 +312,7 @@ public class AdminCmd implements TabExecutor {
     }
 
     /**
-     * Handles tab completion for the /testshopadmin command.
+     * Handles tab completion for the /shopadmin command.
      */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {

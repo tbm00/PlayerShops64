@@ -25,7 +25,7 @@ public class ExchangeWandCmd implements TabExecutor {
     }
 
     /**
-     * Handles the /testexchangesellwand command.
+     * Handles the /exchangesellwand command.
      * 
      * @param player the command sender
      * @param consoleCommand the command being executed
@@ -180,7 +180,7 @@ public class ExchangeWandCmd implements TabExecutor {
     }
 
     /**
-     * Handles tab completion for the /testexchangesellwand command.
+     * Handles tab completion for the /exchangesellwand command.
      */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {

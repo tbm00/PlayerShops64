@@ -2,8 +2,16 @@ package dev.tbm00.papermc.playershops64;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.logging.Level;
 
 import org.bukkit.ChatColor;
+import org.bukkit.command.Command;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -70,11 +78,17 @@ public class PlayerShops64 extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new ShopBaseBlock(this), this);
             
             // Register Commands
-            getCommand("testshop").setExecutor(new ShopCmd(this));
-            getCommand("testshopadmin").setExecutor(new AdminCmd(this));
-            getCommand("testsellgui").setExecutor(new SellGuiCmd(this));
-            getCommand("testdepositgui").setExecutor(new DepositGuiCmd(this));
-            getCommand("testexchangesellwand").setExecutor(new ExchangeWandCmd(this));
+            if (isPluginAvailable("ShopGUIPlus")) {
+                cloneSGPCommand("originalsgplus");
+                overrideSGPCommands();
+            } else {
+                getCommand("shop").setExecutor(new ShopCmd(this));
+            }
+
+            getCommand("shopadmin").setExecutor(new AdminCmd(this));
+            getCommand("sellgui").setExecutor(new SellGuiCmd(this));
+            getCommand("depositgui").setExecutor(new DepositGuiCmd(this));
+            getCommand("exchangesellwand").setExecutor(new ExchangeWandCmd(this));
         }
     }
 
@@ -153,6 +167,103 @@ public class PlayerShops64 extends JavaPlugin {
 
         StaticUtils.log(ChatColor.GREEN, "Floodgate hooked.");
         return true;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void cloneSGPCommand(String newName) {
+        Plugin sgp = getServer().getPluginManager().getPlugin("ShopGUIPlus");
+        if (sgp == null) return;
+        
+        try {
+            // 1) grab the SimpleCommandMap
+            SimpleCommandMap commandMap = (SimpleCommandMap)
+                getServer().getClass().getMethod("getCommandMap").invoke(getServer());
+            Field knownField = SimpleCommandMap.class.getDeclaredField("knownCommands");
+            knownField.setAccessible(true);
+            Map<String, Command> known = (Map<String, Command>) knownField.get(commandMap);
+
+            // 2) find the real PluginCommand whose getName() == "shop"
+            PluginCommand original = null;
+            for (Command cmd : known.values()) {
+                if (cmd instanceof PluginCommand pc
+                    && pc.getPlugin().equals(sgp)
+                    && pc.getName().equalsIgnoreCase("shop"))
+                {
+                    original = pc;
+                    break;
+                }
+            }
+            if (original == null) {
+                getLogger().warning("Could not locate ShopGUIPlus's original /shop command");
+                return;
+            }
+
+            // 3) reflectively construct a fresh PluginCommand
+            Constructor<PluginCommand> ctor =
+                PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
+            ctor.setAccessible(true);
+            PluginCommand clone = ctor.newInstance(newName, sgp);
+
+            // 4) copy over data
+            clone.setDescription(original.getDescription());
+            clone.setUsage(original.getUsage());
+            clone.setPermission(original.getPermission());
+            clone.setAliases(new ArrayList<>());
+            clone.setExecutor(original.getExecutor());
+            if (original.getTabCompleter() != null) {
+                clone.setTabCompleter(original.getTabCompleter());
+            }
+
+            // 5) register it under SGP's namespace
+            commandMap.register(sgp.getName(), clone);
+            getLogger().info("Cloned ShopGUIPlus's /shop ➔ /" + newName);
+        } catch (Exception e) {
+            getLogger().log(Level.SEVERE, "Failed to clone ShopGUIPlus's original /shop command", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void overrideSGPCommands() {
+        Plugin sgp = getServer().getPluginManager().getPlugin("ShopGUIPlus");
+        if (sgp == null) return;
+
+        try {
+            // grab commandMap & knownCommands
+            SimpleCommandMap commandMap = (SimpleCommandMap)
+                getServer().getClass().getMethod("getCommandMap").invoke(getServer());
+            Field f = SimpleCommandMap.class.getDeclaredField("knownCommands");
+            f.setAccessible(true);
+            Map<String, Command> known = (Map<String, Command>) f.get(commandMap);
+
+            for (Command cmd : known.values()) {
+                if (!(cmd instanceof PluginCommand)) continue;
+                PluginCommand pc = (PluginCommand) cmd;
+                if (!pc.getPlugin().equals(sgp)) continue;
+
+                // override /shop
+                if (pc.getName().equalsIgnoreCase("shop")) {
+                    //getLogger().info(pc.getName()+": "+pc.getLabel()+" "+pc.getAliases().subList(0, pc.getAliases().size()-1).toString());
+                    ShopCmd shopCmd = new ShopCmd(this);
+                    pc.setExecutor(shopCmd);
+                    pc.setTabCompleter(shopCmd);
+                    getLogger().info("Overrode ShopGUIPlus's /shop");
+                    continue;
+                }
+
+                // override /sell
+                if (pc.getName().equalsIgnoreCase("sell")) {
+                    //getLogger().info(pc.getName()+": "+pc.getLabel()+" "+pc.getAliases().subList(0, pc.getAliases().size()-1).toString());
+                    pc.setExecutor(null);
+                    pc.setTabCompleter(null);
+                    getLogger().info("Disabled ShopGUIPlus's /sell");
+                    continue;
+                }
+
+                //getLogger().info("Leftover: "+pc.getName()+": "+pc.getLabel()+" "+pc.getAliases().toArray().toString());
+            }
+        } catch (Exception e) {
+            getLogger().log(Level.SEVERE, "Could not override ShopGUIPlus commands", e);
+        }
     }
 
     /**

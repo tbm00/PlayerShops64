@@ -22,7 +22,7 @@ public class SellGuiCmd implements TabExecutor {
     }
 
     /**
-     * Handles the /testsellgui command.
+     * Handles the /sellgui command.
      * 
      * @param player the command sender
      * @param consoleCommand the command being executed
@@ -45,7 +45,7 @@ public class SellGuiCmd implements TabExecutor {
     }
 
     /**
-     * Handles tab completion for the /testsellgui command.
+     * Handles tab completion for the /sellgui command.
      */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {

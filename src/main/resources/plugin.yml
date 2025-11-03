@@ -5,17 +5,17 @@ author: tbm00
 main: dev.tbm00.papermc.playershops64.PlayerShops64
 api-version: 1.21.4
 depend: [Vault]
-softdepend: [DisplayShops]
+softdepend: [DisplayShops, ShopGUIPlus]
 commands:
-  testshop:
+  shop:
     description: Base player command for PlayerShops64
-  testshopadmin:
+  shopadmin:
     description: Base admin command for PlayerShops64
-  testsellgui:
+  sellgui:
     description: Open a GUI to sell items to the best-priced avaliable shops
-  testdepositgui:
+  depositgui:
     description: Open a GUI to deposit items into your shops
-  testexchangesellwand:
+  exchangesellwand:
     description: Exchange Zach_FR's sellwand for PlayerShops64 sellwand
 permissions:
   playershops64.player:

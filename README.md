@@ -10,10 +10,10 @@ Created by tbm00 for play.mc64.wtf.
 - **Vault**: REQUIRED
 
 #### Player Commands
-- `/testshop` Main player command
+- `/shop` Main player command
 
 #### Admin Commands
-- `/testshopadmin` Main admin command
+- `/shopadmin` Main admin command
 
 ## Permissions
 #### Player Permissions
