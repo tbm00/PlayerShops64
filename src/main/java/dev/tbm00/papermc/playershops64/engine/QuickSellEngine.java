@@ -74,14 +74,24 @@ public final class QuickSellEngine {
         }
     }
 
-    private static PlayerShops64 javaPlugin;
+    public static final class QuickSellResult {
+        final int sold;
+        final BigDecimal earned;
+
+        QuickSellResult(int sold, BigDecimal earned) {
+            this.sold = sold;
+            this.earned = StaticUtils.normalizeBigDecimal(earned);
+        }
+    }
+
+    private final PlayerShops64 javaPlugin;
     public Plan plans;
     public Player player;
     public final Inventory physicalInv;
     public final boolean isPhysicalInv;
 
     public QuickSellEngine(PlayerShops64 javaPlugin, Player player, Inventory physicalInv) {
-        QuickSellEngine.javaPlugin = javaPlugin;
+        this.javaPlugin = javaPlugin;
         this.player = player;
         this.isPhysicalInv = (physicalInv!=null);
         this.physicalInv = physicalInv;
@@ -235,27 +245,28 @@ public final class QuickSellEngine {
             }
 
             // 3) execute the planned slices in order (will persist + reindex each step)
-            int totalSold = 0, totalEarned = 0;
+            int totalSold = 0;
+            BigDecimal totalEarned = BigDecimal.ZERO;
             boolean failedAndReturn = false;
             for (SellPlanEntry entry : plans.sellPlan.entries) {
                 if (!failedAndReturn) {
-                    int[] result = quickSellToShop(player, entry.shopUuid, entry.amount);
+                    QuickSellResult result = quickSellToShop(player, entry.shopUuid, entry.amount);
                     
                     // given validation, this should succeed exactly
-                    if (result[0]!=entry.amount || result[1]!=entry.totalPrice.intValue()) {
+                    if (result.sold!=entry.amount || result.earned.compareTo(entry.totalPrice) != 0) {
                         unlockShops(acquired, "&cA race condition was detected -- offer expired midway through sale..!");
                         plans.returnPlan.entries.add(new ReturnPlanEntry(entry.item, entry.amount));
                         failedAndReturn = true;
                     }
 
-                    totalSold += result[0];
-                    totalEarned += result[1];
+                    totalSold += result.sold;
+                    totalEarned = StaticUtils.normalizeBigDecimal(totalEarned.add(result.earned));
                 } else {
                     plans.returnPlan.entries.add(new ReturnPlanEntry(entry.item, entry.amount));
                 }
             }
 
-            StaticUtils.sendMessage(player, "&aSold " + totalSold + " items for a total of $" + StaticUtils.formatIntUS(totalEarned));
+            StaticUtils.sendMessage(player, "&aSold " + totalSold + " items for a total of $" + StaticUtils.formatIntUS(totalEarned.doubleValue()));
             returnNonmatchedItems();
         } finally {
             // 4) always unlock
@@ -299,76 +310,76 @@ public final class QuickSellEngine {
         returnMatchedItems();
     }
 
-    private int[] quickSellToShop(Player player, UUID shopUuid, int quantity) {
+    private QuickSellResult quickSellToShop(Player player, UUID shopUuid, int quantity) {
         if (!Bukkit.isPrimaryThread()) {
             StaticUtils.log(ChatColor.RED, player.getName() + " tried to quick sell to shop " + shopUuid + " off the main thread -- canceling..!");
-            return new int[] {0, 0};
+            return new QuickSellResult(0, BigDecimal.ZERO);
         }
 
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
             StaticUtils.sendMessage(player, "&cQuick Sell Error: shop being used by someone else");
-            return new int[] {0, 0};
+            return new QuickSellResult(0, BigDecimal.ZERO);
         }
 
         try {
             Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
             if (shop == null) {
                 StaticUtils.sendMessage(player, "&cQuick Sell Error: a shop object was null");
-                return new int[] {0, 0};
+                return new QuickSellResult(0, BigDecimal.ZERO);
             }
 
             if (shop.getOwnerUuid()!=null && shop.getOwnerUuid().equals(player.getUniqueId())) {
-                StaticUtils.sendMessage(player, "&cQuick Sell Error: cant sell to own shop");
-                return new int[] {0, 0};
+                StaticUtils.sendMessage(player, "&cQuick Sell Error: can't sell to own shop");
+                return new QuickSellResult(0, BigDecimal.ZERO);
             }
 
             if (shop.isAssistant(player.getUniqueId())) {
-                StaticUtils.sendMessage(player, "&cQuick Sell Error: cant sell to shops you are an assistant to");
-                return new int[] {0, 0};
+                StaticUtils.sendMessage(player, "&cQuick Sell Error: can't sell to shops you are an assistant to");
+                return new QuickSellResult(0, BigDecimal.ZERO);
             }
 
             if (shop.getSellPrice()==null || shop.getSellPrice().compareTo(BigDecimal.ZERO)<0) {
                 StaticUtils.sendMessage(player, "&cQuick Sell Error: bad sell price (p<0 || p==null)");
-                return new int[] {0, 0};
+                return new QuickSellResult(0, BigDecimal.ZERO);
             }
 
             ItemStack saleItem = shop.getItemStack();
             if (saleItem == null || saleItem.getType().isAir()) {
                 StaticUtils.sendMessage(player, "&cQuick Sell Error: bad sell item");
-                return new int[] {0, 0};
+                return new QuickSellResult(0, BigDecimal.ZERO);
             }
 
             if (quantity <= 0) {
                 StaticUtils.sendMessage(player, "&cQuick Sell Error: bad quantity (q<0)");
-                return new int[] {0, 0};
+                return new QuickSellResult(0, BigDecimal.ZERO);
             } 
             
             if (quantity+shop.getItemStock()>javaPlugin.getConfigHandler().getMaxStock()) {
                 StaticUtils.sendMessage(player, "&cQuick Sell Error: bad quantity (new would be greater than configurable max)");
-                return new int[] {0, 0};
+                return new QuickSellResult(0, BigDecimal.ZERO);
             }
 
             BigDecimal unitPrice = shop.getSellPriceForOne();
             if (unitPrice == null || unitPrice.compareTo(BigDecimal.ZERO) < 0) {
                 StaticUtils.sendMessage(player, "&cQuick Sell Error: bad unit price (p<0 || p==null)");
-                return new int[] {0, 0};
+                return new QuickSellResult(0, BigDecimal.ZERO);
             }
 
-            BigDecimal totalPrice = StaticUtils.normalizeBigDecimal( unitPrice.multiply(BigDecimal.valueOf(quantity)) );
+            BigDecimal totalPrice = StaticUtils.normalizeBigDecimal(unitPrice.multiply(BigDecimal.valueOf(quantity)));
             if (!shop.hasInfiniteMoney()) {
                 BigDecimal moneyStock = shop.getMoneyStock() == null ? BigDecimal.ZERO : shop.getMoneyStock();
                 if (moneyStock.compareTo(totalPrice) < 0) {
-                    StaticUtils.sendMessage(player, "&cQuick Sell Error: shop cant afford quantity");
-                    return new int[] {0, 0};
+                    StaticUtils.sendMessage(player, "&cQuick Sell Error: shop can't afford quantity");
+                    return new QuickSellResult(0, BigDecimal.ZERO);
                 }
             }
             
             totalPrice = totalPrice.max(BigDecimal.ZERO);
 
-            boolean gaveMoneyToPlayer = javaPlugin.getVaultHook().giveMoney( player, totalPrice.doubleValue());
+            boolean gaveMoneyToPlayer = javaPlugin.getVaultHook().giveMoney(player, totalPrice.doubleValue());
             if (!gaveMoneyToPlayer) {
                 StaticUtils.sendMessage(player, "&cQuick Sell Error: failed to pay you $"+totalPrice.doubleValue());
-                return new int[] {0, 0};
+                return new QuickSellResult(0, BigDecimal.ZERO);
             }
 
             // edit shop
@@ -379,7 +390,7 @@ public final class QuickSellEngine {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             Logger.logEdit(player.getName()+" quick sold "+quantity+" "+StaticUtils.getItemName(saleItem)+" ("+StaticUtils.formatTitleCase(saleItem.getType().toString())+") to "+shop.getOwnerName()+"'s shop ("+ShopUtils.getShopHint(shopUuid)+") for $"+totalPrice.doubleValue()+". Shop's updated stock: "+shop.getItemStock() + ", Shop's updated balance: $"+shop.getMoneyStock().doubleValue());
-            return new int[] {quantity, totalPrice.intValue()};
+            return new QuickSellResult(quantity, totalPrice);
         } finally {
             //javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }

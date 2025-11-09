@@ -16,7 +16,9 @@ commands:
   depositgui:
     description: Open a GUI to deposit items into your shops
   exchangesellwand:
-    description: Exchange Zach_FR's sellwand for PlayerShops64 sellwand
+    description: Exchange Zach_FR's sell wand for PlayerShops64's sell wand
+  exchangeshops:
+    description: Exchange DisplayShops's shop blocks for PlayerShops64's shop blocks
 permissions:
   playershops64.player:
     description: Ability to use player commands & features

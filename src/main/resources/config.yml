@@ -68,7 +68,7 @@ display:
   holoColor: "60,0,0,0" # ARGB(%,R,G,B)
 
 search:
-  ignoredPlayers: # player names that conflict with item / enchantment searches
+  ignoredPlayers: # player names that conflict with item / enchantment queries
     - "sharpness"
 
 gui:

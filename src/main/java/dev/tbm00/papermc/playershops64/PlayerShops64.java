@@ -89,6 +89,7 @@ public class PlayerShops64 extends JavaPlugin {
             getCommand("sellgui").setExecutor(new SellGuiCmd(this));
             getCommand("depositgui").setExecutor(new DepositGuiCmd(this));
             getCommand("exchangesellwand").setExecutor(new ExchangeWandCmd(this));
+            getCommand("exchangeshops").setExecutor(new ExchangeShopCmd(this));
         }
     }
 

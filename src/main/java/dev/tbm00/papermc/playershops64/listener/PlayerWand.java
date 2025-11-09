@@ -42,30 +42,26 @@ public class PlayerWand implements Listener {
         ItemMeta heldItemMeta = heldItem.getItemMeta();
         if (heldItemMeta == null) return;
 
-        if (!player.isSneaking()) return;
+        if (player.isSneaking()) { // Sell wand or Deposit Wand
+            if (!StaticUtils.CONTAINER_MATERIALS.contains(block.getType())) return;
+            BlockState state = block.getState();
+            if (!(state instanceof InventoryHolder holder)) return;
+            Inventory blocksInv = holder.getInventory();
 
-        if (!StaticUtils.CONTAINER_MATERIALS.contains(block.getType())) return;
-        BlockState state = block.getState();
-        if (!(state instanceof InventoryHolder holder)) return;
-        Inventory blocksInv = holder.getInventory();
-
-        PersistentDataContainer itemDataContainer = heldItemMeta.getPersistentDataContainer();
-        if (itemDataContainer.has(StaticUtils.DESPOIT_WAND_KEY, PersistentDataType.STRING)) {
-            event.setCancelled(true);
-            depositItemsFromContainer(blocksInv, player);
-        } else if (itemDataContainer.has(StaticUtils.SELL_WAND_KEY, PersistentDataType.STRING)) {
-            event.setCancelled(true);
-            sellItemsFromContainer(blocksInv, player);
+            PersistentDataContainer itemDataContainer = heldItemMeta.getPersistentDataContainer();
+            if (itemDataContainer.has(StaticUtils.DESPOIT_WAND_KEY, PersistentDataType.STRING)) {
+                event.setCancelled(true);
+                if (!player.hasPermission(StaticUtils.PLAYER_PERM)) return;
+                depositItemsFromContainer(blocksInv, player);
+            } else if (itemDataContainer.has(StaticUtils.SELL_WAND_KEY, PersistentDataType.STRING)) {
+                event.setCancelled(true);
+                if (!player.hasPermission(StaticUtils.PLAYER_PERM)) return;
+                sellItemsFromContainer(blocksInv, player);
+            } else return;
         } else return;
     }
 
     private void sellItemsFromContainer(Inventory inv, Player player) {
-        if (!player.isOnline() || player.isDead()) {
-            for (ItemStack item : inv.getStorageContents()) {
-                StaticUtils.addToInventoryOrDrop(player, item);
-            } return;
-        }
-
         QuickSellEngine engine = new QuickSellEngine(javaPlugin, player, inv);
         engine.computePlans(inv, player.getUniqueId());
         

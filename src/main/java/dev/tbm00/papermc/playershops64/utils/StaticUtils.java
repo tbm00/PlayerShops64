@@ -69,7 +69,24 @@ public class StaticUtils {
 
     public static final Set<Material> CONTAINER_MATERIALS = EnumSet.of(
         Material.CHEST,
-        Material.BARREL
+        Material.BARREL,
+        Material.SHULKER_BOX,
+        Material.WHITE_SHULKER_BOX,
+        Material.ORANGE_SHULKER_BOX,
+        Material.MAGENTA_SHULKER_BOX,
+        Material.LIGHT_BLUE_SHULKER_BOX,
+        Material.YELLOW_SHULKER_BOX,
+        Material.LIME_SHULKER_BOX,
+        Material.PINK_SHULKER_BOX,
+        Material.GRAY_SHULKER_BOX,
+        Material.LIGHT_GRAY_SHULKER_BOX,
+        Material.CYAN_SHULKER_BOX,
+        Material.PURPLE_SHULKER_BOX,
+        Material.BLUE_SHULKER_BOX,
+        Material.BROWN_SHULKER_BOX,
+        Material.GREEN_SHULKER_BOX,
+        Material.RED_SHULKER_BOX,
+        Material.BLACK_SHULKER_BOX
     );
 
     public static void init(PlayerShops64 javaPlugin) {
@@ -78,6 +95,7 @@ public class StaticUtils {
         DISPLAY_KEY = new NamespacedKey(javaPlugin, "display-entity");
         DESPOIT_WAND_KEY = new NamespacedKey(javaPlugin, "deposit-wand");
         SELL_WAND_KEY = new NamespacedKey(javaPlugin, "sell-wand");
+        REGION_WAND_KEY = new NamespacedKey(javaPlugin, "region-wand");
     }
 
     /**
@@ -636,9 +654,9 @@ public class StaticUtils {
         ItemMeta meta = lectern.getItemMeta();
 
         meta.getPersistentDataContainer().set(StaticUtils.SHOP_KEY, PersistentDataType.STRING, "true");
-        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aPlayerShop"));
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&ePlayerShop"));
         List<String> lore = new ArrayList<>();
-        lore.add("&7&oPlace to create a empty shop");
+        lore.add("&7&oPlace to create a shop");
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
         meta.addEnchant(Enchantment.LURE, 1, true);
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);

@@ -50,7 +50,7 @@ public class ExchangeWandCmd implements TabExecutor {
         if (!removed && removeMultiSellwands(player)) removed = true;
 
         if (removed==false) {
-            StaticUtils.sendMessage(sender, "&cError: Couldn't find an old infinite sellwand (or 3 finite sell wands) in your inventory!");
+            StaticUtils.sendMessage(sender, "&cError: Couldn't find an old infinite sell wand (or 4 finite sell wands) in your inventory!");
             return true;
         }
 
@@ -103,7 +103,7 @@ public class ExchangeWandCmd implements TabExecutor {
 
         int removedCount=0;
         int oldTempWandCount = countOldTempWands(storage);
-        if (oldTempWandCount>=3) {
+        if (oldTempWandCount>=4) {
             for (int i = 0; i < storage.length; i++) {
                 if (removedCount>=oldTempWandCount) return true;
 
