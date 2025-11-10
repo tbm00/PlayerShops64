@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
@@ -66,29 +67,29 @@ public class ShopUtils {
     }
 
     // Shop Edits
-    public static void deleteShop(Player player, UUID shopUuid, Block block) {
+    public static boolean deleteShop(Player player, UUID shopUuid, Block block) {
         if (!Bukkit.isPrimaryThread()) {
             StaticUtils.log(ChatColor.RED, player.getName() + " tried to delete shop " + shopUuid + " off the main thread -- trying again during next tick on main thread!");
             javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> deleteShop(player, shopUuid, block));
-            return;
+            return false;
         }
 
         // guard
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
             StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
-            return;
+            return false;
         }
         
         try {
             Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
             if (shop == null) {
                 StaticUtils.sendMessage(player, "&cShop not found..!");
-                return;
+                return false;
             }
 
             if (shop.getItemStock()>0) {
                 StaticUtils.sendMessage(player, "&cShop must have an empty item stock before deleting it!");
-                return;
+                return false;
             }
 
             BigDecimal moneyStock = StaticUtils.normalizeBigDecimal(shop.getMoneyStock());
@@ -103,23 +104,24 @@ public class ShopUtils {
             } else block.setType(Material.AIR, false);
             StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepPlayerShopItemStack(1));
             StaticUtils.sendMessage(player, "&aDeleted shop!");
+            return true;
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
-    } public static void deleteShop(UUID shopUuid, Block block) {
+    } public static boolean deleteShop(UUID shopUuid, Block block) {
         if (!Bukkit.isPrimaryThread()) {
             StaticUtils.log(ChatColor.RED, "Plugin tried to delete shop " + shopUuid + " off the main thread -- trying again during next tick on main thread!");
             javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> deleteShop(shopUuid, block));
-            return;
+            return false;
         }
         
         Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
         if (shop == null) {
-            return;
+            return false;
         }
 
         if (shop.getItemStock()>0) {
-            return;
+            return false;
         }
 
         BigDecimal moneyStock = StaticUtils.normalizeBigDecimal(shop.getMoneyStock());
@@ -132,6 +134,7 @@ public class ShopUtils {
         if (block==null) {
             javaPlugin.getServer().getWorld(shop.getWorld().getUID()).getBlockAt(shop.getLocation()).setType(Material.AIR, false);
         } else block.setType(Material.AIR, false);
+        return true;
     } 
     
     public static void setShopItem(Player player, UUID shopUuid) {
@@ -1113,6 +1116,38 @@ public class ShopUtils {
             javaPlugin.getShopHandler().upsertShopObject(shop);
             Logger.logEdit(player.getName()+" added " + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + shop.getItemStock());
             return workingAmount;
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
+    public static boolean setShopOwner(Player player, UUID shopUuid, OfflinePlayer newOwner) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to set shop " + shopUuid + "'s owner off the main thread -- canceling..!");
+            return false;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            return false;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                return false;
+            }
+
+            UUID ownerUuid = newOwner==null ? null : newOwner.getUniqueId();
+            String ownerName = newOwner==null ? null : newOwner.getName();
+
+            // edit shop
+            shop.setOwnerName(ownerName);
+            shop.setOwnerUuid(ownerUuid);
+
+            // apply updates
+            javaPlugin.getShopHandler().upsertShopObject(shop);
+            Logger.logEdit(player.getName()+" set " + ownerName + " as shop "+ShopUtils.getShopHint(shopUuid)+"'s owner!");
+            return true;
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }

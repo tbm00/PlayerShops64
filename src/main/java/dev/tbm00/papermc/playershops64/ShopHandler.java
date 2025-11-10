@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -43,6 +46,9 @@ public class ShopHandler {
                 // Map<WorldUID, Map<ChunkKey, Set<ShopUUID>>>
     private final Map<Material, ShopPriceQueue> shopMaterialPriceMap = new HashMap<>();
     private final Map<UUID, Set<UUID>> shopOwnerMap = new HashMap<>();
+
+                // Map<PlayerUuid, Pair<left block location, right block location>>
+    public final Map<UUID, Pair<Location, Location>> regionPositionMap = new ConcurrentHashMap<>();
 
     public VisualTask visualTask;
 

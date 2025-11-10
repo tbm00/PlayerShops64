@@ -1,6 +1,10 @@
 package dev.tbm00.papermc.playershops64.listener;
 
+import java.util.UUID;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -8,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -58,7 +63,42 @@ public class PlayerWand implements Listener {
                 if (!player.hasPermission(StaticUtils.PLAYER_PERM)) return;
                 sellItemsFromContainer(blocksInv, player);
             } else return;
-        } else return;
+        } else { // Region wand
+            if (block.getType().equals(Material.AIR)) return;
+
+            PersistentDataContainer itemDataContainer = heldItemMeta.getPersistentDataContainer();
+            if (itemDataContainer.has(StaticUtils.REGION_WAND_KEY, PersistentDataType.STRING)) {
+                Action action = event.getAction();
+                if (action != Action.LEFT_CLICK_BLOCK && action != Action.RIGHT_CLICK_BLOCK) return;
+
+                event.setCancelled(true);
+                if (!player.hasPermission(StaticUtils.ADMIN_PERM)) return;
+                UUID playerUuid = player.getUniqueId();
+
+                Pair<Location, Location> ownerPair = javaPlugin.getShopHandler().regionPositionMap.get(playerUuid);
+                Location left = (ownerPair != null) ? ownerPair.getLeft() : null;
+                Location right = (ownerPair != null) ? ownerPair.getRight() : null;
+
+                Location clickedLoc = block.getLocation();
+
+                // left block position, right block position
+                if (action == Action.LEFT_CLICK_BLOCK) {
+                    left = clickedLoc;
+                    StaticUtils.sendMessage(player, "&aSet position 1 to " +
+                            clickedLoc.getBlockX() + " " +
+                            clickedLoc.getBlockY() + " " +
+                            clickedLoc.getBlockZ());
+                } else if (action == Action.RIGHT_CLICK_BLOCK) {
+                    right = clickedLoc;
+                    StaticUtils.sendMessage(player, "&aSet position 2 to " +
+                            clickedLoc.getBlockX() + " " +
+                            clickedLoc.getBlockY() + " " +
+                            clickedLoc.getBlockZ());
+                }
+
+                javaPlugin.getShopHandler().regionPositionMap.put(playerUuid, Pair.of(left, right));
+            } else return;
+        }
     }
 
     private void sellItemsFromContainer(Inventory inv, Player player) {

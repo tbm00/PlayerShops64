@@ -63,6 +63,7 @@ public class StaticUtils {
     public static NamespacedKey SHOP_KEY;
     public static NamespacedKey DESPOIT_WAND_KEY;
     public static NamespacedKey SELL_WAND_KEY;
+    public static NamespacedKey REGION_WAND_KEY;
 
     private static final Pattern INVISIBLES = Pattern.compile("[\\u00AD\\u00A0\\u200B\\u200C\\u200D\\u2060]");
     private static final Pattern WHITESPACE_RUN = Pattern.compile("[\\s_]+");
@@ -665,6 +666,26 @@ public class StaticUtils {
         if (amount!=null) lectern.setAmount(amount);
 
         return lectern;
+    }
+
+    public static ItemStack prepRegionWandItemStack(Integer amount) {
+        ItemStack wand = new ItemStack(Material.SPYGLASS);
+        ItemMeta meta = wand.getItemMeta();
+
+        meta.getPersistentDataContainer().set(StaticUtils.REGION_WAND_KEY, PersistentDataType.STRING, "true");
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&6Region Wand"));
+        meta.setLore(null);
+        List<String> lore = new ArrayList<>();
+        lore.add("&7&oLeft-click for position 1");
+        lore.add("&7&oRight-click for position 2");
+        meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+        meta.addEnchant(Enchantment.LURE, 1, true);
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+
+        wand.setItemMeta(meta);
+        if (amount!=null) wand.setAmount(amount);
+
+        return wand;
     }
 
     public static ItemStack prepDepositWandItemStack(Integer amount) {

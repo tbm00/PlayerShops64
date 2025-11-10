@@ -2,26 +2,34 @@
 
 package dev.tbm00.papermc.playershops64.command;
 
-import java.util.List;
-import java.util.Set;
+/* import java.util.Set;
 import java.util.UUID;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+
+import org.bukkit.inventory.ItemStack; */
+
+import java.util.List;
+import java.util.UUID;
+import java.util.ArrayList;
+
+import org.apache.commons.lang3.tuple.Pair;
+
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.Location;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.enums.QueryType;
@@ -66,10 +74,12 @@ public class AdminCmd implements TabExecutor {
                 return handleMenuCmd(player);
             case "give":
                 return handleGiveCmd(player, args);
-            case "transferdisplayshopsdata":
+            case "region":
+                return handleRegionCmd(player, args);
+            /*case "transferdisplayshopsdata":
                 return handleTransferCmd(player);
             case "deleteplayershopsdata":
-                return handleDeleteCmd(player);
+                return handleDeleteCmd(player);*/
             default: {
                 return handleSearchCmd(player, args);
             }
@@ -78,8 +88,10 @@ public class AdminCmd implements TabExecutor {
     
     private boolean handleHelpCmd(Player player) {
         player.sendMessage(ChatColor.DARK_PURPLE + "--- " + ChatColor.LIGHT_PURPLE + "Admin Shop Commands" + ChatColor.DARK_PURPLE + " ---\n"
+            + ChatColor.WHITE + "/shopadmin" + ChatColor.GRAY + " Open shop GUI as admin\n"
             + ChatColor.WHITE + "/shopadmin give <player> <item> [amount]" + ChatColor.GRAY + " Give shop or wand item to a player\n"
             + ChatColor.WHITE + "/shopadmin <player>" + ChatColor.GRAY + " Find & manage all <player>'s shops\n"
+            + ChatColor.WHITE + "/shopadmin region" + ChatColor.GRAY + " Region commands\n"
         );
 
         return true;
@@ -95,7 +107,252 @@ public class AdminCmd implements TabExecutor {
         return true;
     }
 
-    private boolean handleDeleteCmd(Player player) {
+    private boolean handleGiveCmd(CommandSender sender, String[] args) {
+        String argument = args.length >= 2 ? args[1] : null; // should be player
+        String argument2 = args.length >= 3 ? args[2] : null; // should be item type
+        String argument3 = args.length >= 4 ? args[3] : "1"; // should be amount
+
+        int amount = 1;
+        Integer j = Integer.parseInt(argument3);
+        if (j!=null) amount = j;
+
+        Player player = getPlayerFromCommand(sender, argument);
+        if (player == null) {
+            sender.sendMessage(ChatColor.RED + "Could not find target player!");
+            return false;
+        }
+
+        if (argument2==null || argument2.isBlank()) {
+            sender.sendMessage(ChatColor.RED + "Can't give nothing!");
+            return false;
+        } argument2 = argument2.replace("_","");
+
+        if (argument2.equalsIgnoreCase("SELLWAND")) {
+            StaticUtils.sendMessage(player, "&aReceived " + amount + " sell wand!");
+            StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepSellWandItemStack(amount));
+        } else if (argument2.equalsIgnoreCase("DEPOSITWAND")) {
+            StaticUtils.sendMessage(player, "&aReceived " + amount + " deposit wand!");
+            StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepDepositWandItemStack(amount));
+        } else if (argument2.equalsIgnoreCase("REGIONWAND")) {
+            StaticUtils.sendMessage(player, "&aReceived " + amount + " region wand!");
+            StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepRegionWandItemStack(amount));
+        } else if (argument2.equalsIgnoreCase("SHOP") || argument2.equalsIgnoreCase("SHOPBLOCK") || argument2.equalsIgnoreCase("BASEBLOCK")) {
+            StaticUtils.sendMessage(player, "&aReceived " + amount + " player shops!");
+            StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepPlayerShopItemStack(amount));
+        } else {
+            sender.sendMessage(ChatColor.RED + "'"+argument2+"' is not defined!");
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean handleRegionCmd(Player player, String[] args) {
+        if (args.length < 2) {
+            StaticUtils.sendMessage(player, "&f/shop region <info/deleteAll/setOwner> [newOwner]");
+            return true;
+        }
+
+        String sub = args[1].toLowerCase();
+        switch (sub) {
+            case "info":
+                return handleRegionInfoCmd(player);
+            case "setowner":
+                return handleRegionSetOwnerCmd(player, args);
+            case "deleteall":
+                return handleRegionDeleteAllCmd(player);
+            default:
+                StaticUtils.sendMessage(player, "&f/shop region <info/deleteAll/setOwner> [newOwner]");
+                return true;
+        }
+    }
+
+
+    private boolean handleRegionInfoCmd(Player player) {
+        UUID uuid = player.getUniqueId();
+        Pair<Location, Location> pair = javaPlugin.getShopHandler().regionPositionMap.get(uuid);
+
+        if (pair == null) {
+            StaticUtils.sendMessage(player, "&eYou don't have a region selected!");
+            return true;
+        }
+
+        Location pos1 = pair.getLeft();
+        Location pos2 = pair.getRight();
+        
+        StaticUtils.sendMessage(player, "&d--- &5Region Info &d---");
+        if (pos1 != null) 
+            StaticUtils.sendMessage(player, "&aPos1: &f" + pos1.getWorld().getName() + " " + pos1.getBlockX() + " " + pos1.getBlockY() + " " + pos1.getBlockZ());
+        else StaticUtils.sendMessage(player, "&aPos1: &f<not set>");
+        
+        if (pos2 != null) 
+            StaticUtils.sendMessage(player, "&aPos2: &f" + pos2.getWorld().getName() + " " + pos2.getBlockX() + " " + pos2.getBlockY() + " " + pos2.getBlockZ());
+        else StaticUtils.sendMessage(player, "&aPos2: &f<not set>");
+        
+        return true;
+    }
+
+    private boolean handleRegionSetOwnerCmd(Player player, String[] args) {
+        if (args.length < 3) {
+            StaticUtils.sendMessage(player, "&eUsage: &f/shopadmin region setOwner <playerName>");
+            return true;
+        }
+
+        String targetName = args[2];
+        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        if (target == null || ( !target.isOnline() && !target.hasPlayedBefore())) {
+            StaticUtils.sendMessage(player, "&cCould not find player " + targetName + "!");
+            return true;
+        } if (target.getName() != null) targetName = target.getName();
+
+        UUID playerUuid = player.getUniqueId();
+        Pair<Location, Location> pair = javaPlugin.getShopHandler().regionPositionMap.get(playerUuid);
+        if (pair == null || pair.getLeft() == null || pair.getRight() == null) {
+            StaticUtils.sendMessage(player, "&cYou must select both positions with the region wand first!");
+            return true;
+        }
+
+        Location pos1 = pair.getLeft();
+        Location pos2 = pair.getRight();
+        if (!pos1.getWorld().equals(pos2.getWorld())) {
+            StaticUtils.sendMessage(player, "&cPos1 and Pos2 must be in the same world!");
+            return true;
+        }
+
+        // cuboid bounds
+        int minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
+        int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
+        int minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
+        int maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
+        int minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
+        int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+        String worldName = pos1.getWorld().getName();
+
+        int changed = 0;
+        for (Shop shop : javaPlugin.getShopHandler().getShopView().values()) {
+            Location shopLocation = shop.getLocation();
+            if (shopLocation == null || !shopLocation.getWorld().getName().equals(worldName)) continue;
+
+            int x = shopLocation.getBlockX();
+            int y = shopLocation.getBlockY();
+            int z = shopLocation.getBlockZ();
+
+            if (x < minX || x > maxX) continue;
+            if (y < minY || y > maxY) continue;
+            if (z < minZ || z > maxZ) continue;
+
+            if (ShopUtils.setShopOwner(player, shop.getUuid(), target)) changed++;
+        }
+
+        StaticUtils.sendMessage(player, "&aSet owner to " + targetName + " for " + changed + " shops in the selected region!");
+        return true;
+    }
+
+    private boolean handleRegionDeleteAllCmd(Player player) {
+        UUID playerUuid = player.getUniqueId();
+        Pair<Location, Location> pair = javaPlugin.getShopHandler().regionPositionMap.get(playerUuid);
+        if (pair == null || pair.getLeft() == null || pair.getRight() == null) {
+            StaticUtils.sendMessage(player, "&cYou must select both positions with the region wand first!");
+            return true;
+        }
+
+        Location pos1 = pair.getLeft();
+        Location pos2 = pair.getRight();
+        if (!pos1.getWorld().equals(pos2.getWorld())) {
+            StaticUtils.sendMessage(player, "&cPos1 and Pos2 must be in the same world!");
+            return true;
+        }
+
+        // cuboid bounds
+        int minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
+        int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
+        int minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
+        int maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
+        int minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
+        int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+        String worldName = pos1.getWorld().getName();
+
+        int deleted = 0;
+        for (Shop shop : javaPlugin.getShopHandler().getShopView().values()) {
+            Location shopLocation = shop.getLocation();
+            if (shopLocation == null || !shopLocation.getWorld().getName().equals(worldName)) continue;
+
+            int x = shopLocation.getBlockX();
+            int y = shopLocation.getBlockY();
+            int z = shopLocation.getBlockZ();
+
+            if (x < minX || x > maxX) continue;
+            if (y < minY || y > maxY) continue;
+            if (z < minZ || z > maxZ) continue;
+
+            if (ShopUtils.deleteShop(player, shop.getUuid(), null)) deleted++;
+        }
+
+        StaticUtils.sendMessage(player, "&aDeleted " + deleted + " shops in the selected region!");
+        return true;
+    }
+
+    private Player getPlayerFromCommand(CommandSender sender, String arg) {
+        if (arg == null) {
+            sender.sendMessage(ChatColor.RED + "Could not find target player!");
+            return null;
+        } else {
+            Player player = javaPlugin.getServer().getPlayer(arg);
+            if (player == null) {
+            }
+            return player;
+        }
+    }
+
+    /**
+     * Handles tab completion for the /shopadmin command.
+     */
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        List<String> list = new ArrayList<>();
+        if (args.length == 1) {
+            list.clear();
+            String[] subCmds = new String[]{"give","<player>","region"/*,"transferDisplayShopsData","deletePlayerShopsData"*/};
+            for (String n : subCmds) {
+                if (n!=null && n.startsWith(args[0].toLowerCase())) 
+                    list.add(n);
+            }
+            Bukkit.getOnlinePlayers().forEach(player -> {
+                if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())&&args[0].length()>0)
+                    list.add(player.getName());
+            });
+        } else if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("give")) {
+                Bukkit.getOnlinePlayers().forEach(player -> {
+                    if (player.getName().toLowerCase().startsWith(args[1].toLowerCase()))
+                        list.add(player.getName());
+                });
+            } else if (args[0].equalsIgnoreCase("region")) {
+                String[] regionSub = new String[]{"info","setOwner","deleteAll"};
+                for (String n : regionSub) {
+                    if (n.toLowerCase().startsWith(args[1].toLowerCase()))
+                        list.add(n);
+                }
+            }
+        } else if (args.length == 3) {
+            if (args[0].equalsIgnoreCase("give")) {
+                String[] subCmds = new String[]{"SHOP_BLOCK","SELL_WAND","DEPOSIT_WAND","REGION_WAND"};
+                for (String n : subCmds) {
+                    if (n!=null && n.startsWith(args[2].toUpperCase())) 
+                        list.add(n);
+                }
+            } else if (args[0].equalsIgnoreCase("region") && args[1].equalsIgnoreCase("setOwner")) {
+                Bukkit.getOnlinePlayers().forEach(player -> {
+                    if (player.getName().toLowerCase().startsWith(args[2].toLowerCase()))
+                        list.add(player.getName());
+                });
+            }
+        }
+        return list;
+    }
+
+
+    /*private boolean handleDeleteCmd(Player player) {
         List<UUID> toDelete = new ArrayList<>();
         for (Shop shop : javaPlugin.getShopHandler().getShopView().values()) {
             toDelete.add(shop.getUuid());
@@ -260,90 +517,5 @@ public class AdminCmd implements TabExecutor {
 
         ShopUtils.createShop(psShop);
         return true;
-    }
-
-    private boolean handleGiveCmd(CommandSender sender, String[] args) {
-        String argument = args.length >= 2 ? args[1] : null; // should be player
-        String argument2 = args.length >= 3 ? args[2] : null; // should be item type
-        String argument3 = args.length >= 4 ? args[3] : "1"; // should be amount
-
-        int amount = 1;
-        Integer j = Integer.parseInt(argument3);
-        if (j!=null) amount = j;
-
-        Player player = getPlayerFromCommand(sender, argument);
-        if (player == null) {
-            sender.sendMessage(ChatColor.RED + "Could not find target player!");
-            return false;
-        }
-
-        if (argument2==null || argument2.isBlank()) {
-            sender.sendMessage(ChatColor.RED + "Can't give nothing!");
-            return false;
-        } argument2 = argument2.replace("_","");
-
-        if (argument2.equalsIgnoreCase("SELLWAND")) {
-            StaticUtils.sendMessage(player, "&aReceived " + amount + " sell wand!");
-            StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepSellWandItemStack(amount));
-        } else if (argument2.equalsIgnoreCase("DEPOSITWAND")) {
-            StaticUtils.sendMessage(player, "&aReceived " + amount + " deposit wand!");
-            StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepDepositWandItemStack(amount));
-        } else if (argument2.equalsIgnoreCase("SHOP") || argument2.equalsIgnoreCase("SHOPBLOCK") || argument2.equalsIgnoreCase("BASEBLOCK")) {
-            StaticUtils.sendMessage(player, "&aReceived " + amount + " player shops!");
-            StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepPlayerShopItemStack(amount));
-        } else {
-            sender.sendMessage(ChatColor.RED + "'"+argument2+"' is not defined!");
-            return false;
-        }
-
-        return true;
-    }
-
-    private Player getPlayerFromCommand(CommandSender sender, String arg) {
-        if (arg == null) {
-            sender.sendMessage(ChatColor.RED + "Could not find target player!");
-            return null;
-        } else {
-            Player player = javaPlugin.getServer().getPlayer(arg);
-            if (player == null) {
-            }
-            return player;
-        }
-    }
-
-    /**
-     * Handles tab completion for the /shopadmin command.
-     */
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        List<String> list = new ArrayList<>();
-        if (args.length == 1) {
-            list.clear();
-            String[] subCmds = new String[]{"give","<player>","transferDisplayShopsData","deletePlayerShopsData"};
-            for (String n : subCmds) {
-                if (n!=null && n.startsWith(args[0].toLowerCase())) 
-                    list.add(n);
-            }
-            Bukkit.getOnlinePlayers().forEach(player -> {
-                if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())&&args[0].length()>0)
-                    list.add(player.getName());
-            });
-        } else if (args.length == 2) {
-            if (args[0].equalsIgnoreCase("give")) {
-                Bukkit.getOnlinePlayers().forEach(player -> {
-                    if (player.getName().toLowerCase().startsWith(args[1].toLowerCase()))
-                        list.add(player.getName());
-                });
-            }
-        } else if (args.length == 3) {
-            if (args[0].equalsIgnoreCase("give")) {
-                String[] subCmds = new String[]{"SHOP_BLOCK","SELL_WAND","DEPOSIT_WAND"};
-                for (String n : subCmds) {
-                    if (n!=null && n.startsWith(args[2].toUpperCase())) 
-                        list.add(n);
-                }
-            }
-        }
-        return list;
-    }
+    }*/
 }
