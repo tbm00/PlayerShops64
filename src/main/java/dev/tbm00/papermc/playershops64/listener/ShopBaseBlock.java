@@ -67,7 +67,7 @@ public class ShopBaseBlock implements Listener {
 
         ShopUtils.createShop(owner, world, location);
 
-        StaticUtils.sendMessage(owner, "&aCreated a new PlayerShop! Click to manage it, or sneak-left-click to start selling your held item");
+        StaticUtils.sendMessage(owner, "&aCreated a new PlayerShop! Click to manage it, or sneak-right-click to start selling your held item");
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -86,23 +86,50 @@ public class ShopBaseBlock implements Listener {
             return;
         }
 
-        boolean isManager = (shop.getOwnerUuid()!=null && player.getUniqueId().equals(shop.getOwnerUuid())) || shop.isAssistant(player.getUniqueId());
-        boolean isSneaking = player.isSneaking();
+        ItemStack heldItem = player.getItemInHand().clone();
         Action action = event.getAction();
+        boolean isSneaking = player.isSneaking();
+        boolean isAdmin = StaticUtils.hasPermission(player, StaticUtils.ADMIN_PERM);
+        boolean isManager = (shop.getOwnerUuid()!=null && player.getUniqueId().equals(shop.getOwnerUuid())) || shop.isAssistant(player.getUniqueId());
+        boolean isHoldingShopItem = (shop.getItemStack()==null) ? false : shop.getItemStack().isSimilar(heldItem);
+
+        if (isAdmin && !isManager) {
+            if (isSneaking) {
+                new ShopManageGui(javaPlugin, player, true, shop.getUuid());
+                return;
+            } else {
+                if (shop.getItemStack()==null) {
+                    StaticUtils.sendMessage(player, "&cThis shop does not have a sale item set up!");
+                    return;
+                }
+                if (shop.getBuyPrice()==null && shop.getSellPrice()==null) {
+                    StaticUtils.sendMessage(player, "&cThis shop has buying and selling both disabled!");
+                    return;
+                }
+                new ShopTransactionGui(javaPlugin, player, true, shop.getUuid(), 1, true);
+                return;
+            }
+        }
 
         if (isManager) {
             if (isSneaking) {
                 if (action==Action.LEFT_CLICK_BLOCK) {
-                    /*if (shop.getItemStack()==null || shop.getItemStock()<1) {
-                        ShopUtils.deleteShop(player, shop.getUuid(), block);
+                    if (isHoldingShopItem) {
+                        ShopUtils.depositStockFromHand(player, shop.getUuid());
                         return;
-                    } else {*/
+                    } else if (shop.getItemStack()==null) {
+                        StaticUtils.sendMessage(player, "&eHold an item then sneak-right-click to set a sale item!");
+                        return;
+                    } else {
                         ShopUtils.adjustStock(player, shop.getUuid(), AdjustType.ADD, 1);
                         return;
-                    //}
+                    }
                 } else if (action==Action.RIGHT_CLICK_BLOCK) {
-                    if (shop.getItemStack()==null) {
+                    if (shop.getItemStack()==null && heldItem!=null && !heldItem.getType().equals(Material.AIR)) {
                         ShopUtils.setShopItem(player, shop.getUuid());
+                        return;
+                    } else if (shop.getItemStack()==null) {
+                        StaticUtils.sendMessage(player, "&eHold an item then sneak-right-click to set a sale item!");
                         return;
                     } else {
                         ShopUtils.adjustStock(player, shop.getUuid(), AdjustType.REMOVE, 1);
@@ -115,7 +142,9 @@ public class ShopBaseBlock implements Listener {
                     return;
                 } else return;
             }
-        } else {
+        }
+
+        /* regular player */ {
             if (shop.getItemStack()==null) {
                 StaticUtils.sendMessage(player, "&cThis shop does not have a sale item set up!");
                 return;
@@ -124,7 +153,7 @@ public class ShopBaseBlock implements Listener {
                 StaticUtils.sendMessage(player, "&cThis shop has buying and selling both disabled!");
                 return;
             }
-            new ShopTransactionGui(javaPlugin, player, false, shop.getUuid(), 1, true);
+            new ShopTransactionGui(javaPlugin, player, true, shop.getUuid(), 1, true);
             return;
         }
     }

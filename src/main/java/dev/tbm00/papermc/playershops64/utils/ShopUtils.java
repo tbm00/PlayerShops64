@@ -846,6 +846,86 @@ public class ShopUtils {
         }
     }
 
+    public static void depositStockFromHand(Player player, UUID shopUuid) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to adjust shop " + shopUuid + "'s stock off the main thread -- trying again during next tick on main thread!");
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> depositStockFromHand(player, shopUuid));
+            return;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            StaticUtils.sendMessage(player, "&cThis shop is currently being used by someone else.");
+            return;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                StaticUtils.sendMessage(player, "&cShop not found..!");
+                return;
+            }
+
+            ItemStack saleItem = shop.getItemStack();
+            if (saleItem == null) {
+                StaticUtils.sendMessage(player, "&cShop has no sale item set..!");
+                return;
+            }
+
+            ItemStack heldItem = player.getItemInHand().clone();
+            if (heldItem==null || !heldItem.isSimilar(saleItem)) {
+                StaticUtils.sendMessage(player, "&cThe item your holding doesn't match the shop's sale item!");
+                return;
+            }
+
+            int requestedAmount = heldItem.getAmount();
+            if (requestedAmount < 0) {
+                StaticUtils.sendMessage(player, "&cInvalid quantity.");
+                return;
+            }
+
+            int playerStock = StaticUtils.countMatchingItems(player, saleItem);
+            int shopStock = shop.getItemStock();
+            int max = javaPlugin.getConfigHandler().getMaxStock();
+
+            if (requestedAmount == 0) {
+                StaticUtils.sendMessage(player, "&cCannot deposit 0!");
+                return;
+            }
+            if (playerStock <= 0) {
+                StaticUtils.sendMessage(player, "&cYou don't have any matching items to deposit!");
+                return;
+            }
+
+            int space = Math.max(0, max - shopStock);
+            if (space <= 0) {
+                StaticUtils.sendMessage(player, "&cShop is at max stock!");
+                return;
+            }
+
+            int workingAmount = Math.min(requestedAmount, Math.min(playerStock, space));
+            if (workingAmount <= 0) {
+                StaticUtils.sendMessage(player, "&cNothing to deposit.");
+                return;
+            }
+            
+            if (!StaticUtils.removeSpecificItem(player, saleItem, workingAmount)) {
+                StaticUtils.sendMessage(player, "&cError removing " + StaticUtils.formatIntUS(workingAmount) + " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
+                return;
+            }
+
+            int newStock = shopStock + workingAmount;
+            shop.setItemStock(newStock);
+            
+            // apply updates
+            javaPlugin.getShopHandler().upsertShopObject(shop);
+            StaticUtils.sendMessage(player, "&aAdded " + StaticUtils.formatIntUS(workingAmount) + " to the shop's stock! Updated stock: " + StaticUtils.formatIntUS(newStock));
+            Logger.logEdit(player.getName()+" added " + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + newStock);
+            
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
     public static void sellToShop(Player player, UUID shopUuid, int quantity) {
         if (!Bukkit.isPrimaryThread()) {
             StaticUtils.log(ChatColor.RED, player.getName() + " tried to sell to shop " + shopUuid + " off the main thread -- trying again during next tick on main thread!");
@@ -1181,7 +1261,7 @@ public class ShopUtils {
         String buy = (shop.getBuyPrice()==null) ? "disabled" : StaticUtils.formatIntUS(shop.getBuyPrice().doubleValue());
         String sell = (shop.getSellPrice()==null) ? "disabled" : StaticUtils.formatIntUS(shop.getSellPrice().doubleValue());
         String stock = (shop.hasInfiniteStock()) ? "∞" : shop.getItemStock() + "";
-        String balance = (shop.hasInfiniteMoney()) ? "∞" : (shop.getMoneyStock()==null) ? "null" : StaticUtils.formatIntUS(shop.getMoneyStock().doubleValue());
+        //String balance = (shop.hasInfiniteMoney()) ? "∞" : (shop.getMoneyStock()==null) ? "null" : StaticUtils.formatIntUS(shop.getMoneyStock().doubleValue());
         String owner = (shop.getOwnerName()==null) ? "null" : shop.getOwnerName();
 
         String loreLine = null;
@@ -1201,8 +1281,12 @@ public class ShopUtils {
         if (loreLine!=null && !loreLine.isBlank()) returnText += "\n&7&o" + loreLine;
         if (shop.getBuyPrice()!=null) returnText += "\n&7Buy for &a$" + buy;
         if (shop.getSellPrice()!=null) returnText += "\n&7Sell for &c$" + sell;
-        returnText += "\n&7Stock: &e" + stock + "&7, Balance: &e$" + balance;
-        if (shop.getOwnerName()!=null) returnText += "\n&7Owner: &e" + owner;
+        returnText += "\n&7Stock: &e" + stock;
+        if (shop.getOwnerName()!=null) returnText += "&7, Owner: &e" + owner;
+        /* 
+            returnText += "\n&7Stock: &e" + stock + "&7, Balance: &e$" + balance;
+            if (shop.getOwnerName()!=null) returnText += "\n&7Owner: &e" + owner;
+        */
 
         return returnText;
     }

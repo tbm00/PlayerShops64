@@ -20,7 +20,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
+//import org.bukkit.GameMode;
 import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
@@ -255,7 +255,7 @@ public class StaticUtils {
      * @return true if the sender has the permission, false otherwise
      */
     public static boolean hasPermission(CommandSender sender, String perm) {
-        if (sender instanceof Player && ((Player)sender).getGameMode()==GameMode.CREATIVE) return false;
+        //if (sender instanceof Player && ((Player)sender).getGameMode()==GameMode.CREATIVE) return false;
         return sender.hasPermission(perm) || sender instanceof ConsoleCommandSender;
     }
 
@@ -475,6 +475,38 @@ public class StaticUtils {
         }
 
         return remaining == 0;
+    }
+
+    /**
+     * Removes exactly {@code quantity} items similar to {@code item} from the player's held item.
+     * Returns true iff all requested items were removed. Nothing is removed if the player doesn't have enough.
+     *
+     * Must be called on the main thread (Bukkit thread).
+     */
+    public static boolean removeSpecificItem(Player player, ItemStack item, int quantity) {
+        if (quantity <= 0) return true;
+        if (player == null || item == null || item.getType().isAir()) return false;
+        
+        // Inventory changes must happen on the primary thread.
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, "Cannot removeSpecificItem() for "+player.getName()+" because it was called off the main thread..!");
+            return false;
+        }
+
+        ItemStack hand = player.getItemInHand();
+        if (hand == null || hand.getType().isAir()) return false;
+        if (!hand.isSimilar(item)) return false;
+        if (hand.getAmount() < quantity) return false;
+
+        int remaining = hand.getAmount() - quantity;
+        if (remaining <= 0) {
+            player.setItemInHand(new ItemStack(Material.AIR));
+        } else {
+            hand.setAmount(remaining);
+            player.setItemInHand(hand);
+        }
+
+        return true;
     }
 
     /**
