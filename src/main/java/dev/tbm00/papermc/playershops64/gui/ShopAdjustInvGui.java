@@ -46,7 +46,7 @@ public class ShopAdjustInvGui {
         
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
             return;
-        } StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
+        } //StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
 
         label = "Adjust "+AdjustAttribute.toString(attribute);
         switch (attribute) {
@@ -66,7 +66,7 @@ public class ShopAdjustInvGui {
         setup();
         gui.disableAllInteractions();
         gui.setCloseGuiAction(event -> {
-            StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
+            //StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
             javaPlugin.getShopHandler().unlockShop(shopUuid, viewer.getUniqueId());
         });
 
@@ -197,7 +197,7 @@ public class ShopAdjustInvGui {
                                                                                     gui.setCloseGuiAction(null);
                                                                                     //gui.close(viewer);
                                                                                     viewer.closeInventory();
-                                                                                    StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
+                                                                                    //StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
                                                                                 }
                                                                             }));
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
@@ -220,7 +220,7 @@ public class ShopAdjustInvGui {
                                                                                     gui.setCloseGuiAction(null);
                                                                                     //gui.close(viewer);
                                                                                     viewer.closeInventory();
-                                                                                    StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
+                                                                                    //StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
                                                                                 }
                                                                             }));
             }
@@ -247,7 +247,7 @@ public class ShopAdjustInvGui {
                                                                                     gui.setCloseGuiAction(null);
                                                                                     //gui.close(viewer);
                                                                                     viewer.closeInventory();
-                                                                                    StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
+                                                                                    //StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
                                                                                 }
                                                                             }));
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
@@ -270,7 +270,7 @@ public class ShopAdjustInvGui {
                                                                                     gui.setCloseGuiAction(null);
                                                                                     //gui.close(viewer);
                                                                                     viewer.closeInventory();
-                                                                                    StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
+                                                                                    //StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
                                                                                 }
                                                                             }));
             } else if (attribute.equals(AdjustAttribute.DISPLAY_HEIGHT)) {
@@ -293,7 +293,7 @@ public class ShopAdjustInvGui {
                                                                                     gui.setCloseGuiAction(null);
                                                                                     //gui.close(viewer);
                                                                                     viewer.closeInventory();
-                                                                                    StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
+                                                                                    //StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
                                                                                 }
                                                                             }));
             }
@@ -320,7 +320,7 @@ public class ShopAdjustInvGui {
                                                                                     gui.setCloseGuiAction(null);
                                                                                     //gui.close(viewer);
                                                                                     viewer.closeInventory();
-                                                                                    StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
+                                                                                    //StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
                                                                                 }
                                                                             }));
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
@@ -343,7 +343,7 @@ public class ShopAdjustInvGui {
                                                                                     gui.setCloseGuiAction(null);
                                                                                     //gui.close(viewer);
                                                                                     viewer.closeInventory();
-                                                                                    StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
+                                                                                    //StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
                                                                                 }
                                                                             }));
             }

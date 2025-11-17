@@ -50,14 +50,14 @@ public class ShopTransactionGui {
 
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
             return;
-        } StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s transcation gui: " + this.quantity);
+        } //StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s transcation gui: " + this.quantity);
 
         label = "Shop Transaction: " + StaticUtils.formatIntUS(this.quantity);
         gui.updateTitle(label);
         setup();
         gui.disableAllInteractions();
         gui.setCloseGuiAction(event -> {
-            StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s transaction gui: " + this.quantity);
+            //StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s transaction gui: " + this.quantity);
             javaPlugin.getShopHandler().unlockShop(shopUuid, viewer.getUniqueId());
         });
 
@@ -165,7 +165,7 @@ public class ShopTransactionGui {
                                                                                 //gui.close(viewer);
                                                                                 gui.setCloseGuiAction(null);
                                                                                 viewer.closeInventory();
-                                                                                StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s transaction gui: " + this.quantity);
+                                                                                //StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s transaction gui: " + this.quantity);
                                                                             }
                                                                         }));
         }
@@ -188,7 +188,7 @@ public class ShopTransactionGui {
                                                                                 //gui.close(viewer);
                                                                                 gui.setCloseGuiAction(null);
                                                                                 viewer.closeInventory();
-                                                                                StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s transaction gui: " + this.quantity);
+                                                                                //StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s transaction gui: " + this.quantity);
                                                                             }
                                                                         }));
         }

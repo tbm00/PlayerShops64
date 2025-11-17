@@ -50,7 +50,7 @@ public class ShopManageGui {
 
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
             return;
-        } StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s manage gui");
+        } //StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s manage gui");
 
         gui.updateTitle(label);
         setup();
@@ -63,7 +63,7 @@ public class ShopManageGui {
     }
 
     private void closeAction() {
-        StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s manage gui");
+        //StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s manage gui");
         javaPlugin.getShopHandler().unlockShop(shopUuid, viewer.getUniqueId());
     }
 
