@@ -488,10 +488,13 @@ public class ShopCmd implements TabExecutor {
         );
         TextComponent msg = new TextComponent(mainComponents);
 
-        String hoverText = "&7B: &a$" + StaticUtils.formatIntUS(shop.getBuyPrice().doubleValue())
-                        + "&7, S: &c$" + StaticUtils.formatIntUS(shop.getSellPrice().doubleValue())
-                        + "&7, Stock: &e" + StaticUtils.formatIntUS(shop.getItemStock())
-                        + "&7, Balance: &e$" + StaticUtils.formatIntUS(shop.getMoneyStock().doubleValue());
+        String hoverText = "";
+        if (shop.getBuyPrice()!=null) {
+            hoverText += "&7B: &a$" + StaticUtils.formatIntUS(shop.getBuyPrice().doubleValue()) + "&7, ";
+        } if (shop.getSellPrice()!=null) {
+            hoverText += "&7S: &c$" + StaticUtils.formatIntUS(shop.getSellPrice().doubleValue()) + "&7, ";
+        } hoverText += "&7Stock: &e" + StaticUtils.formatIntUS(shop.getItemStock()) + "&7, Balance: &e$" + StaticUtils.formatIntUS(shop.getMoneyStock().doubleValue());
+
         BaseComponent[] hoverComponents = TextComponent.fromLegacyText(
             ChatColor.translateAlternateColorCodes('&', hoverText)
         );
