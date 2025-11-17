@@ -920,7 +920,6 @@ public class ShopUtils {
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aAdded " + StaticUtils.formatIntUS(workingAmount) + " to the shop's stock! Updated stock: " + StaticUtils.formatIntUS(newStock));
             Logger.logEdit(player.getName()+" added " + workingAmount + " to shop "+ShopUtils.getShopHint(shopUuid)+"'s stock! Updated stock: " + newStock);
-            
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
         }
@@ -974,6 +973,10 @@ public class ShopUtils {
                 return;
             } if (workingAmount+shop.getItemStock()>javaPlugin.getConfigHandler().getMaxStock()) {
                 workingAmount = javaPlugin.getConfigHandler().getMaxStock()-shop.getItemStock();
+                if (workingAmount<=0) {
+                    StaticUtils.sendMessage(player, "&cThis shop is full on stock right now!");
+                    return;
+                }
             }
 
             if (shop.getSellPrice()==null || shop.getSellPrice().compareTo(BigDecimal.ZERO)<0 || shop.getMoneyStock()==null) {

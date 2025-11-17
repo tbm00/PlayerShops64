@@ -13,6 +13,7 @@ commands:
     description: Base admin command for PlayerShops64
   sellgui:
     description: Open a GUI to sell items to the best-priced avaliable shops
+    aliases: [sell]
   depositgui:
     description: Open a GUI to deposit items into your shops
   exchangesellwand:

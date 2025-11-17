@@ -16,8 +16,8 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import dev.tbm00.papermc.playershops64.utils.*;
 import xzot1k.plugins.ds.DisplayShops;
+
 import dev.tbm00.papermc.playershops64.command.*;
 import dev.tbm00.papermc.playershops64.data.ConfigHandler;
 import dev.tbm00.papermc.playershops64.data.MySQLConnection;
@@ -28,6 +28,7 @@ import dev.tbm00.papermc.playershops64.listener.PlayerMovement;
 import dev.tbm00.papermc.playershops64.listener.PlayerWand;
 //import dev.tbm00.papermc.playershops64.listener.ServerStartup;
 import dev.tbm00.papermc.playershops64.listener.ShopBaseBlock;
+import dev.tbm00.papermc.playershops64.utils.*;
 
 public class PlayerShops64 extends JavaPlugin {
     private ConfigHandler configHandler;
@@ -83,11 +84,10 @@ public class PlayerShops64 extends JavaPlugin {
                 overrideSGPCommands();
             } else {
                 getCommand("shop").setExecutor(new ShopCmd(this));
+                getCommand("sellgui").setExecutor(new SellGuiCmd(this));
             }
-
-            getCommand("shopadmin").setExecutor(new AdminCmd(this));
-            getCommand("sellgui").setExecutor(new SellGuiCmd(this));
             getCommand("depositgui").setExecutor(new DepositGuiCmd(this));
+            getCommand("shopadmin").setExecutor(new AdminCmd(this));
             getCommand("exchangesellwand").setExecutor(new ExchangeWandCmd(this));
             getCommand("exchangeshops").setExecutor(new ExchangeShopCmd(this));
         }
@@ -254,9 +254,11 @@ public class PlayerShops64 extends JavaPlugin {
                 // override /sell
                 if (pc.getName().equalsIgnoreCase("sell")) {
                     //getLogger().info(pc.getName()+": "+pc.getLabel()+" "+pc.getAliases().subList(0, pc.getAliases().size()-1).toString());
-                    pc.setExecutor(null);
-                    pc.setTabCompleter(null);
-                    getLogger().info("Disabled ShopGUIPlus's /sell");
+                    SellGuiCmd sellGuiCmd = new SellGuiCmd(this);
+                    getCommand("sellgui").setExecutor(sellGuiCmd);
+                    pc.setExecutor(sellGuiCmd);
+                    pc.setTabCompleter(sellGuiCmd);
+                    getLogger().info("Overrode ShopGUIPlus's /sell");
                     continue;
                 }
 

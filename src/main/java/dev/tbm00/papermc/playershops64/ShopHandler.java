@@ -462,9 +462,9 @@ public class ShopHandler {
             return null;
         }
         Shop shop = getIndexedShop(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
-        if (shop == null) {
+        /*if (shop == null) {
             StaticUtils.log(ChatColor.RED, "location not found in shopLocationMap");
-        }
+        }*/
         return shop;
     }
 

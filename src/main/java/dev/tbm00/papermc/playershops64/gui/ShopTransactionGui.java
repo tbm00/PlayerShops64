@@ -163,7 +163,9 @@ public class ShopTransactionGui {
                                                                                 new ShopTransactionGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, closeGuiAfter);
                                                                             } else {
                                                                                 //gui.close(viewer);
+                                                                                gui.setCloseGuiAction(null);
                                                                                 viewer.closeInventory();
+                                                                                StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s transaction gui: " + this.quantity);
                                                                             }
                                                                         }));
         }
@@ -184,7 +186,9 @@ public class ShopTransactionGui {
                                                                                 new ShopTransactionGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, closeGuiAfter);
                                                                             } else {
                                                                                 //gui.close(viewer);
+                                                                                gui.setCloseGuiAction(null);
                                                                                 viewer.closeInventory();
+                                                                                StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s transaction gui: " + this.quantity);
                                                                             }
                                                                         }));
         }

@@ -194,8 +194,10 @@ public class ShopAdjustInvGui {
                                                                                         new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
                                                                                     }, 2L);
                                                                                 } else {
-                                                                                    gui.close(viewer);
-                                                                                    //viewer.closeInventory();
+                                                                                    gui.setCloseGuiAction(null);
+                                                                                    //gui.close(viewer);
+                                                                                    viewer.closeInventory();
+                                                                                    StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
                                                                                 }
                                                                             }));
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
@@ -215,8 +217,10 @@ public class ShopAdjustInvGui {
                                                                                         new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
                                                                                     }, 2L);
                                                                                 } else {
-                                                                                    gui.close(viewer);
-                                                                                    //viewer.closeInventory();
+                                                                                    gui.setCloseGuiAction(null);
+                                                                                    //gui.close(viewer);
+                                                                                    viewer.closeInventory();
+                                                                                    StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
                                                                                 }
                                                                             }));
             }
@@ -240,8 +244,10 @@ public class ShopAdjustInvGui {
                                                                                         new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
                                                                                     }, 2L);
                                                                                 } else {
-                                                                                    gui.close(viewer);
-                                                                                    //viewer.closeInventory();
+                                                                                    gui.setCloseGuiAction(null);
+                                                                                    //gui.close(viewer);
+                                                                                    viewer.closeInventory();
+                                                                                    StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
                                                                                 }
                                                                             }));
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
@@ -261,8 +267,10 @@ public class ShopAdjustInvGui {
                                                                                         new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
                                                                                     }, 2L);
                                                                                 } else {
-                                                                                    gui.close(viewer);
-                                                                                    //viewer.closeInventory();
+                                                                                    gui.setCloseGuiAction(null);
+                                                                                    //gui.close(viewer);
+                                                                                    viewer.closeInventory();
+                                                                                    StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
                                                                                 }
                                                                             }));
             } else if (attribute.equals(AdjustAttribute.DISPLAY_HEIGHT)) {
@@ -282,8 +290,10 @@ public class ShopAdjustInvGui {
                                                                                         new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
                                                                                     }, 2L);
                                                                                 } else {
-                                                                                    gui.close(viewer);
-                                                                                    //viewer.closeInventory();
+                                                                                    gui.setCloseGuiAction(null);
+                                                                                    //gui.close(viewer);
+                                                                                    viewer.closeInventory();
+                                                                                    StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
                                                                                 }
                                                                             }));
             }
@@ -307,8 +317,10 @@ public class ShopAdjustInvGui {
                                                                                         new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
                                                                                     }, 2L);
                                                                                 } else {
-                                                                                    gui.close(viewer);
-                                                                                    //viewer.closeInventory();
+                                                                                    gui.setCloseGuiAction(null);
+                                                                                    //gui.close(viewer);
+                                                                                    viewer.closeInventory();
+                                                                                    StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
                                                                                 }
                                                                             }));
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
@@ -328,8 +340,10 @@ public class ShopAdjustInvGui {
                                                                                         new ShopAdjustInvGui(javaPlugin, viewer, isAdmin, shopUuid, quantity, attribute, closeGuiAfter);
                                                                                     }, 2L);
                                                                                 } else {
-                                                                                    gui.close(viewer);
-                                                                                    //viewer.closeInventory();
+                                                                                    gui.setCloseGuiAction(null);
+                                                                                    //gui.close(viewer);
+                                                                                    viewer.closeInventory();
+                                                                                    StaticUtils.log(ChatColor.GREEN, viewer.getName() + " closed shop "+ShopUtils.getShopHint(shopUuid)+"'s adjust inv gui: "+AdjustAttribute.toString(attribute));
                                                                                 }
                                                                             }));
             }
