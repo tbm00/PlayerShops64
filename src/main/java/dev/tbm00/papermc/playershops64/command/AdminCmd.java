@@ -23,9 +23,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.Location;
-
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -36,7 +35,9 @@ import dev.tbm00.papermc.playershops64.data.enums.QueryType;
 import dev.tbm00.papermc.playershops64.data.enums.SortType;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.gui.ListShopsGui;
-import dev.tbm00.papermc.playershops64.utils.*;
+import dev.tbm00.papermc.playershops64.utils.GuiUtils;
+import dev.tbm00.papermc.playershops64.utils.ShopUtils;
+import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class AdminCmd implements TabExecutor {
     private final PlayerShops64 javaPlugin;

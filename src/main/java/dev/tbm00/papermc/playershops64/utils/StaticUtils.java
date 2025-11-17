@@ -356,6 +356,27 @@ public class StaticUtils {
         return true;
     }
 
+    public static boolean teleportPlayer(Player player, Location location) {
+        String playerName = player.getName();
+        if (pendingTeleports.contains(playerName)) {
+            StaticUtils.sendMessage(player, "&cYou are already waiting for a teleport!");
+            return false;
+        }
+        pendingTeleports.add(playerName);
+        StaticUtils.sendMessage(player, "&aTeleporting in 3 seconds -- don't move!");
+
+        // Schedule the teleport to run later
+        Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
+            if (pendingTeleports.contains(playerName)) {
+                // Remove player from pending list and teleport
+                pendingTeleports.remove(playerName);
+                player.teleport(location);
+            }
+        }, 60L);
+
+        return true;
+    }
+
     /**
      * Counts how many items in the player's inventory (storage + offhand) are "similar" to item
      */

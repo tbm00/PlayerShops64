@@ -2,9 +2,10 @@
 
 package dev.tbm00.papermc.playershops64.command;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -17,6 +18,11 @@ import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.enums.AdjustType;
 import dev.tbm00.papermc.playershops64.data.enums.QueryType;
@@ -26,10 +32,14 @@ import dev.tbm00.papermc.playershops64.gui.DepositGui;
 import dev.tbm00.papermc.playershops64.gui.ListCategoriesGui;
 import dev.tbm00.papermc.playershops64.gui.ListShopsGui;
 import dev.tbm00.papermc.playershops64.gui.SellGui;
-import dev.tbm00.papermc.playershops64.utils.*;
+import dev.tbm00.papermc.playershops64.utils.GuiUtils;
+import dev.tbm00.papermc.playershops64.utils.ShopUtils;
+import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
 public class ShopCmd implements TabExecutor {
     private final PlayerShops64 javaPlugin;
+
+    public static final List<UUID> recentAds = new CopyOnWriteArrayList<>();
 
     public ShopCmd(PlayerShops64 javaPlugin) {
         this.javaPlugin = javaPlugin;
@@ -80,6 +90,10 @@ public class ShopCmd implements TabExecutor {
                 return handleWithdrawCmd(player, args);
             case "assistant":
                 return handleAssistantCmd(player, args);
+            case "advertise":
+                return handleAdvertiseCmd(player);
+            case "teleport":
+                return handleShopTpCmd(player, args[1]);
             default: {
                 return handleSearchCmd(player, args);
             }
@@ -89,6 +103,7 @@ public class ShopCmd implements TabExecutor {
     private boolean handleHelpCmd(Player player) {
         player.sendMessage(ChatColor.DARK_PURPLE + "--- " + ChatColor.LIGHT_PURPLE + "Shop Owner Commands" + ChatColor.DARK_PURPLE + " ---\n"
             + ChatColor.WHITE + "/shop buy <amount>" + ChatColor.GRAY + " Buy shop creation item(s)\n"
+            + ChatColor.WHITE + "/shop advertise" + ChatColor.GRAY + " Advertise the shop in your view with a clickable message\n"
             + ChatColor.WHITE + "/shop manage" + ChatColor.GRAY + " View and manage all your shops\n"
             + ChatColor.WHITE + "/shop assistant add/remove all/view <player>" + ChatColor.GRAY + " Add/remove assistants to your shops\n"
             + ChatColor.WHITE + "/shop withdraw all/view max/<amount>" + ChatColor.GRAY + " Withdraw money from your shops\n"
@@ -437,6 +452,65 @@ public class ShopCmd implements TabExecutor {
         }
     }
 
+    private boolean handleAdvertiseCmd(Player player) {
+        UUID playerUuid = player.getUniqueId();
+        if (recentAds.contains(playerUuid)) {
+            StaticUtils.sendMessage(player, "&cYou must wait to advertise again!");
+            return true;
+        }
+
+        Shop shop = javaPlugin.getShopHandler().getShopInFocus(player);
+        if (shop == null) {
+            StaticUtils.sendMessage(player, "&cNo shop in your view!");
+            return true;
+        } else if (shop.getItemStack()==null) {
+            StaticUtils.sendMessage(player, "&cShop does not have a sale item set up!");
+            return true;
+        }
+
+        recentAds.add(playerUuid);
+        Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
+            if (recentAds.contains(playerUuid)) recentAds.remove(playerUuid);
+        }, 6000L); // 5 minutes
+
+        boolean own = shop.getOwnerUuid().equals(playerUuid);
+        for (Player onlinePlayer : javaPlugin.getServer().getOnlinePlayers()) {
+            sendAdvertisement(player, onlinePlayer, shop, own);
+        }
+        return true;
+    }
+
+    private void sendAdvertisement(Player fromPlayer, Player toPlayer, Shop shop, boolean own) {
+        String mainText = own ? javaPlugin.getConfigHandler().getChatPrefix() + "&d"+fromPlayer.getName()+" invited you to their "+StaticUtils.getItemName(shop.getItemStack()) +" &r&dshop! &a[Click to TP]":
+                                javaPlugin.getConfigHandler().getChatPrefix() + "&d"+fromPlayer.getName()+" invited you to a "+StaticUtils.getItemName(shop.getItemStack()) +" &r&dshop! &7 &a[Click to TP]";
+        BaseComponent[] mainComponents = TextComponent.fromLegacyText(
+            ChatColor.translateAlternateColorCodes('&', mainText)
+        );
+        TextComponent msg = new TextComponent(mainComponents);
+
+        String hoverText = "&7B: &a$" + StaticUtils.formatIntUS(shop.getBuyPrice().doubleValue())
+                        + "&7, S: &c$" + StaticUtils.formatIntUS(shop.getSellPrice().doubleValue())
+                        + "&7, Stock: &e" + StaticUtils.formatIntUS(shop.getItemStock())
+                        + "&7, Balance: &e$" + StaticUtils.formatIntUS(shop.getMoneyStock().doubleValue());
+        BaseComponent[] hoverComponents = TextComponent.fromLegacyText(
+            ChatColor.translateAlternateColorCodes('&', hoverText)
+        );
+
+        msg.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/shop teleport " + shop.getUuid()));
+        msg.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverComponents));
+        toPlayer.spigot().sendMessage(msg);
+    }
+
+    private boolean handleShopTpCmd(Player sender, String arg) {
+        if (arg==null || arg.isBlank()) return true;
+        
+        UUID shopUuid = UUID.fromString(arg);
+        if (shopUuid==null) return true;
+
+        StaticUtils.teleportPlayer(sender, javaPlugin.getShopHandler().getShop(shopUuid).getLocation());
+        return true;
+    }
+
     /**
      * Handles tab completion for the /shop command.
      */
@@ -445,7 +519,7 @@ public class ShopCmd implements TabExecutor {
         List<String> list = new ArrayList<>();
         if (args.length == 1) {
             list.clear();
-            String[] subCmds = new String[]{"help","buy","manage","deposit","withdraw","all","hand","<item>","<player>","assistant"};
+            String[] subCmds = new String[]{"help","buy","manage","deposit","withdraw","all","hand","<item>","<player>","assistant","advertise"};
 
             for (String n : subCmds) {
                 if (n!=null && n.startsWith(args[0])) 
