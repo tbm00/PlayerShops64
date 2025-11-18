@@ -2,6 +2,7 @@
 
 package dev.tbm00.papermc.playershops64.command;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -208,12 +209,26 @@ public class ShopCmd implements TabExecutor {
             case "all": {
                 List<UUID> ownedShops = new ArrayList<>(javaPlugin.getShopHandler().getPlayersShops(playerUuid));
                 if (ownedShops.size()<1) {
-                    StaticUtils.sendMessage(player, "&cError: Couldn't find any of your DisplayShops!");
+                    StaticUtils.sendMessage(player, "&cError: Couldn't find any of your shops!");
+                    return true;
+                }
+
+                int able = 0;
+                for (UUID shopUuid : ownedShops) {
+                    Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+                    if (shop.getItemStack()==null) continue;
+                    if (shop.hasInfiniteMoney()) continue;
+                    if (shop.getMoneyStock().compareTo(BigDecimal.valueOf(javaPlugin.getConfigHandler().getMaxBalance()))>=0) continue;
+                    able++;
+                }
+
+                if (able<=0) {
+                    StaticUtils.sendMessage(player, "&cError: None of your shops are appicable!");
                     return true;
                 }
 
                 if (arg3.equals("max")) {
-                    deposit_per = Math.floor(pocket_balance / ownedShops.size());
+                    deposit_per = Math.floor(pocket_balance / able);
                 } else {
                     try {
                         deposit_per = Double.parseDouble(arg3);
@@ -225,8 +240,14 @@ public class ShopCmd implements TabExecutor {
 
                 int i = 0;
                 for (UUID shopUuid : ownedShops) {
-                    i++;
+                    Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+                    if (shop.getItemStack()==null) continue;
+                    if (shop.hasInfiniteMoney()) continue;
+                    if (shop.getMoneyStock().compareTo(BigDecimal.valueOf(javaPlugin.getConfigHandler().getMaxBalance()))>=0) continue;
+                    
+                    double totalMemory = total_deposited;
                     total_deposited += ShopUtils.adjustBalance(player, shopUuid, AdjustType.ADD, deposit_per, false);
+                    if (totalMemory!=total_deposited) i++;
                 }
                 StaticUtils.sendMessage(player, "&aDeposited a total of $" + StaticUtils.formatIntUS(total_deposited) + " into " + i + " of your shops!");
                 return true;
@@ -473,7 +494,7 @@ public class ShopCmd implements TabExecutor {
             if (recentAds.contains(playerUuid)) recentAds.remove(playerUuid);
         }, 6000L); // 5 minutes
 
-        boolean own = shop.getOwnerUuid().equals(playerUuid);
+        boolean own = (shop.getOwnerUuid()==null) ? false : shop.getOwnerUuid().equals(playerUuid);
         for (Player onlinePlayer : javaPlugin.getServer().getOnlinePlayers()) {
             sendAdvertisement(player, onlinePlayer, shop, own);
         }

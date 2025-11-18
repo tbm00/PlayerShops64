@@ -2,6 +2,9 @@
 
 package dev.tbm00.papermc.playershops64.command;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+
 /* import java.util.Set;
 import java.util.UUID;
 import java.math.BigDecimal;
@@ -17,10 +20,8 @@ import org.bukkit.inventory.ItemStack; */
 
 import java.util.List;
 import java.util.UUID;
-import java.util.ArrayList;
 
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -65,24 +66,25 @@ public class AdminCmd implements TabExecutor {
             return handleMenuCmd(player);
         }
 
-        Player player = (Player) sender;
         String subCmd = args[0].toLowerCase();
         switch (subCmd) {
             case "help":
-                return handleHelpCmd(player);
+                return handleHelpCmd((Player) sender);
             case "menu":
             case "gui":
-                return handleMenuCmd(player);
+                return handleMenuCmd((Player) sender);
             case "give":
-                return handleGiveCmd(player, args);
+                return handleGiveCmd(sender, args);
             case "region":
-                return handleRegionCmd(player, args);
+                return handleRegionCmd((Player) sender, args);
+            case "info":
+                return handleInfoCmd((Player) sender);
             /*case "transferdisplayshopsdata":
                 return handleTransferCmd(player);
             case "deleteplayershopsdata":
                 return handleDeleteCmd(player);*/
             default: {
-                return handleSearchCmd(player, args);
+                return handleSearchCmd((Player) sender, args);
             }
         }
     }
@@ -92,9 +94,31 @@ public class AdminCmd implements TabExecutor {
             + ChatColor.WHITE + "/shopadmin" + ChatColor.GRAY + " Open shop GUI as admin\n"
             + ChatColor.WHITE + "/shopadmin give <player> <item> [amount]" + ChatColor.GRAY + " Give shop or wand item to a player\n"
             + ChatColor.WHITE + "/shopadmin <player>" + ChatColor.GRAY + " Find & manage all <player>'s shops\n"
-            + ChatColor.WHITE + "/shopadmin region" + ChatColor.GRAY + " Region commands\n"
+            + ChatColor.WHITE + "/shopadmin region <subCommand>" + ChatColor.GRAY + " Region system\n"
+            + ChatColor.WHITE + "/shopadmin info" + ChatColor.GRAY + " Get info about shop in your view\n"
         );
 
+        return true;
+    }
+
+    private boolean handleInfoCmd(Player player) {
+        Shop shop = javaPlugin.getShopHandler().getShopInFocus(player);
+        if (shop==null) {
+            StaticUtils.sendMessage(player, "&cError: No shop in your view!");
+            return true;
+        }
+
+        String msg = ChatColor.DARK_PURPLE + "--- " + ChatColor.LIGHT_PURPLE + ShopUtils.getShopHint(shop.getUuid()) + ChatColor.DARK_PURPLE + " ---\n";
+        if (shop.getItemStack()!=null) msg += ChatColor.WHITE + "- Item: " + ChatColor.GRAY + StaticUtils.getItemName(shop.getItemStack())+" x "+shop.getStackSize()+"\n";
+        msg += ChatColor.WHITE + "- Owner: " + ChatColor.GRAY + shop.getOwnerName()+" "+shop.getOwnerUuid()+"\n";
+        msg += ChatColor.WHITE + "- Stock: " + ChatColor.GRAY + shop.getItemStock()+" "+shop.hasInfiniteStock()+"\n";
+        msg += ChatColor.WHITE + "- Money: " + ChatColor.GRAY + StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue())+" "+shop.hasInfiniteMoney()+"\n";
+        if (shop.getBuyPrice()!=null) msg += ChatColor.WHITE + "- BuyPrice: " + ChatColor.GRAY + StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue())+"\n";
+        if (shop.getSellPrice()!=null) msg += ChatColor.WHITE + "- SellPrice: " + ChatColor.GRAY + StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue())+"\n";
+        if (shop.getLastTransactionDate()!=null) msg += ChatColor.WHITE + "- LastTransaction: " + ChatColor.GRAY + shop.getLastTransactionDate().toString()+"\n";
+        if (shop.getCurrentEditor()!=null) msg += ChatColor.WHITE + "- CurrentEditor: " + ChatColor.GRAY + javaPlugin.getServer().getOfflinePlayer(shop.getCurrentEditor()).getName()+" "+shop.getCurrentEditor()+"\n";
+
+        player.sendMessage(msg);
         return true;
     }
 
@@ -140,11 +164,15 @@ public class AdminCmd implements TabExecutor {
         } else if (argument2.equalsIgnoreCase("SHOP") || argument2.equalsIgnoreCase("SHOPBLOCK") || argument2.equalsIgnoreCase("BASEBLOCK")) {
             StaticUtils.sendMessage(player, "&aReceived " + amount + " player shops!");
             StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepPlayerShopItemStack(amount));
+        } else if (argument2.equalsIgnoreCase("COUPON")) {
+            StaticUtils.sendMessage(player, "&aReceived " + amount + " AdminShop coupons!");
+            StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepCouponItemStack(amount));
         } else {
             sender.sendMessage(ChatColor.RED + "'"+argument2+"' is not defined!");
             return false;
         }
 
+        sender.sendMessage(ChatColor.GREEN + "Gave "+player.getName()+" "+amount+" "+argument2+"s!");
         return true;
     }
 
@@ -160,10 +188,16 @@ public class AdminCmd implements TabExecutor {
                 return handleRegionInfoCmd(player);
             case "setowner":
                 return handleRegionSetOwnerCmd(player, args);
+            case "setinfinitestock":
+                return handleRegionSetInfStockCmd(player, args);
+            case "setinfinitemoney":
+                return handleRegionSetInfMoneyCmd(player, args);
+            case "adjustbuyprice":
+                return handleRegionAdjustBuyPriceCmd(player, args);
             case "deleteall":
                 return handleRegionDeleteAllCmd(player);
             default:
-                StaticUtils.sendMessage(player, "&f/shop region <info/deleteAll/setOwner> [newOwner]");
+                StaticUtils.sendMessage(player, "&f/shop region <info/deleteAll/setOwner/setInfiniteMoney/setInfiniteStock/adjustBuyPrice> [arg]");
                 return true;
         }
     }
@@ -200,11 +234,20 @@ public class AdminCmd implements TabExecutor {
         }
 
         String targetName = args[2];
-        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-        if (target == null || ( !target.isOnline() && !target.hasPlayedBefore())) {
-            StaticUtils.sendMessage(player, "&cCould not find player " + targetName + "!");
-            return true;
-        } if (target.getName() != null) targetName = target.getName();
+
+        OfflinePlayer target;
+        if (targetName.equalsIgnoreCase("null")) target = null;
+        else {
+            target = Bukkit.getOfflinePlayer(targetName);
+            if (target == null || ( !target.isOnline() && !target.hasPlayedBefore())) {
+                StaticUtils.sendMessage(player, "&cCould not find player " + targetName + "!");
+                return true;
+            } 
+        }
+
+        if (target == null) {
+            StaticUtils.sendMessage(player, "&eSetting null owner..!");
+        } else if (target.getName() != null) targetName = target.getName();
 
         UUID playerUuid = player.getUniqueId();
         Pair<Location, Location> pair = javaPlugin.getShopHandler().regionPositionMap.get(playerUuid);
@@ -246,6 +289,169 @@ public class AdminCmd implements TabExecutor {
         }
 
         StaticUtils.sendMessage(player, "&aSet owner to " + targetName + " for " + changed + " shops in the selected region!");
+        return true;
+    }
+
+    private boolean handleRegionAdjustBuyPriceCmd(Player player, String[] args) {
+        if (args.length < 3) {
+            StaticUtils.sendMessage(player, "&eUsage: &f/shopadmin region adjustBuyPrice <value>");
+            return true;
+        }
+
+        double value;
+        try {
+            value = Double.parseDouble(args[2]);
+        } catch (Exception e) {
+            StaticUtils.sendMessage(player, "&cCould not parse double from "+args[2]+"!");
+            return true;
+        }
+
+        UUID playerUuid = player.getUniqueId();
+        Pair<Location, Location> pair = javaPlugin.getShopHandler().regionPositionMap.get(playerUuid);
+        if (pair == null || pair.getLeft() == null || pair.getRight() == null) {
+            StaticUtils.sendMessage(player, "&cYou must select both positions with the region wand first!");
+            return true;
+        }
+
+        Location pos1 = pair.getLeft();
+        Location pos2 = pair.getRight();
+        if (!pos1.getWorld().equals(pos2.getWorld())) {
+            StaticUtils.sendMessage(player, "&cPos1 and Pos2 must be in the same world!");
+            return true;
+        }
+
+        // cuboid bounds
+        int minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
+        int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
+        int minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
+        int maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
+        int minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
+        int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+        String worldName = pos1.getWorld().getName();
+
+        int attempted = 0;
+        for (Shop shop : javaPlugin.getShopHandler().getShopView().values()) {
+            Location shopLocation = shop.getLocation();
+            if (shopLocation == null || !shopLocation.getWorld().getName().equals(worldName)) continue;
+
+            int x = shopLocation.getBlockX();
+            int y = shopLocation.getBlockY();
+            int z = shopLocation.getBlockZ();
+
+            if (x < minX || x > maxX) continue;
+            if (y < minY || y > maxY) continue;
+            if (z < minZ || z > maxZ) continue;
+
+            BigDecimal ogPrice = shop.getBuyPrice();
+            Double newPrice = ogPrice.doubleValue() * value;
+
+            ShopUtils.setBuyPrice(player, shop.getUuid(), newPrice);
+            attempted++;
+        }
+
+        StaticUtils.sendMessage(player, "&aAttempted changing buy price of " + attempted + " shops in the selected region!");
+        return true;
+    }
+
+    private boolean handleRegionSetInfMoneyCmd(Player player, String[] args) {
+        if (args.length < 3) {
+            StaticUtils.sendMessage(player, "&eUsage: &f/shopadmin region setInfiniteMoney <true/false>");
+            return true;
+        }
+
+        boolean infinite = Boolean.parseBoolean(args[2]);
+
+        UUID playerUuid = player.getUniqueId();
+        Pair<Location, Location> pair = javaPlugin.getShopHandler().regionPositionMap.get(playerUuid);
+        if (pair == null || pair.getLeft() == null || pair.getRight() == null) {
+            StaticUtils.sendMessage(player, "&cYou must select both positions with the region wand first!");
+            return true;
+        }
+
+        Location pos1 = pair.getLeft();
+        Location pos2 = pair.getRight();
+        if (!pos1.getWorld().equals(pos2.getWorld())) {
+            StaticUtils.sendMessage(player, "&cPos1 and Pos2 must be in the same world!");
+            return true;
+        }
+
+        // cuboid bounds
+        int minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
+        int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
+        int minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
+        int maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
+        int minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
+        int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+        String worldName = pos1.getWorld().getName();
+
+        int changed = 0;
+        for (Shop shop : javaPlugin.getShopHandler().getShopView().values()) {
+            Location shopLocation = shop.getLocation();
+            if (shopLocation == null || !shopLocation.getWorld().getName().equals(worldName)) continue;
+
+            int x = shopLocation.getBlockX();
+            int y = shopLocation.getBlockY();
+            int z = shopLocation.getBlockZ();
+
+            if (x < minX || x > maxX) continue;
+            if (y < minY || y > maxY) continue;
+            if (z < minZ || z > maxZ) continue;
+
+            if (ShopUtils.setShopInfiniteMoney(player, shop.getUuid(), infinite)) changed++;
+        }
+
+        StaticUtils.sendMessage(player, "&aSet infinite money to " + infinite + " for " + changed + " shops in the selected region!");
+        return true;
+    }
+
+    private boolean handleRegionSetInfStockCmd(Player player, String[] args) {
+        if (args.length < 3) {
+            StaticUtils.sendMessage(player, "&eUsage: &f/shopadmin region setInfiniteStock <true/false>");
+            return true;
+        }
+
+        boolean infinite = Boolean.parseBoolean(args[2]);
+
+        UUID playerUuid = player.getUniqueId();
+        Pair<Location, Location> pair = javaPlugin.getShopHandler().regionPositionMap.get(playerUuid);
+        if (pair == null || pair.getLeft() == null || pair.getRight() == null) {
+            StaticUtils.sendMessage(player, "&cYou must select both positions with the region wand first!");
+            return true;
+        }
+
+        Location pos1 = pair.getLeft();
+        Location pos2 = pair.getRight();
+        if (!pos1.getWorld().equals(pos2.getWorld())) {
+            StaticUtils.sendMessage(player, "&cPos1 and Pos2 must be in the same world!");
+            return true;
+        }
+
+        // cuboid bounds
+        int minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
+        int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
+        int minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
+        int maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
+        int minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
+        int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+        String worldName = pos1.getWorld().getName();
+
+        int changed = 0;
+        for (Shop shop : javaPlugin.getShopHandler().getShopView().values()) {
+            Location shopLocation = shop.getLocation();
+            if (shopLocation == null || !shopLocation.getWorld().getName().equals(worldName)) continue;
+
+            int x = shopLocation.getBlockX();
+            int y = shopLocation.getBlockY();
+            int z = shopLocation.getBlockZ();
+
+            if (x < minX || x > maxX) continue;
+            if (y < minY || y > maxY) continue;
+            if (z < minZ || z > maxZ) continue;
+
+            if (ShopUtils.setShopInfiniteStock(player, shop.getUuid(), infinite)) changed++;
+        }
+
+        StaticUtils.sendMessage(player, "&aSet infinite stock to " + infinite + " for " + changed + " shops in the selected region!");
         return true;
     }
 
@@ -313,7 +519,7 @@ public class AdminCmd implements TabExecutor {
         List<String> list = new ArrayList<>();
         if (args.length == 1) {
             list.clear();
-            String[] subCmds = new String[]{"give","<player>","region"/*,"transferDisplayShopsData","deletePlayerShopsData"*/};
+            String[] subCmds = new String[]{"give","<player>","region","info"/*,"transferDisplayShopsData","deletePlayerShopsData"*/};
             for (String n : subCmds) {
                 if (n!=null && n.startsWith(args[0].toLowerCase())) 
                     list.add(n);
@@ -329,7 +535,7 @@ public class AdminCmd implements TabExecutor {
                         list.add(player.getName());
                 });
             } else if (args[0].equalsIgnoreCase("region")) {
-                String[] regionSub = new String[]{"info","setOwner","deleteAll"};
+                String[] regionSub = new String[]{"info","setOwner","deleteAll","setInfiniteMoney","setInfiniteStock","adjustBuyPrice"};
                 for (String n : regionSub) {
                     if (n.toLowerCase().startsWith(args[1].toLowerCase()))
                         list.add(n);
@@ -337,7 +543,7 @@ public class AdminCmd implements TabExecutor {
             }
         } else if (args.length == 3) {
             if (args[0].equalsIgnoreCase("give")) {
-                String[] subCmds = new String[]{"SHOP_BLOCK","SELL_WAND","DEPOSIT_WAND","REGION_WAND"};
+                String[] subCmds = new String[]{"SHOP_BLOCK","SELL_WAND","DEPOSIT_WAND","REGION_WAND","COUPON"};
                 for (String n : subCmds) {
                     if (n!=null && n.startsWith(args[2].toUpperCase())) 
                         list.add(n);

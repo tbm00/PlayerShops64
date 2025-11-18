@@ -17,19 +17,18 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.OfflinePlayer;
 //import org.bukkit.GameMode;
 import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.Orientable;
 import org.bukkit.block.data.Rotatable;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.enchantments.Enchantment;
@@ -43,10 +42,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import net.md_5.bungee.api.chat.TextComponent;
-
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
+import net.md_5.bungee.api.chat.TextComponent;
 
 public class StaticUtils {
     private static PlayerShops64 javaPlugin;
@@ -64,6 +62,7 @@ public class StaticUtils {
     public static NamespacedKey DESPOIT_WAND_KEY;
     public static NamespacedKey SELL_WAND_KEY;
     public static NamespacedKey REGION_WAND_KEY;
+    public static NamespacedKey COUPON_HALF_OFF_KEY;
 
     private static final Pattern INVISIBLES = Pattern.compile("[\\u00AD\\u00A0\\u200B\\u200C\\u200D\\u2060]");
     private static final Pattern WHITESPACE_RUN = Pattern.compile("[\\s_]+");
@@ -97,6 +96,7 @@ public class StaticUtils {
         DESPOIT_WAND_KEY = new NamespacedKey(javaPlugin, "deposit-wand");
         SELL_WAND_KEY = new NamespacedKey(javaPlugin, "sell-wand");
         REGION_WAND_KEY = new NamespacedKey(javaPlugin, "region-wand");
+        COUPON_HALF_OFF_KEY = new NamespacedKey(javaPlugin, "half-off-coupon");
     }
 
     /**
@@ -318,6 +318,27 @@ public class StaticUtils {
         }
     }
 
+    public static Location parseLocation(String str) {
+        if (str == null || str.isEmpty()) return null;
+        
+        String[] parts = str.split(",\\s*");
+        if (parts.length != 4) return null;
+
+        String worldName = parts[0];
+        World world = javaPlugin.getServer().getWorld(worldName);
+
+        if (world == null) {
+            javaPlugin.getLogger().warning("World '" + worldName + "' does not exist when parsing!");
+            return null;
+        }
+
+        double x = Double.parseDouble(parts[1]);
+        double y = Double.parseDouble(parts[2]);
+        double z = Double.parseDouble(parts[3]);
+
+        return new Location(world, x, y, z);
+    }
+
     /**
      * Teleports a player to the given world and coordinates after a 5-second delay.
      * If the player moves during the delay, the teleport is cancelled.
@@ -504,7 +525,7 @@ public class StaticUtils {
      *
      * Must be called on the main thread (Bukkit thread).
      */
-    public static boolean removeSpecificItem(Player player, ItemStack item, int quantity) {
+    public static boolean removeSpecificHeldItem(Player player, ItemStack item, int quantity) {
         if (quantity <= 0) return true;
         if (player == null || item == null || item.getType().isAir()) return false;
         
@@ -771,6 +792,25 @@ public class StaticUtils {
         List<String> lore = new ArrayList<>();
         lore.add("&7&oShift-click a container to");
         lore.add("&7&osell items to matching shops");
+        meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+        meta.addEnchant(Enchantment.LURE, 1, true);
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+
+        wand.setItemMeta(meta);
+        if (amount!=null) wand.setAmount(amount);
+
+        return wand;
+    }
+
+    public static ItemStack prepCouponItemStack(Integer amount) {
+        ItemStack wand = new ItemStack(Material.MAP);
+        ItemMeta meta = wand.getItemMeta();
+
+        meta.getPersistentDataContainer().set(StaticUtils.COUPON_HALF_OFF_KEY, PersistentDataType.STRING, "true");
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&6AdminShop Coupon"));
+        meta.setLore(null);
+        List<String> lore = new ArrayList<>();
+        lore.add("&7Use to get 50% off your purchase at &o/adminshop");
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
         meta.addEnchant(Enchantment.LURE, 1, true);
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);

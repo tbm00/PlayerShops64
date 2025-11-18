@@ -50,6 +50,8 @@ public class ShopHandler {
                 // Map<PlayerUuid, Pair<left block location, right block location>>
     public final Map<UUID, Pair<Location, Location>> regionPositionMap = new ConcurrentHashMap<>();
 
+    public final Set<UUID> activeCoupons = new HashSet<>();
+
     public VisualTask visualTask;
 
     public ShopHandler(PlayerShops64 javaPlugin, MySQLConnection db) {

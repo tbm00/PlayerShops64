@@ -11,9 +11,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import dev.triumphteam.gui.builder.item.ItemBuilder;
-import dev.triumphteam.gui.guis.Gui;
-
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.enums.AdjustAttribute;
 import dev.tbm00.papermc.playershops64.data.enums.QueryType;
@@ -21,6 +18,8 @@ import dev.tbm00.papermc.playershops64.data.enums.SortType;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
+import dev.triumphteam.gui.builder.item.ItemBuilder;
+import dev.triumphteam.gui.guis.Gui;
 
 public class ShopTransactionGui {
     private final PlayerShops64 javaPlugin;
@@ -32,6 +31,7 @@ public class ShopTransactionGui {
     private final int quantity;
     private final boolean closeGuiAfter;
     private String label = "Shop Transaction";
+    private final boolean usingCoupon;
     
     public ShopTransactionGui(PlayerShops64 javaPlugin, Player viewer, boolean isAdmin, UUID shopUuid, Integer quantity, boolean closeGuiAfter) {
         this.javaPlugin = javaPlugin;
@@ -42,6 +42,7 @@ public class ShopTransactionGui {
         this.quantity = (quantity==null) ? 0 : Math.max(quantity, 0);
         this.gui = new Gui(6, label);
         this.closeGuiAfter = closeGuiAfter;
+        this.usingCoupon = (shop.hasInfiniteMoney() && javaPlugin.getShopHandler().activeCoupons.contains(viewer.getUniqueId()));
 
         if (shop.getItemStack()==null) {
             StaticUtils.sendMessage(viewer, "&cError: This shop does not have a sale item set!");
@@ -137,7 +138,7 @@ public class ShopTransactionGui {
             ItemMeta shopMeta = shopItem.getItemMeta();
             List<String> shopLore = shopMeta.getLore();
 
-            shopLore = ShopUtils.formatSaleItemLoreText(shop, true);
+            shopLore = ShopUtils.formatSaleItemLoreText(shop, true, usingCoupon);
             shopItem.setAmount(shop.getStackSize());
             shopMeta.setDisplayName(StaticUtils.getItemName(shop.getItemStack()));
             shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
@@ -173,7 +174,9 @@ public class ShopTransactionGui {
         if (shop.getBuyPrice()!=null) { // Buy Button
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to &abuy " + quantity + " &6for $" + StaticUtils.formatDoubleUS((shop.getBuyPriceForOne().multiply(BigDecimal.valueOf(quantity))).doubleValue()));
+            if (usingCoupon) lore.add("&6Click to &abuy " + quantity + " &6for &m$" + StaticUtils.formatDoubleUS((shop.getBuyPriceForOne().multiply(BigDecimal.valueOf(quantity))).doubleValue())+"&r&e $"+StaticUtils.formatDoubleUS(((shop.getBuyPriceForOne().divide(BigDecimal.valueOf(2))).multiply(BigDecimal.valueOf(quantity))).doubleValue()));
+            else lore.add("&6Click to &abuy " + quantity + " &6for $" + StaticUtils.formatDoubleUS((shop.getBuyPriceForOne().multiply(BigDecimal.valueOf(quantity))).doubleValue()));
+            
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aConfirm Buy"));
             item.setItemMeta(meta);

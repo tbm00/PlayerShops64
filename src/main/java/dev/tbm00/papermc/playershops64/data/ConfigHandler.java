@@ -37,8 +37,12 @@ public class ConfigHandler {
 
     private Set<String> ignoredPlayerSearches = new HashSet<>();
 
+    private boolean adminShopCouponsEnabled = false;
+    private boolean adminShopNearToRedeem = false;
+    private String adminShopLocation = null;
+    private int adminShopNearRadius = 20;
+
     private List<GuiSearchCategory> searchCategories = new ArrayList<>();
-    
 
     /**
      * Constructs a ConfigHandler instance.
@@ -56,6 +60,7 @@ public class ConfigHandler {
             if (!loadDisplaySection()) passed = false;
             if (!loadSearchSection()) passed = false;
             if (!loadGuiSection()) passed = false;
+            if (!loadCouponSection()) passed = false;
             
             if (passed)
                 StaticUtils.log(ChatColor.GREEN, "ConfigHandler initialized.");
@@ -126,7 +131,7 @@ public class ConfigHandler {
     }
 
     /**
-     * Loads the "shop" section of the configuration.
+     * Loads the "search" section of the configuration.
      */
     private boolean loadSearchSection() {
         ConfigurationSection search = javaPlugin.getConfig().getConfigurationSection("search");
@@ -138,6 +143,20 @@ public class ConfigHandler {
             }
         }
 
+        return true;
+    }
+
+    /**
+     * Loads the "adminShopCoupons" section of the configuration.
+     */
+    private boolean loadCouponSection() {
+        ConfigurationSection lang = javaPlugin.getConfig().getConfigurationSection("adminShopCoupons");
+        if (lang!=null) {
+            adminShopCouponsEnabled = lang.contains("enabled") ? lang.getBoolean("enabled") : false;
+            adminShopNearToRedeem = lang.contains("mustBeNearAdminShopToRedeem") ? lang.getBoolean("mustBeNearAdminShopToRedeem") : false;
+            adminShopLocation = lang.contains("adminShopLocation") ? lang.getString("adminShopLocation") : null;
+            adminShopNearRadius = lang.contains("adminShopNearRadius") ? lang.getInt("adminShopNearRadius") : 0;
+        }
         return true;
     }
 
@@ -257,8 +276,26 @@ public class ConfigHandler {
         return baseBlockMaterials;
     }
 
+    // Search
     public Set<String> getIgnoredPlayerSearches() {
         return ignoredPlayerSearches;
+    }
+
+    // Coupons
+    public boolean isAdminShopCouponEnabled() {
+        return adminShopCouponsEnabled;
+    }
+
+    public boolean mustBeNearAdminShopToRedeem() {
+        return adminShopNearToRedeem;
+    }
+
+    public String getAdminShopLocation() {
+        return adminShopLocation;
+    }
+
+    public int getAdminShopNearByRadius() {
+        return adminShopNearRadius;
     }
 
     // Display

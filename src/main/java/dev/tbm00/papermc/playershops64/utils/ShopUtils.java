@@ -251,7 +251,7 @@ public class ShopUtils {
             
             // edit shop
             if (newPrice==null) shop.setBuyPrice(null);
-            else shop.setBuyPrice(BigDecimal.valueOf(newPrice));
+            else shop.setBuyPrice(BigDecimal.valueOf(newPrice).setScale(2, RoundingMode.DOWN));
 
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
@@ -293,7 +293,7 @@ public class ShopUtils {
 
             // edit shop
             if (newPrice==null) shop.setSellPrice(null);
-            else shop.setSellPrice(BigDecimal.valueOf(newPrice));
+            else shop.setSellPrice(BigDecimal.valueOf(newPrice).setScale(2, RoundingMode.DOWN));
 
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
@@ -908,7 +908,7 @@ public class ShopUtils {
                 return;
             }
             
-            if (!StaticUtils.removeSpecificItem(player, saleItem, workingAmount)) {
+            if (!StaticUtils.removeSpecificHeldItem(player, saleItem, workingAmount)) {
                 StaticUtils.sendMessage(player, "&cError removing " + StaticUtils.formatIntUS(workingAmount) + " x " + StaticUtils.getItemName(saleItem) + "&r&c from your inventory..!");
                 return;
             }
@@ -950,7 +950,7 @@ public class ShopUtils {
             }
 
             if (shop.isAssistant(player.getUniqueId())) {
-                StaticUtils.sendMessage(player, "&cYou can't sell to shops you are an assistant to");
+                StaticUtils.sendMessage(player, "&cYou can't sell to shops you are an assistant to!");
                 return;
             }
 
@@ -1064,7 +1064,7 @@ public class ShopUtils {
             }
 
             if (shop.isAssistant(player.getUniqueId())) {
-                StaticUtils.sendMessage(player, "&cYou can't buy from shops you are an assistant to");
+                StaticUtils.sendMessage(player, "&cYou can't buy from shops you are an assistant to!");
                 return;
             }
 
@@ -1100,11 +1100,14 @@ public class ShopUtils {
                 return;
             }
 
-            BigDecimal totalPrice = StaticUtils.normalizeBigDecimal( unitPrice.multiply(BigDecimal.valueOf(workingAmount)) );
+            boolean usingCoupon = (javaPlugin.getShopHandler().activeCoupons.contains(player.getUniqueId()) && shop.hasInfiniteMoney());
+            BigDecimal effectiveUnitPrice = usingCoupon ? unitPrice.divide(BigDecimal.valueOf(2)) : unitPrice;
+
+            BigDecimal totalPrice = StaticUtils.normalizeBigDecimal(effectiveUnitPrice.multiply(BigDecimal.valueOf(workingAmount)) );
             BigDecimal balance = BigDecimal.valueOf(javaPlugin.getVaultHook().getBalance(player));
             if (balance.compareTo(totalPrice) < 0) {
                 // get max afforded
-                int playerCanAfford = balance.divide(unitPrice, 0, RoundingMode.DOWN).intValue();
+                int playerCanAfford = balance.divide(effectiveUnitPrice, 0, RoundingMode.DOWN).intValue();
                 if (playerCanAfford<=0) {
                     StaticUtils.sendMessage(player, "&cYou can't afford to buy any right now!");
                     return;
@@ -1112,13 +1115,14 @@ public class ShopUtils {
 
                 if (shop.hasInfiniteStock()) workingAmount = playerCanAfford;
                 else workingAmount = Math.min(playerCanAfford, shopHas);
-                totalPrice = StaticUtils.normalizeBigDecimal( unitPrice.multiply(BigDecimal.valueOf(workingAmount)) );
+
+                totalPrice = StaticUtils.normalizeBigDecimal( effectiveUnitPrice.multiply(BigDecimal.valueOf(workingAmount)) );
             }
 
             BigDecimal maxBalance = StaticUtils.normalizeBigDecimal(BigDecimal.valueOf(javaPlugin.getConfigHandler().getMaxBalance()));
             BigDecimal shopBalance = StaticUtils.normalizeBigDecimal(shop.getMoneyStock() == null ? BigDecimal.ZERO : shop.getMoneyStock());
             BigDecimal projected = shopBalance.add(totalPrice);
-            if (projected.compareTo(maxBalance) > 0) {
+            if (!shop.hasInfiniteMoney() && projected.compareTo(maxBalance) > 0) {
                 StaticUtils.sendMessage(player, "&cTransaction canceled as it would cause this shop to exceed the max stored balance!");
                 return;
             }
@@ -1141,6 +1145,8 @@ public class ShopUtils {
                 StaticUtils.sendMessage(player, "&cError adding " +StaticUtils.formatIntUS(workingAmount)+ " x " + StaticUtils.getItemName(saleItem) + "&r&c to your inventory..!");
                 return;
             }
+
+            if (usingCoupon) javaPlugin.getShopHandler().activeCoupons.remove(player.getUniqueId());
 
             // edit shop
             if (!shop.hasInfiniteStock()) shop.setItemStock(shop.getItemStock() - workingAmount);
@@ -1236,6 +1242,60 @@ public class ShopUtils {
         }
     }
 
+    public static boolean setShopInfiniteMoney(Player player, UUID shopUuid, boolean hasInfinite) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to set shop " + shopUuid + "'s infiniteMoney off the main thread -- canceling..!");
+            return false;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            return false;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                return false;
+            }
+
+            shop.setInfiniteMoney(hasInfinite);
+
+            // apply updates
+            javaPlugin.getShopHandler().upsertShopObject(shop);
+            Logger.logEdit(player.getName()+" set infnite money to " + hasInfinite + " for shop "+ShopUtils.getShopHint(shopUuid)+"!");
+            return true;
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
+    public static boolean setShopInfiniteStock(Player player, UUID shopUuid, boolean hasInfinite) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to set shop " + shopUuid + "'s infiniteStock off the main thread -- canceling..!");
+            return false;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            return false;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                return false;
+            }
+
+            shop.setInfiniteStock(hasInfinite);
+
+            // apply updates
+            javaPlugin.getShopHandler().upsertShopObject(shop);
+            Logger.logEdit(player.getName()+" set infnite stock to " + hasInfinite + " for shop "+ShopUtils.getShopHint(shopUuid)+"!");
+            return true;
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
     // One offs
     public static void teleportPlayerToShop(Player player, Shop shop) {
         double x=shop.getLocation().getX(), y=shop.getLocation().getY(), z=shop.getLocation().getZ();
@@ -1295,6 +1355,10 @@ public class ShopUtils {
     }
 
     public static List<String> formatSaleItemLoreText(Shop shop, boolean includeStackSize) {
+        return formatSaleItemLoreText(shop, includeStackSize, false);
+    }
+
+    public static List<String> formatSaleItemLoreText(Shop shop, boolean includeStackSize, boolean usingCoupon) {
         if (shop==null) return null;
 
         Double buyPrice = (shop.getBuyPrice()==null) ? null : shop.getBuyPrice().doubleValue();
@@ -1325,12 +1389,14 @@ public class ShopUtils {
             lore.add("&7" + shop.getDescription());
 
         if (buyPrice==null) priceLine = "&7B: &4(disabled) ";
-        else priceLine = "&7B: &a$" + StaticUtils.formatIntUS(buyPrice) + " ";
+        else {
+            if (usingCoupon) priceLine = "&7B: &2&m$" + StaticUtils.formatIntUS(buyPrice) + "&r&a $"+StaticUtils.formatIntUS(buyPrice/2) + " ";
+            else priceLine = "&7B: &a$" + StaticUtils.formatIntUS(buyPrice) + " ";
+        }
 
         if (sellPrice==null) priceLine += "&7S: &4(disabled) ";
         else priceLine += "&7S: &c$" + StaticUtils.formatIntUS(sellPrice);
         lore.add(priceLine);
-
 
         String sizeLine = "";
         //if (includeStackSize) sizeLine += "&7Stack Size: &e" + shop.getStackSize() + " ";

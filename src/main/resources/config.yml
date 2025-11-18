@@ -1,4 +1,4 @@
-# PlayerShops64 v1.0.3 by @tbm00
+# PlayerShops64 v1.0.4 by @tbm00
 # https://github.com/tbm00/PlayerShops64
 
 enabled: true
@@ -70,6 +70,12 @@ display:
 search:
   ignoredPlayers: # player names that conflict with item / enchantment queries
     - "sharpness"
+
+adminShopCoupons: # a shop is an "admin shop" if it has infinite money stock
+  enabled: false
+  mustBeNearAdminShopToRedeem: true
+  adminShopLocation: "World, X, Y, Z"
+  adminShopNearRadius: 20
 
 gui:
   categories:
