@@ -90,7 +90,7 @@ public class ShopManageGui {
                                                                             //gui.close(viewer);
                                                                             viewer.closeInventory();
                                                                             
-                                                                            ShopUtils.setShopItem(viewer, shopUuid);
+                                                                            ShopUtils.setShopItem(viewer, shopUuid, false);
                                                                         }));
         } else { 
             // Sale Item

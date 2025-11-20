@@ -36,6 +36,7 @@ import dev.tbm00.papermc.playershops64.data.enums.QueryType;
 import dev.tbm00.papermc.playershops64.data.enums.SortType;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.gui.ListShopsGui;
+import dev.tbm00.papermc.playershops64.gui.ShopManageGui;
 import dev.tbm00.papermc.playershops64.utils.GuiUtils;
 import dev.tbm00.papermc.playershops64.utils.ShopUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
@@ -75,10 +76,16 @@ public class AdminCmd implements TabExecutor {
                 return handleMenuCmd((Player) sender);
             case "give":
                 return handleGiveCmd(sender, args);
-            case "region":
-                return handleRegionCmd((Player) sender, args);
             case "info":
                 return handleInfoCmd((Player) sender);
+            case "manage":
+                return handleManageCmd((Player) sender);
+            case "setstock":
+                return handleSetStockCmd((Player) sender, args);
+            case "setitem":
+                return handleSetItemCmd((Player) sender);
+            case "region":
+                return handleRegionCmd((Player) sender, args);
             /*case "transferdisplayshopsdata":
                 return handleTransferCmd(player);
             case "deleteplayershopsdata":
@@ -98,27 +105,6 @@ public class AdminCmd implements TabExecutor {
             + ChatColor.WHITE + "/shopadmin info" + ChatColor.GRAY + " Get info about shop in your view\n"
         );
 
-        return true;
-    }
-
-    private boolean handleInfoCmd(Player player) {
-        Shop shop = javaPlugin.getShopHandler().getShopInFocus(player);
-        if (shop==null) {
-            StaticUtils.sendMessage(player, "&cError: No shop in your view!");
-            return true;
-        }
-
-        String msg = ChatColor.DARK_PURPLE + "--- " + ChatColor.LIGHT_PURPLE + ShopUtils.getShopHint(shop.getUuid()) + ChatColor.DARK_PURPLE + " ---\n";
-        if (shop.getItemStack()!=null) msg += ChatColor.WHITE + "- Item: " + ChatColor.GRAY + StaticUtils.getItemName(shop.getItemStack())+" x "+shop.getStackSize()+"\n";
-        msg += ChatColor.WHITE + "- Owner: " + ChatColor.GRAY + shop.getOwnerName()+" "+shop.getOwnerUuid()+"\n";
-        msg += ChatColor.WHITE + "- Stock: " + ChatColor.GRAY + shop.getItemStock()+" "+shop.hasInfiniteStock()+"\n";
-        msg += ChatColor.WHITE + "- Money: " + ChatColor.GRAY + StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue())+" "+shop.hasInfiniteMoney()+"\n";
-        if (shop.getBuyPrice()!=null) msg += ChatColor.WHITE + "- BuyPrice: " + ChatColor.GRAY + StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue())+"\n";
-        if (shop.getSellPrice()!=null) msg += ChatColor.WHITE + "- SellPrice: " + ChatColor.GRAY + StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue())+"\n";
-        if (shop.getLastTransactionDate()!=null) msg += ChatColor.WHITE + "- LastTransaction: " + ChatColor.GRAY + shop.getLastTransactionDate().toString()+"\n";
-        if (shop.getCurrentEditor()!=null) msg += ChatColor.WHITE + "- CurrentEditor: " + ChatColor.GRAY + javaPlugin.getServer().getOfflinePlayer(shop.getCurrentEditor()).getName()+" "+shop.getCurrentEditor()+"\n";
-
-        player.sendMessage(msg);
         return true;
     }
 
@@ -173,6 +159,73 @@ public class AdminCmd implements TabExecutor {
         }
 
         sender.sendMessage(ChatColor.GREEN + "Gave "+player.getName()+" "+amount+" "+argument2+"s!");
+        return true;
+    }
+
+    private boolean handleInfoCmd(Player player) {
+        Shop shop = javaPlugin.getShopHandler().getShopInFocus(player);
+        if (shop==null) {
+            StaticUtils.sendMessage(player, "&cError: No shop in your view!");
+            return true;
+        }
+
+        String msg = ChatColor.DARK_PURPLE + "--- " + ChatColor.LIGHT_PURPLE + ShopUtils.getShopHint(shop.getUuid()) + ChatColor.DARK_PURPLE + " ---\n";
+        if (shop.getItemStack()!=null) msg += ChatColor.WHITE + "- Item: " + ChatColor.GRAY + StaticUtils.getItemName(shop.getItemStack())+" x "+shop.getStackSize()+"\n";
+        msg += ChatColor.WHITE + "- Owner: " + ChatColor.GRAY + shop.getOwnerName()+" "+shop.getOwnerUuid()+"\n";
+        msg += ChatColor.WHITE + "- Stock: " + ChatColor.GRAY + shop.getItemStock()+" "+shop.hasInfiniteStock()+"\n";
+        msg += ChatColor.WHITE + "- Money: " + ChatColor.GRAY + StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue())+" "+shop.hasInfiniteMoney()+"\n";
+        if (shop.getBuyPrice()!=null) msg += ChatColor.WHITE + "- BuyPrice: " + ChatColor.GRAY + StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue())+"\n";
+        if (shop.getSellPrice()!=null) msg += ChatColor.WHITE + "- SellPrice: " + ChatColor.GRAY + StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue())+"\n";
+        if (shop.getLastTransactionDate()!=null) msg += ChatColor.WHITE + "- LastTransaction: " + ChatColor.GRAY + shop.getLastTransactionDate().toString()+"\n";
+        if (shop.getCurrentEditor()!=null) msg += ChatColor.WHITE + "- CurrentEditor: " + ChatColor.GRAY + javaPlugin.getServer().getOfflinePlayer(shop.getCurrentEditor()).getName()+" "+shop.getCurrentEditor()+"\n";
+
+        player.sendMessage(msg);
+        return true;
+    }
+
+    private boolean handleManageCmd(Player player) {
+        Shop shop = javaPlugin.getShopHandler().getShopInFocus(player);
+        if (shop==null) {
+            StaticUtils.sendMessage(player, "&cError: No shop in your view!");
+            return true;
+        }
+
+        new ShopManageGui(javaPlugin, player, true, shop.getUuid());
+        return true;
+    }
+
+    private boolean handleSetItemCmd(Player player) {
+        Shop shop = javaPlugin.getShopHandler().getShopInFocus(player);
+        if (shop==null) {
+            StaticUtils.sendMessage(player, "&cError: No shop in your view!");
+            return true;
+        }
+
+        ShopUtils.setShopItem(player, shop.getUuid(), true);
+        return true;
+    }
+
+    private boolean handleSetStockCmd(Player player, String[] args) {
+        if (args.length<2) {
+            StaticUtils.sendMessage(player, "&cMust supply new stock amount..!");
+            return true;
+        }
+
+        int value;
+        try {
+            value = Integer.parseInt(args[1]);
+        } catch (Exception e) {
+            StaticUtils.sendMessage(player, "&cCould not parse integer from "+args[1]+"!");
+            return true;
+        }
+
+        Shop shop = javaPlugin.getShopHandler().getShopInFocus(player);
+        if (shop==null) {
+            StaticUtils.sendMessage(player, "&cError: No shop in your view!");
+            return true;
+        }
+
+        ShopUtils.setShopStock(player, shop.getUuid(), value);
         return true;
     }
 
@@ -519,7 +572,7 @@ public class AdminCmd implements TabExecutor {
         List<String> list = new ArrayList<>();
         if (args.length == 1) {
             list.clear();
-            String[] subCmds = new String[]{"give","<player>","region","info"/*,"transferDisplayShopsData","deletePlayerShopsData"*/};
+            String[] subCmds = new String[]{"give","<player>","info","manage","setStock","setItem","region"/*,"transferDisplayShopsData","deletePlayerShopsData"*/};
             for (String n : subCmds) {
                 if (n!=null && n.startsWith(args[0].toLowerCase())) 
                     list.add(n);

@@ -137,10 +137,10 @@ public class ShopUtils {
         return true;
     } 
     
-    public static void setShopItem(Player player, UUID shopUuid) {
+    public static void setShopItem(Player player, UUID shopUuid, boolean force) {
         if (!Bukkit.isPrimaryThread()) {
             StaticUtils.log(ChatColor.RED, player.getName() + " tried to set shop " + shopUuid + "'s item off the main thread -- trying again during next tick on main thread!");
-            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> setShopItem(player, shopUuid));
+            javaPlugin.getServer().getScheduler().runTask(javaPlugin, () -> setShopItem(player, shopUuid, force));
             return;
         }
 
@@ -163,8 +163,12 @@ public class ShopUtils {
             }
 
             if (shop.getItemStock()>0) {
-                StaticUtils.sendMessage(player, "&cShop must have an empty item stock before changing sale items!");
-                return;
+                if (force) {
+                    StaticUtils.sendMessage(player, "&e...adjusting stock despite having a sale item stock...");
+                } else {
+                    StaticUtils.sendMessage(player, "&cShop must have an empty item stock before changing sale items!");
+                    return;
+                }
             }
 
             // edit shop
@@ -172,13 +176,16 @@ public class ShopUtils {
             ItemStack one = hand.clone();
             one.setAmount(1);
             shop.setItemStack(one);
-            shop.setItemStock(1);
-            shop.setStackSize(1);
+            if (!force) shop.setItemStock(1);
+            if (!force) shop.setStackSize(1);
 
             // apply updates
-            if (handCount>1) {
-                hand.setAmount(handCount-1);
-            } else {player.getInventory().setItemInMainHand(null);}
+            if (!force) {
+                if (handCount>1) {
+                    hand.setAmount(handCount-1);
+                } else {player.getInventory().setItemInMainHand(null);}
+            }
+
 
             javaPlugin.getShopHandler().upsertShopObject(shop);
             StaticUtils.sendMessage(player, "&aShop's sale item set to &e" + StaticUtils.getItemName(one));
@@ -1290,6 +1297,33 @@ public class ShopUtils {
             // apply updates
             javaPlugin.getShopHandler().upsertShopObject(shop);
             Logger.logEdit(player.getName()+" set infnite stock to " + hasInfinite + " for shop "+ShopUtils.getShopHint(shopUuid)+"!");
+            return true;
+        } finally {
+            javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());
+        }
+    }
+
+    public static boolean setShopStock(Player player, UUID shopUuid, int newStock) {
+        if (!Bukkit.isPrimaryThread()) {
+            StaticUtils.log(ChatColor.RED, player.getName() + " tried to set shop " + shopUuid + "'s stock off the main thread -- canceling..!");
+            return false;
+        }
+
+        if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, player)) {
+            return false;
+        }
+
+        try {
+            Shop shop = javaPlugin.getShopHandler().getShop(shopUuid);
+            if (shop == null) {
+                return false;
+            }
+
+            shop.setItemStock(newStock);
+
+            // apply updates
+            javaPlugin.getShopHandler().upsertShopObject(shop);
+            Logger.logEdit(player.getName()+" set stock to " + newStock + " for shop "+ShopUtils.getShopHint(shopUuid)+"!");
             return true;
         } finally {
             javaPlugin.getShopHandler().unlockShop(shopUuid, player.getUniqueId());

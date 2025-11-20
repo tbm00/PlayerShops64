@@ -126,7 +126,7 @@ public class ShopBaseBlock implements Listener {
                     }
                 } else if (action==Action.RIGHT_CLICK_BLOCK) {
                     if (shop.getItemStack()==null && heldItem!=null && !heldItem.getType().equals(Material.AIR)) {
-                        ShopUtils.setShopItem(player, shop.getUuid());
+                        ShopUtils.setShopItem(player, shop.getUuid(), false);
                         return;
                     } else if (shop.getItemStack()==null) {
                         StaticUtils.sendMessage(player, "&eHold an item then sneak-right-click to set a sale item!");
