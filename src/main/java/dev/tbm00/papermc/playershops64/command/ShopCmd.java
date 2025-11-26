@@ -136,7 +136,7 @@ public class ShopCmd implements TabExecutor {
         double totalCost = javaPlugin.getConfigHandler().getShopBlockBuyPrice() * amount;
 
         if (!javaPlugin.getVaultHook().hasMoney(player, totalCost)) {
-            StaticUtils.sendMessage(player, "&cYou don't have enough money to buy "+amount+" shops for $"+StaticUtils.formatIntUS(javaPlugin.getConfigHandler().getShopBlockBuyPrice())+" each!");
+            StaticUtils.sendMessage(player, "&cYou don't have enough money to buy "+amount+" shops for $"+StaticUtils.formatUS(javaPlugin.getConfigHandler().getShopBlockBuyPrice())+" each!");
             return true;
         }
 
@@ -146,7 +146,7 @@ public class ShopCmd implements TabExecutor {
         }
 
         StaticUtils.addToInventoryOrDrop(player, StaticUtils.prepPlayerShopItemStack(amount));
-        StaticUtils.sendMessage(player, "&aYou bought "+amount+" shops for $"+StaticUtils.formatIntUS(totalCost)+"!");
+        StaticUtils.sendMessage(player, "&aYou bought "+amount+" shops for $"+StaticUtils.formatUS(totalCost)+"!");
         return true;
     }
 
@@ -249,7 +249,7 @@ public class ShopCmd implements TabExecutor {
                     total_deposited += ShopUtils.adjustBalance(player, shopUuid, AdjustType.ADD, deposit_per, false);
                     if (totalMemory!=total_deposited) i++;
                 }
-                StaticUtils.sendMessage(player, "&aDeposited a total of $" + StaticUtils.formatIntUS(total_deposited) + " into " + i + " of your shops!");
+                StaticUtils.sendMessage(player, "&aDeposited a total of $" + StaticUtils.formatUS(total_deposited) + " into " + i + " of your shops!");
                 return true;
             }
             case "view": {
@@ -342,7 +342,7 @@ public class ShopCmd implements TabExecutor {
                     }
                 }
 
-                StaticUtils.sendMessage(player, "&aWithdrawn a total of $" + StaticUtils.formatIntUS(total_withdrawn) + " from " + i + " of your shops!");
+                StaticUtils.sendMessage(player, "&aWithdrawn a total of $" + StaticUtils.formatUS(total_withdrawn) + " from " + i + " of your shops!");
                 return true;
             }
             case "view": {
@@ -511,10 +511,10 @@ public class ShopCmd implements TabExecutor {
 
         String hoverText = "";
         if (shop.getBuyPrice()!=null) {
-            hoverText += "&7B: &a$" + StaticUtils.formatIntUS(shop.getBuyPrice().doubleValue()) + "&7, ";
+            hoverText += "&7B: &a$" + StaticUtils.formatUS(shop.getBuyPrice().doubleValue()) + "&7, ";
         } if (shop.getSellPrice()!=null) {
-            hoverText += "&7S: &c$" + StaticUtils.formatIntUS(shop.getSellPrice().doubleValue()) + "&7, ";
-        } hoverText += "&7Stock: &e" + StaticUtils.formatIntUS(shop.getItemStock()) + "&7, Balance: &e$" + StaticUtils.formatIntUS(shop.getMoneyStock().doubleValue());
+            hoverText += "&7S: &c$" + StaticUtils.formatUS(shop.getSellPrice().doubleValue()) + "&7, ";
+        } hoverText += "&7Stock: &e" + StaticUtils.formatUS(shop.getItemStock()) + "&7, Balance: &e$" + StaticUtils.formatUS(shop.getMoneyStock().doubleValue());
 
         BaseComponent[] hoverComponents = TextComponent.fromLegacyText(
             ChatColor.translateAlternateColorCodes('&', hoverText)

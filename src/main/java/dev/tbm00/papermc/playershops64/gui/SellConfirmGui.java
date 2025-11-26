@@ -30,7 +30,7 @@ public final class SellConfirmGui {
         this.javaPlugin = javaPlugin;
         this.player = player;
         this.engine = engine;
-        this.label += " for $" +StaticUtils.formatIntUS(engine.plans.sellPlan.totalMoney.intValue());
+        this.label += " for $" +StaticUtils.formatUS(engine.plans.sellPlan.totalMoney.intValue());
         this.gui = new PaginatedGui(6, 45, label);
 
         gui.setCloseGuiAction(event -> {
@@ -64,11 +64,11 @@ public final class SellConfirmGui {
         if (shopLore==null) shopLore = new ArrayList<>();
 
         shopLore.add("&8-----------------------");
-        shopLore.add("&7Selling &e" + StaticUtils.formatIntUS(entry.amount) + " &7for");
-        shopLore.add("&a$" + StaticUtils.formatDoubleUS(entry.unitPrice.doubleValue()) + " &7each");
+        shopLore.add("&7Selling &e" + StaticUtils.formatUS(entry.amount) + " &7for");
+        shopLore.add("&a$" + StaticUtils.formatUS(entry.unitPrice.doubleValue()) + " &7each");
         shopLore.add("&7to " + shop.getOwnerName());
         shopLore.add(" ");
-        shopLore.add("&2Total: $" + StaticUtils.formatDoubleUS(entry.totalPrice.doubleValue()));
+        shopLore.add("&2Total: $" + StaticUtils.formatUS(entry.totalPrice.doubleValue()));
 
         shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
         /*shopMeta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
@@ -96,8 +96,8 @@ public final class SellConfirmGui {
         List<String> lore = new ArrayList<>();
         
         lore.add("&8-----------------------");
-        lore.add("&6Click to &aconfirm & sell &6" + StaticUtils.formatIntUS(engine.plans.sellPlan.totalItems));
-        lore.add("&6for &a$" + StaticUtils.formatDoubleUS(engine.plans.sellPlan.totalMoney.doubleValue()));
+        lore.add("&6Click to &aconfirm & sell &6" + StaticUtils.formatUS(engine.plans.sellPlan.totalItems));
+        lore.add("&6for &a$" + StaticUtils.formatUS(engine.plans.sellPlan.totalMoney.doubleValue()));
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
         meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dConfirm Sale"));
         item.setItemMeta(meta);

@@ -151,6 +151,29 @@ public class StaticUtils {
     }
 
     /**
+     * Formats double to "200,000" style
+     * 
+     * @param amount the amount to format
+     * @return the formatted string
+     */
+    public static String formatUS(int amount) {
+        return formatIntUS(amount);
+    }
+
+    /**
+     * Formats double to "200,000" style
+     * or to "200,000.50" style if it has digits beyond decimal
+     * 
+     * @param amount the amount to format
+     * @return the formatted string
+     */
+    public static String formatUS(double amount) {
+        if (amount % 1 != 0) {
+            return formatDoubleUS(amount);
+        } else return formatIntUS(amount);
+    }
+
+    /**
      * Formats int to "200,000.00" style
      * 
      * @param amount the amount to format
@@ -217,7 +240,7 @@ public class StaticUtils {
         if (shop.getItemStack()==null || shop.getItemStack().getType()==Material.AIR) {
             return ChatColor.translateAlternateColorCodes('&', "&c(null item)");
         } else {
-            return ChatColor.translateAlternateColorCodes('&', (getItemName(shop.getItemStack()) + " &7x &f" + shop.getStackSize()));
+            return ChatColor.translateAlternateColorCodes('&', (getItemName(shop.getItemStack()) + " &7x &f" + formatUS(shop.getStackSize())));
         }
     }
 

@@ -183,9 +183,9 @@ public class AdminCmd implements TabExecutor {
         if (shop.getItemStack()!=null) msg += ChatColor.WHITE + "- Item: " + ChatColor.GRAY + StaticUtils.getItemName(shop.getItemStack())+" x "+shop.getStackSize()+"\n";
         msg += ChatColor.WHITE + "- Owner: " + ChatColor.GRAY + shop.getOwnerName()+" "+shop.getOwnerUuid()+"\n";
         msg += ChatColor.WHITE + "- Stock: " + ChatColor.GRAY + shop.getItemStock()+" "+shop.hasInfiniteStock()+"\n";
-        msg += ChatColor.WHITE + "- Money: " + ChatColor.GRAY + StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue())+" "+shop.hasInfiniteMoney()+"\n";
-        if (shop.getBuyPrice()!=null) msg += ChatColor.WHITE + "- BuyPrice: " + ChatColor.GRAY + StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue())+"\n";
-        if (shop.getSellPrice()!=null) msg += ChatColor.WHITE + "- SellPrice: " + ChatColor.GRAY + StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue())+"\n";
+        msg += ChatColor.WHITE + "- Money: " + ChatColor.GRAY + StaticUtils.formatUS(shop.getMoneyStock().doubleValue())+" "+shop.hasInfiniteMoney()+"\n";
+        if (shop.getBuyPrice()!=null) msg += ChatColor.WHITE + "- BuyPrice: " + ChatColor.GRAY + StaticUtils.formatUS(shop.getBuyPrice().doubleValue())+"\n";
+        if (shop.getSellPrice()!=null) msg += ChatColor.WHITE + "- SellPrice: " + ChatColor.GRAY + StaticUtils.formatUS(shop.getSellPrice().doubleValue())+"\n";
         if (shop.getLastTransactionDate()!=null) msg += ChatColor.WHITE + "- LastTransaction: " + ChatColor.GRAY + shop.getLastTransactionDate().toString()+"\n";
         if (shop.getCurrentEditor()!=null) msg += ChatColor.WHITE + "- CurrentEditor: " + ChatColor.GRAY + javaPlugin.getServer().getOfflinePlayer(shop.getCurrentEditor()).getName()+" "+shop.getCurrentEditor()+"\n";
 

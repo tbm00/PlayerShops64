@@ -130,7 +130,7 @@ public class ShopManageGui {
             lore.add("&8-----------------------");
             if (shop.getSellPrice()!=null) {
                 lore.add("&6Click to set this shop's sell price");
-                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&4Sell Price: &f$" + StaticUtils.formatDoubleUS(shop.getSellPrice().doubleValue())));
+                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&4Sell Price: &f$" + StaticUtils.formatUS(shop.getSellPrice().doubleValue())));
             } else { 
                 lore.add("&6Click to re-enable selling");
                 lore.add("&6& set this shop's sell price");
@@ -169,7 +169,7 @@ public class ShopManageGui {
             lore.add("&8-----------------------");
             if (shop.getBuyPrice()!=null) {
                 lore.add("&6Click to set this shop's buy price");
-                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&2Buy Price: &f$" + StaticUtils.formatDoubleUS(shop.getBuyPrice().doubleValue())));
+                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&2Buy Price: &f$" + StaticUtils.formatUS(shop.getBuyPrice().doubleValue())));
             } else { 
                 lore.add("&6Click to re-enable buying");
                 lore.add("&6& set this shop's buy price");
@@ -209,7 +209,7 @@ public class ShopManageGui {
             lore.add("&6Click to manage this shop's balance");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             if (shop.getMoneyStock()!=null) 
-                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Balance: &f$" + StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue())));
+                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Balance: &f$" + StaticUtils.formatUS(shop.getMoneyStock().doubleValue())));
             else meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Balance: &f$(null)"));
             item.setItemMeta(meta);
             item.setType(Material.HOPPER_MINECART);
@@ -225,7 +225,7 @@ public class ShopManageGui {
             lore.add("&8-----------------------");
             lore.add("&6Click to manage this shop's stock");
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Stock: &f" + StaticUtils.formatIntUS(shop.getItemStock())));
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eStored Stock: &f" + StaticUtils.formatUS(shop.getItemStock())));
             item.setItemMeta(meta);
             item.setType(Material.BARREL);
             gui.setItem(4, 5, ItemBuilder.from(item).asGuiItem(event -> {

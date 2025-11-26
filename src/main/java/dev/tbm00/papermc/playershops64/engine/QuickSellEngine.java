@@ -266,7 +266,7 @@ public final class QuickSellEngine {
                 }
             }
 
-            StaticUtils.sendMessage(player, "&aSold " + totalSold + " items for a total of $" + StaticUtils.formatIntUS(totalEarned.doubleValue()));
+            StaticUtils.sendMessage(player, "&aSold " + totalSold + " items for a total of $" + StaticUtils.formatUS(totalEarned.doubleValue()));
             returnNonmatchedItems();
         } finally {
             // 4) always unlock

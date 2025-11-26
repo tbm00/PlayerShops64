@@ -53,7 +53,7 @@ public class ShopTransactionGui {
             return;
         } //StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s transcation gui: " + this.quantity);
 
-        label = "Shop Transaction: " + StaticUtils.formatIntUS(this.quantity);
+        label = "Shop Transaction: " + StaticUtils.formatUS(this.quantity);
         gui.updateTitle(label);
         setup();
         gui.disableAllInteractions();
@@ -120,10 +120,10 @@ public class ShopTransactionGui {
         if (shop.getItemStack()!=null) { // New Amount Item
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&7Current Selected Amount: &6" + quantity);
-            lore.add("&7Shop Stock: &e" + shop.getItemStock());
+            lore.add("&7Current Selected Amount: &6" + StaticUtils.formatUS(quantity));
+            lore.add("&7Shop Stock: &e" + StaticUtils.formatUS(shop.getItemStock()));
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&fSelection: &6" + quantity));
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&fSelection: &6" + StaticUtils.formatUS(quantity)));
             item.setItemMeta(meta);
             item.setAmount(1);
             item.setType(Material.GLASS);
@@ -151,7 +151,7 @@ public class ShopTransactionGui {
         if (shop.getSellPrice()!=null) { // Sell Button
             lore.clear();
             lore.add("&8-----------------------");
-            lore.add("&6Click to &csell " + quantity + " &6for $" + StaticUtils.formatDoubleUS((shop.getSellPriceForOne().multiply(BigDecimal.valueOf(quantity))).doubleValue()));
+            lore.add("&6Click to &csell " + StaticUtils.formatUS(quantity) + " &6for $" + StaticUtils.formatUS((shop.getSellPriceForOne().multiply(BigDecimal.valueOf(quantity))).doubleValue()));
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cConfirm Sell"));
             item.setItemMeta(meta);
@@ -174,8 +174,8 @@ public class ShopTransactionGui {
         if (shop.getBuyPrice()!=null) { // Buy Button
             lore.clear();
             lore.add("&8-----------------------");
-            if (usingCoupon) lore.add("&6Click to &abuy " + quantity + " &6for &m$" + StaticUtils.formatDoubleUS((shop.getBuyPriceForOne().multiply(BigDecimal.valueOf(quantity))).doubleValue())+"&r&e $"+StaticUtils.formatDoubleUS(((shop.getBuyPriceForOne().divide(BigDecimal.valueOf(2))).multiply(BigDecimal.valueOf(quantity))).doubleValue()));
-            else lore.add("&6Click to &abuy " + quantity + " &6for $" + StaticUtils.formatDoubleUS((shop.getBuyPriceForOne().multiply(BigDecimal.valueOf(quantity))).doubleValue()));
+            if (usingCoupon) lore.add("&6Click to &abuy " + StaticUtils.formatUS(quantity) + " &6for &m$" + StaticUtils.formatUS((shop.getBuyPriceForOne().multiply(BigDecimal.valueOf(quantity))).doubleValue())+"&r&e $"+StaticUtils.formatUS(((shop.getBuyPriceForOne().divide(BigDecimal.valueOf(2))).multiply(BigDecimal.valueOf(quantity))).doubleValue()));
+            else lore.add("&6Click to &abuy " + StaticUtils.formatUS(quantity) + " &6for $" + StaticUtils.formatUS((shop.getBuyPriceForOne().multiply(BigDecimal.valueOf(quantity))).doubleValue()));
             
             meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aConfirm Buy"));
@@ -229,8 +229,8 @@ public class ShopTransactionGui {
     private void addQuantityButton(ItemStack item, ItemMeta meta, List<String> lore, Material material, String name, int amount, int row, int col) {
         lore.clear();
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-        if (amount<0) meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cRemove "+(-1*amount)));
-        else meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aAdd "+amount));
+        if (amount<0) meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cRemove "+StaticUtils.formatUS(-1*amount)));
+        else meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aAdd "+StaticUtils.formatUS(amount)));
         item.setItemMeta(meta);
         item.setType(material);
         if (amount<0) item.setAmount((-1*amount));

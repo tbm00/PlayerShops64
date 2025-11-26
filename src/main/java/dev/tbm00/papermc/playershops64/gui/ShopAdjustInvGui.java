@@ -51,10 +51,10 @@ public class ShopAdjustInvGui {
         label = "Adjust "+AdjustAttribute.toString(attribute);
         switch (attribute) {
             case BALANCE:
-                label += ": $" + StaticUtils.formatIntUS(this.quantity);
+                label += ": $" + StaticUtils.formatUS(this.quantity);
                 break;
             case STOCK:
-                label += ": " + StaticUtils.formatIntUS(this.quantity);
+                label += ": " + StaticUtils.formatUS(this.quantity);
                 break;
             case DISPLAY_HEIGHT:
                 label += ": " + this.quantity;
@@ -131,15 +131,15 @@ public class ShopAdjustInvGui {
             switch (attribute) {
                 case STOCK: 
                     lore.add("&8-----------------------");
-                    lore.add("&7Current Selected Amount: &6" + quantity);
-                    lore.add("&7Current Stock: &e" + shop.getItemStock());
-                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&fSelection: &6" + quantity));
+                    lore.add("&7Current Selected Amount: &6" + StaticUtils.formatUS(quantity));
+                    lore.add("&7Current Stock: &e" + StaticUtils.formatUS(shop.getItemStock()));
+                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&fSelection: &6" + StaticUtils.formatUS(quantity)));
                     break;
                 case BALANCE: 
                     lore.add("&8-----------------------");
-                    lore.add("&7Current Selected Amount: &6$" + StaticUtils.formatIntUS(quantity));
-                    lore.add("&7Current Balance: &e$" + StaticUtils.formatDoubleUS(shop.getMoneyStock().doubleValue()));
-                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&fSelection: &6$" + StaticUtils.formatIntUS(quantity)));
+                    lore.add("&7Current Selected Amount: &6$" + StaticUtils.formatUS(quantity));
+                    lore.add("&7Current Balance: &e$" + StaticUtils.formatUS(shop.getMoneyStock().doubleValue()));
+                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&fSelection: &6$" + StaticUtils.formatUS(quantity)));
                     break;
                 case DISPLAY_HEIGHT: 
                     lore.add("&8-----------------------");
@@ -180,7 +180,7 @@ public class ShopAdjustInvGui {
             if (attribute.equals(AdjustAttribute.STOCK)) {
                 lore.clear();
                 lore.add("&8-----------------------");
-                lore.add("&6Click to withdraw " + quantity + " from shop's stock");
+                lore.add("&6Click to withdraw " + StaticUtils.formatUS(quantity) + " from shop's stock");
                 meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cWithdraw from Shop Stock"));
                 item.setItemMeta(meta);
@@ -203,7 +203,7 @@ public class ShopAdjustInvGui {
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
                 lore.clear();
                 lore.add("&8-----------------------");
-                lore.add("&6Click to withdraw $" + StaticUtils.formatIntUS(quantity) + " from shop's balance");
+                lore.add("&6Click to withdraw $" + StaticUtils.formatUS(quantity) + " from shop's balance");
                 meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cWithdraw from Shop Balance"));
                 item.setItemMeta(meta);
@@ -230,7 +230,7 @@ public class ShopAdjustInvGui {
             if (attribute.equals(AdjustAttribute.STOCK)) {
                 lore.clear();
                 lore.add("&8-----------------------");
-                lore.add("&6Click to set shop's stock to " + quantity);
+                lore.add("&6Click to set shop's stock to " + StaticUtils.formatUS(quantity));
                 meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eSet Shop Stock"));
                 item.setItemMeta(meta);
@@ -253,7 +253,7 @@ public class ShopAdjustInvGui {
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
                 lore.clear();
                 lore.add("&8-----------------------");
-                lore.add("&6Click to set shop's balance to $" + StaticUtils.formatIntUS(quantity));
+                lore.add("&6Click to set shop's balance to $" + StaticUtils.formatUS(quantity));
                 meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&eSet Shop Balance"));
                 item.setItemMeta(meta);
@@ -303,7 +303,7 @@ public class ShopAdjustInvGui {
             if (attribute.equals(AdjustAttribute.STOCK)) {
                 lore.clear();
                 lore.add("&8-----------------------");
-                lore.add("&6Click to deposit " + quantity + " to shop's stock");
+                lore.add("&6Click to deposit " + StaticUtils.formatUS(quantity) + " to shop's stock");
                 meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aDeposit to Shop Stock"));
                 item.setItemMeta(meta);
@@ -326,7 +326,7 @@ public class ShopAdjustInvGui {
             } else if (attribute.equals(AdjustAttribute.BALANCE)) {
                 lore.clear();
                 lore.add("&8-----------------------");
-                lore.add("&6Click to deposit $" + StaticUtils.formatIntUS(quantity) + " to shop's balance");
+                lore.add("&6Click to deposit $" + StaticUtils.formatUS(quantity) + " to shop's balance");
                 meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
                 meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aDeposit to Shop Balance"));
                 item.setItemMeta(meta);
@@ -406,8 +406,8 @@ public class ShopAdjustInvGui {
     private void addQuantityButton(ItemStack item, ItemMeta meta, List<String> lore, Material material, String name, int amount, int row, int col) {
         lore.clear();
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-        if (amount<0) meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cRemove "+(-1*amount)));
-        else meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aAdd "+amount));
+        if (amount<0) meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cRemove "+StaticUtils.formatUS(-1*amount)));
+        else meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aAdd "+StaticUtils.formatUS(amount)));
         item.setItemMeta(meta);
         item.setType(material);
         if (amount<0) item.setAmount((-1*amount));
@@ -422,8 +422,8 @@ public class ShopAdjustInvGui {
     private void addQuantityButton(ItemStack item, ItemMeta meta, List<String> lore, Material material, String name, int amount, int row, int col, int size) {
         lore.clear();
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
-        if (amount<0) meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cRemove $"+StaticUtils.formatIntUS(-1*amount)));
-        else meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aAdd $"+StaticUtils.formatIntUS(amount)));
+        if (amount<0) meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&cRemove $"+StaticUtils.formatUS(-1*amount)));
+        else meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aAdd $"+StaticUtils.formatUS(amount)));
         item.setItemMeta(meta);
         item.setType(material);
         item.setAmount(size);
