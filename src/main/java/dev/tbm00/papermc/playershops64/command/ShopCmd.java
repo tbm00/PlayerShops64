@@ -179,12 +179,12 @@ public class ShopCmd implements TabExecutor {
         }
 
         String[] arr = {StaticUtils.getItemName(handItem)};
-        GuiUtils.openGuiSearchResults(player, arr, false);
+        GuiUtils.openGuiSearchResults(player, arr, false, SortType.MATERIAL);
         return true;
     }
 
     private boolean handleSearchCmd(Player player, String[] args) {
-        GuiUtils.openGuiSearchResults(player, args, false);
+        GuiUtils.openGuiSearchResults(player, args, false, SortType.MATERIAL);
         return true;
     }
 

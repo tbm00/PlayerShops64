@@ -27,6 +27,30 @@ public enum SortType {
         }
     }
 
+    public static SortType fromString(String string) {
+        String lowercase = string.toLowerCase().replace("_", "");
+        switch (lowercase) {
+            case "unsorted":
+            case "none":
+                return UNSORTED;
+            case "material":
+            case "mat":
+                return MATERIAL;
+            case "buyprice":
+            case "buy":
+                return BUY_PRICE;
+            case "sellprice":
+            case "sell":
+                return SELL_PRICE;
+            case "stock":
+                return STOCK;
+            case "balance":
+                return BALANCE;
+            default:
+                return null;
+        }
+    }
+
     public static SortType nextType(SortType sortType) {
         switch (sortType) {
             case UNSORTED:

@@ -33,7 +33,7 @@ public class GuiUtils {
         GuiUtils.javaPlugin = javaPlugin;
     }
 
-    public static boolean openGuiSearchResults(Player sender, String[] args, boolean isAdmin) {
+    public static boolean openGuiSearchResults(Player sender, String[] args, boolean isAdmin, SortType sortType) {
         // 1st: search shops for target player
         while (args[0].startsWith(" ")) {
             args[0] = args[0].substring(1);
@@ -54,7 +54,7 @@ public class GuiUtils {
         }
         if (targetUUID!=null) {
             StaticUtils.log(ChatColor.YELLOW, "calling ListGui(), query type: PLAYER_UUID " + targetName + " " + targetUUID);
-            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), sender, isAdmin, SortType.MATERIAL, QueryType.PLAYER_UUID, targetUUID);
+            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), sender, isAdmin, sortType, QueryType.PLAYER_UUID, targetUUID);
             return true;
         }
 
@@ -71,7 +71,7 @@ public class GuiUtils {
         if (query==null || query.isEmpty()) return false;
         else {
             StaticUtils.log(ChatColor.YELLOW, "calling ListGui(), query type: STRING '" + query + "'");
-            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), sender, isAdmin, SortType.MATERIAL, QueryType.STRING, query);
+            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), sender, isAdmin, sortType, QueryType.STRING, query);
             return true;
         }
     }

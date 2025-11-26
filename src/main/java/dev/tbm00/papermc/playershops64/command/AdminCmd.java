@@ -4,6 +4,7 @@ package dev.tbm00.papermc.playershops64.command;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /* import java.util.Set;
 import java.util.UUID;
@@ -62,9 +63,9 @@ public class AdminCmd implements TabExecutor {
         if (!StaticUtils.hasPermission(sender, StaticUtils.ADMIN_PERM)) {
             StaticUtils.sendMessage(sender, "&cNo permission!");
             return true;
-        } else if (args.length == 0) {
+        } else if (args == null || args.length == 0) {
             Player player = (Player) sender;
-            return handleMenuCmd(player);
+            return handleMenuCmd(player, args);
         }
 
         String subCmd = args[0].toLowerCase();
@@ -73,7 +74,7 @@ public class AdminCmd implements TabExecutor {
                 return handleHelpCmd((Player) sender);
             case "menu":
             case "gui":
-                return handleMenuCmd((Player) sender);
+                return handleMenuCmd((Player) sender, args);
             case "give":
                 return handleGiveCmd(sender, args);
             case "info":
@@ -108,13 +109,22 @@ public class AdminCmd implements TabExecutor {
         return true;
     }
 
-    private boolean handleMenuCmd(Player player) {
-        new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), player, true, SortType.MATERIAL, QueryType.NO_QUERY, null);
+    private boolean handleMenuCmd(Player player, String[] args) {
+        if (args==null || args.length==0 || args.length==1) {
+            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), player, true, SortType.MATERIAL, QueryType.NO_QUERY, null);
+        } else {
+            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), player, true, SortType.fromString(args[1]), QueryType.NO_QUERY, null);
+        }
         return true;
     }
 
     private boolean handleSearchCmd(Player player, String[] args) {
-        GuiUtils.openGuiSearchResults(player, args, true);
+        if (args.length>1) {
+            String[] search = Arrays.copyOfRange(args, 1, args.length);
+            GuiUtils.openGuiSearchResults(player, search, true, SortType.fromString(args[0]));
+        } else {
+            GuiUtils.openGuiSearchResults(player, args, true, SortType.MATERIAL);
+        }
         return true;
     }
 

@@ -127,6 +127,7 @@ public class ListShopsGui {
     }
 
     private void sortShops(List<Map.Entry<UUID, Shop>> shops, SortType type) {
+        if (type==null) type = SortType.UNSORTED;
         switch (type) {
             case UNSORTED: // Unsorted
                 break;

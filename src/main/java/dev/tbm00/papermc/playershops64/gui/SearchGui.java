@@ -18,6 +18,7 @@ import org.geysermc.floodgate.api.player.FloodgatePlayer;
 import net.wesjd.anvilgui.AnvilGUI;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
+import dev.tbm00.papermc.playershops64.data.enums.SortType;
 import dev.tbm00.papermc.playershops64.utils.GuiUtils;
 import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 
@@ -51,7 +52,7 @@ public class SearchGui {
                         return;
                     }
 
-                    GuiUtils.openGuiSearchResults(player, new String[]{query}, isAdmin);
+                    GuiUtils.openGuiSearchResults(player, new String[]{query}, isAdmin, SortType.MATERIAL);
                 });
 
                 Bukkit.getScheduler().runTaskLater(javaPlugin, () -> {
@@ -96,7 +97,7 @@ public class SearchGui {
 
                     return Arrays.asList(
                         AnvilGUI.ResponseAction.close(),
-                        AnvilGUI.ResponseAction.run(() -> GuiUtils.openGuiSearchResults(player, arr, isAdmin))
+                        AnvilGUI.ResponseAction.run(() -> GuiUtils.openGuiSearchResults(player, arr, isAdmin, SortType.MATERIAL))
                     );
                 })
                 .text(" ")
