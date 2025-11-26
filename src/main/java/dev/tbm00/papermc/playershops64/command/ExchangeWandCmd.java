@@ -20,6 +20,8 @@ import dev.tbm00.papermc.playershops64.utils.StaticUtils;
 public class ExchangeWandCmd implements TabExecutor {
     //private final PlayerShops64 javaPlugin;
 
+    private final int OLD_WAND_REQUIRED_AMOUNT = 4;
+
     public ExchangeWandCmd(PlayerShops64 javaPlugin) {
         //this.javaPlugin = javaPlugin;
     }
@@ -50,7 +52,7 @@ public class ExchangeWandCmd implements TabExecutor {
         if (!removed && removeMultiSellwands(player)) removed = true;
 
         if (removed==false) {
-            StaticUtils.sendMessage(sender, "&cError: Couldn't find an old infinite sell wand (or 4 finite sell wands) in your inventory!");
+            StaticUtils.sendMessage(sender, "&cError: Couldn't find an old infinite sell wand (or "+OLD_WAND_REQUIRED_AMOUNT+" finite sell wands) in your inventory!");
             return true;
         }
 
@@ -103,9 +105,9 @@ public class ExchangeWandCmd implements TabExecutor {
 
         int removedCount=0;
         int oldTempWandCount = countOldTempWands(storage);
-        if (oldTempWandCount>=4) {
+        if (oldTempWandCount>=OLD_WAND_REQUIRED_AMOUNT) {
             for (int i = 0; i < storage.length; i++) {
-                if (removedCount>=oldTempWandCount) return true;
+                if (removedCount>=OLD_WAND_REQUIRED_AMOUNT) return true;
 
                 ItemStack stack = storage[i];
                 if (stack == null) continue;
@@ -137,7 +139,7 @@ public class ExchangeWandCmd implements TabExecutor {
                     else stack.setAmount(newAmt);
 
                     removedCount++;
-                    if (removedCount>=oldTempWandCount) return true;
+                    if (removedCount>=OLD_WAND_REQUIRED_AMOUNT) return true;
                 }
             }
         }
