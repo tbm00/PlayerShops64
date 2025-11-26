@@ -113,7 +113,7 @@ public class ShopTransactionGui {
             item.setType(Material.STONE_BUTTON);
             gui.setItem(2, 2, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
-                                                                            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), viewer, isAdmin, SortType.MATERIAL, QueryType.STRING, StaticUtils.getItemName(shop.getItemStack()));
+                                                                            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), viewer, isAdmin, SortType.MATERIAL, QueryType.STRING, StaticUtils.getItemName(shop.getItemStack().clone()));
                                                                         }));
         }
 
@@ -134,13 +134,13 @@ public class ShopTransactionGui {
         }
         
         if (shop.getItemStack()!=null) { // Sale Item
-            ItemStack shopItem = shop.getItemStack();
+            ItemStack shopItem = shop.getItemStack().clone();
             ItemMeta shopMeta = shopItem.getItemMeta();
             List<String> shopLore = shopMeta.getLore();
 
             shopLore = ShopUtils.formatSaleItemLoreText(shop, true, usingCoupon, isAdmin);
             shopItem.setAmount(shop.getStackSize());
-            shopMeta.setDisplayName(StaticUtils.getItemName(shop.getItemStack()));
+            shopMeta.setDisplayName(StaticUtils.getItemName(shop.getItemStack().clone()));
             shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             shopItem.setItemMeta(shopMeta);
             gui.setItem(2, 5, ItemBuilder.from(shopItem).asGuiItem(event -> {

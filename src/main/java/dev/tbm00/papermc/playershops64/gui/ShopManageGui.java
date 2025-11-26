@@ -96,7 +96,7 @@ public class ShopManageGui {
                                                                         }));
         } else { 
             // Sale Item
-            ItemStack shopItem = shop.getItemStack();
+            ItemStack shopItem = shop.getItemStack().clone();
             ItemMeta shopMeta = shopItem.getItemMeta();
             List<String> shopLore = shopMeta.getLore();
 
@@ -365,7 +365,7 @@ public class ShopManageGui {
             item.setType(Material.STONE_BUTTON);
             gui.setItem(6, 1, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
-                                                                            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), viewer, isAdmin, SortType.MATERIAL, QueryType.STRING, StaticUtils.getItemName(shop.getItemStack()));
+                                                                            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), viewer, isAdmin, SortType.MATERIAL, QueryType.STRING, StaticUtils.getItemName(shop.getItemStack().clone()));
                                                                         }));
         }
 
