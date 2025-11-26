@@ -16,9 +16,12 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import xzot1k.plugins.ds.DisplayShops;
-
-import dev.tbm00.papermc.playershops64.command.*;
+import dev.tbm00.papermc.playershops64.command.AdminCmd;
+import dev.tbm00.papermc.playershops64.command.DepositGuiCmd;
+import dev.tbm00.papermc.playershops64.command.ExchangeShopCmd;
+import dev.tbm00.papermc.playershops64.command.ExchangeWandCmd;
+import dev.tbm00.papermc.playershops64.command.SellGuiCmd;
+import dev.tbm00.papermc.playershops64.command.ShopCmd;
 import dev.tbm00.papermc.playershops64.data.ConfigHandler;
 import dev.tbm00.papermc.playershops64.data.MySQLConnection;
 import dev.tbm00.papermc.playershops64.hook.VaultHook;
@@ -29,7 +32,11 @@ import dev.tbm00.papermc.playershops64.listener.PlayerMovement;
 import dev.tbm00.papermc.playershops64.listener.PlayerWand;
 //import dev.tbm00.papermc.playershops64.listener.ServerStartup;
 import dev.tbm00.papermc.playershops64.listener.ShopBaseBlock;
-import dev.tbm00.papermc.playershops64.utils.*;
+import dev.tbm00.papermc.playershops64.utils.GuiUtils;
+import dev.tbm00.papermc.playershops64.utils.Logger;
+import dev.tbm00.papermc.playershops64.utils.ShopUtils;
+import dev.tbm00.papermc.playershops64.utils.StaticUtils;
+import xzot1k.plugins.ds.DisplayShops;
 
 public class PlayerShops64 extends JavaPlugin {
     private ConfigHandler configHandler;
@@ -82,17 +89,20 @@ public class PlayerShops64 extends JavaPlugin {
                 getServer().getPluginManager().registerEvents(new PlayerCoupon(this), this);
             
             // Register Commands
-            if (isPluginAvailable("ShopGUIPlus")) {
-                cloneSGPCommand("originalsgplus");
-                overrideSGPCommands();
-            } else {
-                getCommand("shop").setExecutor(new ShopCmd(this));
-                getCommand("sellgui").setExecutor(new SellGuiCmd(this));
-            }
             getCommand("depositgui").setExecutor(new DepositGuiCmd(this));
             getCommand("shopadmin").setExecutor(new AdminCmd(this));
             getCommand("exchangesellwand").setExecutor(new ExchangeWandCmd(this));
             getCommand("exchangeshops").setExecutor(new ExchangeShopCmd(this));
+            if (!configHandler.isShopGuiPlusEnabled()) {
+                getCommand("shop").setExecutor(new ShopCmd(this));
+                getCommand("sellgui").setExecutor(new SellGuiCmd(this));
+            } else {
+                // delayed task that tries to hookSGP() after 1200 ticks
+                StaticUtils.log(ChatColor.YELLOW, "Overriding ShopGUIPlus in 2 minutes!");
+                getServer().getScheduler().runTaskLater(this, () -> {
+                    hookSGP();
+                }, 1200L);
+            }
         }
     }
 
@@ -171,6 +181,12 @@ public class PlayerShops64 extends JavaPlugin {
 
         StaticUtils.log(ChatColor.GREEN, "Floodgate hooked.");
         return true;
+    }
+
+    public void hookSGP() {
+        StaticUtils.log(ChatColor.YELLOW, "Hooking into ShopGUIPlus...");
+        cloneSGPCommand("originalsgplus");
+        overrideSGPCommands();
     }
 
     @SuppressWarnings("unchecked")

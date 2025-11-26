@@ -20,6 +20,7 @@ public class ConfigHandler {
     private final PlayerShops64 javaPlugin;
 
     private boolean floodgateEnabled = false;
+    private boolean shopguiplusEnabled = false;
 
     private String chatPrefix;
     
@@ -75,8 +76,10 @@ public class ConfigHandler {
      */
     private boolean loadHookSection() {
         ConfigurationSection hooks = javaPlugin.getConfig().getConfigurationSection("hooks");
-        if (hooks!=null)
+        if (hooks!=null) {
             floodgateEnabled = hooks.contains("floodgate") ? hooks.getBoolean("floodgate") : false;
+            shopguiplusEnabled = hooks.contains("shopguiplus") ? hooks.getBoolean("shopguiplus") : false;
+        }
         
         return true;
     }
@@ -244,6 +247,10 @@ public class ConfigHandler {
     // Hooks
     public boolean isFloodgateEnabled() {
         return floodgateEnabled;
+    }
+
+    public boolean isShopGuiPlusEnabled() {
+        return shopguiplusEnabled;
     }
 
     // Language
