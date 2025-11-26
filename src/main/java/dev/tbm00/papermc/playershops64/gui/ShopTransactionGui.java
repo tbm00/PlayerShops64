@@ -113,7 +113,7 @@ public class ShopTransactionGui {
             item.setType(Material.STONE_BUTTON);
             gui.setItem(2, 2, ItemBuilder.from(item).asGuiItem(event -> {
                                                                             event.setCancelled(true);
-                                                                            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), viewer, isAdmin, SortType.MATERIAL, QueryType.STRING, shop.getItemStack().getType().toString());
+                                                                            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), viewer, isAdmin, SortType.MATERIAL, QueryType.STRING, StaticUtils.getItemName(shop.getItemStack()));
                                                                         }));
         }
 

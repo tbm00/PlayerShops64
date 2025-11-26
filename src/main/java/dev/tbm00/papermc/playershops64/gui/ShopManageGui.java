@@ -16,6 +16,8 @@ import dev.triumphteam.gui.guis.Gui;
 
 import dev.tbm00.papermc.playershops64.PlayerShops64;
 import dev.tbm00.papermc.playershops64.data.enums.AdjustAttribute;
+import dev.tbm00.papermc.playershops64.data.enums.QueryType;
+import dev.tbm00.papermc.playershops64.data.enums.SortType;
 import dev.tbm00.papermc.playershops64.data.structure.Shop;
 import dev.tbm00.papermc.playershops64.utils.GuiUtils;
 import dev.tbm00.papermc.playershops64.utils.ShopUtils;
@@ -353,6 +355,20 @@ public class ShopManageGui {
                                                                         }));
         } 
 
+        if (shop.getItemStack()!=null) { //  Similar Search Button
+            lore.clear();
+            lore.add("&8-----------------------");
+            lore.add("&6Click to find similar shops");
+            meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&dSimilar Shops"));
+            item.setItemMeta(meta);
+            item.setType(Material.STONE_BUTTON);
+            gui.setItem(6, 1, ItemBuilder.from(item).asGuiItem(event -> {
+                                                                            event.setCancelled(true);
+                                                                            new ListShopsGui(javaPlugin, javaPlugin.getShopHandler().getShopView(), viewer, isAdmin, SortType.MATERIAL, QueryType.STRING, StaticUtils.getItemName(shop.getItemStack()));
+                                                                        }));
+        }
+
         {
             // Your Shops
             lore.clear();
@@ -368,6 +384,6 @@ public class ShopManageGui {
                                                                             closeAction();
                                                                             GuiUtils.handleClickYourShops(event, isAdmin);
                                                                         }));
-        } 
+        }
     }
 }
