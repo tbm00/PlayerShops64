@@ -754,7 +754,7 @@ public class AdminCmd implements TabExecutor {
         }
 
         long lastTs = Math.max(dsShop.getLastBuyTimeStamp(), dsShop.getLastSellTimeStamp());
-        Date lastTranscationDate = (lastTs > 0) ? new Date(lastTs) : null;
+        Date lastTransactionDate = (lastTs > 0) ? new Date(lastTs) : null;
 
         Set<UUID> assistants = new HashSet<>();
         if (dsShop.getAssistants()!=null && !dsShop.getAssistants().isEmpty()) {
@@ -776,7 +776,7 @@ public class AdminCmd implements TabExecutor {
                     moneyStock,
                     buyPrice,
                     sellPrice,
-                    lastTranscationDate,
+                    lastTransactionDate,
                     infMoney,
                     infStock,
                     null,

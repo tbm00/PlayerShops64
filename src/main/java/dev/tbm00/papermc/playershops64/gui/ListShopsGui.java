@@ -1,6 +1,7 @@
 package dev.tbm00.papermc.playershops64.gui;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -226,6 +227,22 @@ public class ListShopsGui {
                 });
                 break;
 
+            case LAST_TRANSACTION: // Latest Transaction
+                shops.sort((entry1, entry2) -> {
+                    Shop shop1 = entry1.getValue();
+                    Shop shop2 = entry2.getValue();
+
+                    Date date1 = shop1.getLastTransactionDate();
+                    Date date2 = shop2.getLastTransactionDate();
+
+                    if (date1 == null && date2 == null) return 0;  // no movement
+                    if (date1 == null) return 1;   // shop1 goes after shop2
+                    if (date2 == null) return -1;  // shop2 goes after shop1
+                    
+                    return date2.compareTo(date1);
+                });
+                break;
+
             default:
                 break;
         }
@@ -411,7 +428,7 @@ public class ListShopsGui {
         List<String> shopLore;
         UUID ownerUuid = shop.getOwnerUuid();
 
-        shopLore = ShopUtils.formatSaleItemLoreText(shop, true);
+        shopLore = ShopUtils.formatSaleItemLoreText(shop, true, false, isAdmin);
         shopLore.add("&8-----------------------");
         shopLore.add("&6Click to TP to this shop");
         if (isAdmin || (ownerUuid!=null && viewer.getUniqueId().equals(ownerUuid)) || shop.isAssistant(viewer.getUniqueId()))

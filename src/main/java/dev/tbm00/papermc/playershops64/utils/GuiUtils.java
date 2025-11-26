@@ -233,12 +233,12 @@ public class GuiUtils {
         
         if (!isAdmin) lore.add("&6Click to change sort order");
         else lore.add("&6Click to change sort order &c(ADMIN)");
-        lore.add("&6("+ SortType.toString(sortType) + " -> " + SortType.toString(SortType.nextType(sortType)) + ")");
+        lore.add("&6("+ SortType.toString(sortType) + " -> " + SortType.toString(SortType.nextType(sortType, isAdmin)) + ")");
         meta.setLore(lore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
         meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&fSort Shops"));
         item.setItemMeta(meta);
         item.setType(Material.HOPPER);
-        gui.setItem(6, 7, ItemBuilder.from(item).asGuiItem(event -> handleClickSortList(event, SortType.nextType(sortType), queryType, query, isAdmin)));
+        gui.setItem(6, 7, ItemBuilder.from(item).asGuiItem(event -> handleClickSortList(event, SortType.nextType(sortType, isAdmin), queryType, query, isAdmin)));
         lore.clear();
     }
 

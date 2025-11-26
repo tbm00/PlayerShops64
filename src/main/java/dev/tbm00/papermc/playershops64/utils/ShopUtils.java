@@ -2,6 +2,7 @@ package dev.tbm00.papermc.playershops64.utils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -1389,10 +1390,10 @@ public class ShopUtils {
     }
 
     public static List<String> formatSaleItemLoreText(Shop shop, boolean includeStackSize) {
-        return formatSaleItemLoreText(shop, includeStackSize, false);
+        return formatSaleItemLoreText(shop, includeStackSize, false, false);
     }
 
-    public static List<String> formatSaleItemLoreText(Shop shop, boolean includeStackSize, boolean usingCoupon) {
+    public static List<String> formatSaleItemLoreText(Shop shop, boolean includeStackSize, boolean usingCoupon, boolean showLastTransaction) {
         if (shop==null) return null;
 
         Double buyPrice = (shop.getBuyPrice()==null) ? null : shop.getBuyPrice().doubleValue();
@@ -1449,6 +1450,15 @@ public class ShopUtils {
                 +(int)shop.getLocation().getX()+"&7, &f"
                 +(int)shop.getLocation().getY()+"&7, &f"
                 +(int)shop.getLocation().getZ());
+
+        if (showLastTransaction) {
+            SimpleDateFormat fmt = new SimpleDateFormat("MM/dd/yyyy HH:mm");
+            if (shop.getLastTransactionDate()==null) {
+                lore.add("&7Last: &fnull");
+            } else {
+                lore.add("&7Last: &f" + fmt.format(shop.getLastTransactionDate()));
+            }
+        }
 
         return lore;
     }

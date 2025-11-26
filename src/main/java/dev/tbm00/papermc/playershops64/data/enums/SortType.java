@@ -6,7 +6,8 @@ public enum SortType {
     BUY_PRICE,
     SELL_PRICE,
     STOCK,
-    BALANCE;
+    BALANCE,
+    LAST_TRANSACTION;
 
     public static String toString(SortType sortType) {
         switch (sortType) {
@@ -22,6 +23,8 @@ public enum SortType {
                 return "Stock";
             case BALANCE:
                 return "Balance";
+            case LAST_TRANSACTION:
+                return "Last Transaction";
             default:
                 return null;
         }
@@ -46,27 +49,53 @@ public enum SortType {
                 return STOCK;
             case "balance":
                 return BALANCE;
+            case "lasttransaction":
+            case "transaction":
+            case "lasttrans":
+            case "last":
+                return LAST_TRANSACTION;
             default:
                 return null;
         }
     }
 
-    public static SortType nextType(SortType sortType) {
-        switch (sortType) {
-            case UNSORTED:
-                return MATERIAL;
-            case MATERIAL:
-                return BUY_PRICE;
-            case BUY_PRICE:
-                return SELL_PRICE;
-            case SELL_PRICE:
-                return STOCK;
-            case STOCK:
-                return BALANCE;
-            case BALANCE:
-                return UNSORTED;
-            default:
-                return null;
+    public static SortType nextType(SortType sortType, boolean isAdmin) {
+        if (!isAdmin) {
+            switch (sortType) {
+                case UNSORTED:
+                    return MATERIAL;
+                case MATERIAL:
+                    return BUY_PRICE;
+                case BUY_PRICE:
+                    return SELL_PRICE;
+                case SELL_PRICE:
+                    return STOCK;
+                case STOCK:
+                    return BALANCE;
+                case BALANCE:
+                    return UNSORTED;
+                default:
+                    return null;
+            }
+        } else {
+            switch (sortType) {
+                case UNSORTED:
+                    return MATERIAL;
+                case MATERIAL:
+                    return LAST_TRANSACTION;
+                case LAST_TRANSACTION:
+                    return BUY_PRICE;
+                case BUY_PRICE:
+                    return SELL_PRICE;
+                case SELL_PRICE:
+                    return STOCK;
+                case STOCK:
+                    return BALANCE;
+                case BALANCE:
+                    return UNSORTED;
+                default:
+                    return null;
+            }
         }
     }
 }

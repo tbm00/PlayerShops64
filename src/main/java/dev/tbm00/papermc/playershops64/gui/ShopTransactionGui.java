@@ -51,7 +51,7 @@ public class ShopTransactionGui {
 
         if (!javaPlugin.getShopHandler().tryLockShop(shopUuid, viewer)) {
             return;
-        } //StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s transcation gui: " + this.quantity);
+        } //StaticUtils.log(ChatColor.YELLOW, viewer.getName() + " opened shop "+ShopUtils.getShopHint(shopUuid)+"'s transaction gui: " + this.quantity);
 
         label = "Shop Transaction: " + StaticUtils.formatUS(this.quantity);
         gui.updateTitle(label);
@@ -138,7 +138,7 @@ public class ShopTransactionGui {
             ItemMeta shopMeta = shopItem.getItemMeta();
             List<String> shopLore = shopMeta.getLore();
 
-            shopLore = ShopUtils.formatSaleItemLoreText(shop, true, usingCoupon);
+            shopLore = ShopUtils.formatSaleItemLoreText(shop, true, usingCoupon, isAdmin);
             shopItem.setAmount(shop.getStackSize());
             shopMeta.setDisplayName(StaticUtils.getItemName(shop.getItemStack()));
             shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());

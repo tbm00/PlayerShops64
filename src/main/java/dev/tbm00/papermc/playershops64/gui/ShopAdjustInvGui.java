@@ -165,7 +165,7 @@ public class ShopAdjustInvGui {
             ItemMeta shopMeta = shopItem.getItemMeta();
             List<String> shopLore = shopMeta.getLore();
 
-            shopLore = ShopUtils.formatSaleItemLoreText(shop, true);
+            shopLore = ShopUtils.formatSaleItemLoreText(shop, true, false, isAdmin);
 
             shopMeta.setLore(shopLore.stream().map(l -> ChatColor.translateAlternateColorCodes('&', l)).toList());
             shopMeta.setDisplayName(StaticUtils.getSaleItemNameWithQuantity(shop));
